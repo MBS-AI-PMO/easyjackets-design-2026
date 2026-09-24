@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <script src="./image-slot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+  <style>
+    :root { --ink:#14110f; --ink-2:#2a2521; --cream:#f4efe6; --cream-2:#e9e1d2; --gold:#c9a227; --gold-2:#a8861c; --muted:#6b635a; --display:"Big Shoulders Display", Impact, sans-serif; --body:"Instrument Sans", system-ui, sans-serif; }
+    body { margin:0; background:var(--cream); color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased; text-wrap:pretty; }
+    a { color:var(--ink); } a:hover { color:var(--gold-2); }
+    .ez-nav a { text-decoration:none; font-family:var(--display); font-weight:800; font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); position:relative; padding:6px 0; }
+    .ez-nav a:not(.ez-btn)::after { content:""; position:absolute; left:0; right:100%; bottom:0; height:3px; background:var(--gold); transition:right .25s ease; }
+    .ez-nav a:not(.ez-btn):hover::after { right:0; }
+    .ez-nav a.ez-btn-ink { color:var(--cream); } .ez-nav a.ez-btn-ink:hover { color:var(--ink); }
+    .ez-btn { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; padding:0 26px; font-family:var(--display); font-weight:800; font-size:20px; letter-spacing:0.06em; text-transform:uppercase; text-decoration:none; border-radius:2px; transition:transform .15s, background .15s, color .15s; cursor:pointer; border:2px solid var(--ink); }
+    .ez-btn:hover { transform:translateY(-2px); }
+    .ez-btn-ink { background:var(--ink); color:var(--cream); } .ez-btn-ink:hover { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+    .ez-btn-gold { background:var(--gold); border-color:var(--gold); color:var(--ink); } .ez-btn-gold:hover { background:var(--cream); border-color:var(--cream); }
+    .ez-label { display:grid; gap:8px; font-size:12px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+    .ez-input { font:inherit; font-size:15px; padding:0 14px; height:50px; border:1.5px solid var(--cream-2); border-radius:2px; background:#fbf8f2; color:var(--ink); width:100%; box-sizing:border-box; letter-spacing:0; text-transform:none; font-weight:400; }
+    textarea.ez-input { height:auto; padding:14px; min-height:120px; resize:vertical; }
+    .ez-input:focus { border-color:var(--ink); outline:none; }
+    select.ez-input { appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2314110f' stroke-width='2' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
+    .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; gap:8px; padding:10px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:#fbf8f2; font:inherit; font-size:14px; font-weight:600; cursor:pointer; color:var(--ink); transition:all .15s; letter-spacing:0; text-transform:none; }
+    .ez-chip:hover { border-color:var(--ink); }
+    .ez-chip[aria-pressed="true"] { background:var(--ink); color:var(--cream); border-color:var(--ink); }
+    .ez-drop { border:1.5px dashed var(--muted); border-radius:2px; padding:22px; text-align:center; color:var(--muted); font-size:14px; background:#fbf8f2; cursor:pointer; letter-spacing:0; text-transform:none; font-weight:400; }
+    .ez-drop:hover { border-color:var(--ink); color:var(--ink); }
+    details summary::-webkit-details-marker { display:none; }
+    details[open] .faq-plus { transform:rotate(45deg); }
+    footer a:hover { color:var(--gold) !important; }
+    footer input::placeholder { color:rgba(244,239,230,0.5); }
+    @media (max-width:900px) { footer > div { grid-template-columns:1fr 1fr !important; } footer > div > div:nth-child(2) { grid-column:1/-1; } }
+    .ez-sub { position:relative; }
+    .ez-nav .ez-sub-trigger { display:flex !important; justify-content:space-between; align-items:center; gap:16px; }
+    .ez-sub-menu { position:absolute; top:-10px; left:100%; min-width:250px; padding:10px 0; background:#fbf8f2; border:1px solid var(--cream-2); border-radius:4px; box-shadow:0 24px 48px -20px rgba(20,17,15,0.4); opacity:0; visibility:hidden; transform:translateX(6px); transition:opacity .18s ease, transform .18s ease, visibility .18s; display:grid; }
+    .ez-sub:hover .ez-sub-menu, .ez-sub:focus-within .ez-sub-menu { opacity:1; visibility:visible; transform:translateX(0); }
+    .ez-sub:hover > .ez-sub-trigger { background:var(--cream); color:var(--gold-2); }
+    .ez-dd { position:relative; display:flex; align-items:center; }
+    .ez-dd > a { display:inline-flex; align-items:center; gap:6px; }
+    .ez-dd > a svg { transition:transform .2s; }
+    .ez-dd:hover > a svg, .ez-dd:focus-within > a svg { transform:rotate(180deg); }
+    .ez-dd-menu { position:absolute; top:100%; left:-16px; min-width:240px; padding:10px 0; background:#fbf8f2; border:1px solid var(--cream-2); border-radius:4px; box-shadow:0 24px 48px -20px rgba(20,17,15,0.4); opacity:0; visibility:hidden; transform:translateY(8px); transition:opacity .18s ease, transform .18s ease, visibility .18s; display:grid; z-index:30; }
+    .ez-dd:hover .ez-dd-menu, .ez-dd:focus-within .ez-dd-menu { opacity:1; visibility:visible; transform:translateY(0); }
+    .ez-nav .ez-dd-menu a { display:block; padding:10px 20px; font-family:var(--body); font-weight:600; font-size:15px; letter-spacing:0; text-transform:none; color:var(--ink); }
+    .ez-nav .ez-dd-menu a::after { display:none; }
+    .ez-nav .ez-dd-menu a:hover { background:var(--cream); color:var(--gold-2); }
+    @media (max-width:720px) { .ez-dd { display:none; } }
+    .ez-nav > div > a.ez-btn { white-space:nowrap; }
+    :focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+    @media (max-width:720px) { .ez-nav a { display:none; } }
+    @media (max-width:960px) { .ez-bulk { grid-template-columns:1fr !important; } .ez-form-side { position:static !important; } }
+  </style>
+</helmet>
+
+<nav class="ez-nav" style="position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--cream) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--cream-2);">
+  <div style="max-width:1280px;margin:0 auto;padding:10px clamp(16px,4vw,48px);display:flex;align-items:center;gap:36px;">
+    <a href="Easy Jackets Landing v2.dc.html" style="display:flex;align-items:center;margin-right:auto;padding:0;"><img src="assets/easy-jacket-logo.png" alt="Easy Jacket" style="height:72px;width:auto;display:block;mix-blend-mode:multiply;"></a>
+    <div class="ez-dd"><a href="Easy Jackets Listing.dc.html">Shop <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2"/></svg></a>
+      <div class="ez-dd-menu" style="min-width:270px;"><div class="ez-sub"><a href="Easy Jackets Listing.dc.html?style" class="ez-sub-trigger">Jackets By Style <svg width="8" height="12" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2"/></svg></a><div class="ez-sub-menu"><a href="Easy Jackets Listing.dc.html?style=Varsity%20Jackets">Varsity Jackets</a><a href="Easy Jackets Listing.dc.html?style=Cropped%20Varsity%20Jackets">Cropped Varsity Jackets</a><a href="Easy Jackets Listing.dc.html?style=Bomber%20Jackets">Bomber Jackets</a><a href="Easy Jackets Listing.dc.html?style=Coach%20Jackets">Coach Jackets</a><a href="Easy Jackets Listing.dc.html?style=Hoodies">Hoodies</a></div></div><div class="ez-sub"><a href="Easy Jackets Listing.dc.html?material" class="ez-sub-trigger">By Material <svg width="8" height="12" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2"/></svg></a><div class="ez-sub-menu"><a href="Easy Jackets Listing.dc.html?material=Melton%20Wool">Melton Wool</a><a href="Easy Jackets Listing.dc.html?material=Faux%20Leather">Faux Leather</a><a href="Easy Jackets Listing.dc.html?material=Polyester%20Satin">Polyester Satin</a><a href="Easy Jackets Listing.dc.html?material=Cotton%20Fleece">Cotton Fleece</a><a href="Easy Jackets Listing.dc.html?material=Cotton%20Twill">Cotton Twill</a><a href="Easy Jackets Listing.dc.html?material=Sheep%20Leather">Sheep Leather</a><a href="Easy Jackets Listing.dc.html?material=Nylon">Nylon</a><a href="Easy Jackets Listing.dc.html?material=Cowhide%20Leather">Cowhide Leather</a><a href="Easy Jackets Listing.dc.html?material=Soft%20Shell">Soft Shell</a></div></div><a href="Easy Jackets Listing.dc.html">All Jackets</a></div></div>
+    <div class="ez-dd"><a href="Easy Jackets Design.dc.html">Design Studio <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2"/></svg></a>
+      <div class="ez-dd-menu"><a href="Easy Jackets Design.dc.html">Design Your Own Jacket</a><a href="Easy Jackets How To Design.dc.html">How To Design</a></div></div>
+    <a href="Easy Jackets Bulk.dc.html" style="color:var(--gold-2);">Bulk Orders</a>
+    <a href="Easy Jackets Blog.dc.html">Journal</a>
+    <div class="ez-dd"><a href="Easy Jackets FAQ.dc.html">Support <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2"/></svg></a>
+      <div class="ez-dd-menu"><a href="Easy Jackets Size Chart.dc.html">Size Chart</a><a href="Easy Jackets Material Colors.dc.html">Material Colors</a><a href="Easy Jackets Fabrics.dc.html">Fabrics</a><a href="Easy Jackets FAQ.dc.html">FAQs</a><a href="Easy Jackets Gallery.dc.html">Photo Gallery</a><a href="Easy Jackets About.dc.html">About</a><a href="Easy Jackets Contact.dc.html">Contact</a></div></div>
+    <a href="Easy Jackets Listing.dc.html" class="ez-btn ez-btn-ink" style="min-height:44px;padding:0 20px;font-size:17px;display:inline-flex;">Shop jackets</a>
+  </div>
+</nav>
+
+<!-- hero + form -->
+<section data-screen-label="Bulk hero" class="ez-bulk" style="max-width:1280px;margin:0 auto;padding:clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0;display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:40px clamp(24px,5vw,80px);align-items:start;">
+  <div>
+    <div style="font-size:13px;color:var(--muted);display:flex;gap:8px;"><a href="Easy Jackets Landing v2.dc.html" style="text-decoration:none;color:inherit;">Home</a><span>/</span><span style="color:var(--ink);font-weight:600;">Bulk orders</span></div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-top:24px;"><span style="width:28px;height:6px;background:repeating-linear-gradient(90deg,var(--gold) 0 8px,var(--ink) 8px 12px);"></span>Schools · Teams · Businesses · Clubs</div>
+    <h1 style="font-family:var(--display);font-weight:900;font-size:clamp(56px,7.5vw,108px);line-height:0.88;text-transform:uppercase;margin:14px 0 0;">Bulk varsity<br>&amp; custom<br><span style="color:var(--gold-2);">jacket orders</span></h1>
+    <p style="max-width:48ch;margin:24px 0 0;color:var(--ink-2);line-height:1.6;font-size:17px;">Order custom varsity jackets in bulk for your school, team, business, club or organization. Tell us the colors, the roster and the date — we handle the sizing run, individual names and numbers, and one shipment to your door.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:20px 28px;margin-top:36px;">
+      <div><div style="font-family:var(--display);font-weight:900;font-size:40px;line-height:1;">10<span style="color:var(--gold);">+</span></div><div style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:6px;">Jackets for bulk pricing</div></div>
+      <div><div style="font-family:var(--display);font-weight:900;font-size:40px;line-height:1;">Up to 30<span style="color:var(--gold);">%</span></div><div style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:6px;">Volume discount</div></div>
+      <div><div style="font-family:var(--display);font-weight:900;font-size:40px;line-height:1;">Free</div><div style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:6px;">Design proof &amp; mockup</div></div>
+      <div><div style="font-family:var(--display);font-weight:900;font-size:40px;line-height:1;">3<span style="color:var(--gold);">–</span>4 wks</div><div style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:6px;">Typical team turnaround</div></div>
+    </div>
+    <div style="position:relative;margin-top:44px;">
+      <div style="position:absolute;inset:14px -14px -14px 14px;background:var(--ink);border-radius:4px;"></div>
+      <div style="position:relative;aspect-ratio:16/10;border-radius:4px;overflow:hidden;background:var(--cream-2);"><image-slot id="bulk-hero" shape="rect" src="https://www.thejacketmaker.pk/cdn/shop/files/Team_1024x1024.webp?v=1775220777" placeholder="Team in matching jackets"></image-slot></div>
+    </div>
+  </div>
+
+  <!-- form -->
+  <div class="ez-form-side" style="position:sticky;top:104px;background:#fbf8f2;border:1px solid var(--cream-2);border-radius:4px;padding:clamp(22px,3vw,36px);">
+    <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-2);">Free quote · replies within 1 business day</div>
+      <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(32px,3.5vw,44px);line-height:0.9;text-transform:uppercase;margin:8px 0 0;">Request a bulk quote</h2>
+      <form onSubmit="{{ submit }}" style="display:grid;gap:18px;margin-top:24px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <label class="ez-label">Full name<input class="ez-input" name="name" required placeholder="Jordan Lee"></label>
+          <label class="ez-label">Organization<input class="ez-input" name="org" required placeholder="Lincoln High School"></label>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <label class="ez-label">Email<input class="ez-input" type="email" name="email" required placeholder="you@school.edu"></label>
+          <label class="ez-label">Phone<input class="ez-input" type="tel" name="phone" placeholder="+1 (555) 000-0000"></label>
+        </div>
+        <div class="ez-label">Order type
+          <div style="display:flex;flex-wrap:wrap;gap:8px;"><sc-for list="{{ orgTypes }}" as="o" hint-placeholder-count="5"><button type="button" class="ez-chip" aria-pressed="{{ o.active }}" onClick="{{ o.select }}">{{ o.label }}</button></sc-for></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <label class="ez-label">Jacket type
+            <select class="ez-input" name="type">
+              <option>Wool &amp; leather varsity</option><option>All-wool varsity</option><option>All-leather varsity</option><option>Satin baseball</option><option>Bomber</option><option>Coach jacket</option><option>Fleece hoodie</option><option>Not sure yet</option>
+            </select>
+          </label>
+          <label class="ez-label">Quantity
+            <select class="ez-input" name="qty">
+              <option>10–24</option><option>25–49</option><option>50–99</option><option>100–249</option><option>250+</option>
+            </select>
+          </label>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <label class="ez-label">Needed by<input class="ez-input" type="date" name="date"></label>
+          <label class="ez-label">Budget per jacket
+            <select class="ez-input" name="budget"><option>Under $100</option><option>$100–150</option><option>$150–200</option><option>$200+</option><option>Flexible</option></select>
+          </label>
+        </div>
+        <div class="ez-label">Personalization
+          <div style="display:flex;flex-wrap:wrap;gap:8px;"><sc-for list="{{ addons }}" as="o" hint-placeholder-count="5"><button type="button" class="ez-chip" aria-pressed="{{ o.active }}" onClick="{{ o.toggle }}">{{ o.label }}</button></sc-for></div>
+        </div>
+        <label class="ez-label">Details<textarea class="ez-input" name="details" placeholder="School colors, sizes, logo placement, anything else…"></textarea></label>
+        <label class="ez-label">Logo or artwork
+          <span class="ez-drop"><strong style="color:var(--ink);">Upload files</strong> or drag them here · PNG, JPG, PDF, AI, SVG up to 20 MB<input type="file" multiple accept="image/*,.pdf,.ai,.svg" style="display:none;"></span>
+        </label>
+        <button type="submit" class="ez-btn ez-btn-ink" style="width:100%;">Get my quote →</button>
+        <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5;">No commitment. We'll send pricing, a free mockup and a production timeline. By submitting you agree to be contacted about your order.</p>
+      </form>
+    </sc-if>
+    <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align:center;padding:40px 10px;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--gold);display:grid;place-items:center;margin:0 auto;font-family:var(--display);font-weight:900;font-size:32px;">✓</div>
+        <h2 style="font-family:var(--display);font-weight:900;font-size:40px;line-height:0.9;text-transform:uppercase;margin:20px 0 0;">Request received</h2>
+        <p style="color:var(--muted);line-height:1.6;margin:14px auto 0;max-width:36ch;">Thanks, {{ sentName }}. A team specialist will email pricing and a free mockup within one business day.</p>
+        <button type="button" class="ez-btn" onClick="{{ reset }}" style="margin-top:24px;">Send another request</button>
+      </div>
+    </sc-if>
+  </div>
+</section>
+
+<!-- who we serve -->
+<section data-screen-label="Who" style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0;">
+  <div style="font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-2);">Who orders in bulk</div>
+  <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(44px,6vw,80px);line-height:0.9;text-transform:uppercase;margin:10px 0 36px;">One jacket, the whole crew</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
+    <sc-for list="{{ segments }}" as="s" hint-placeholder-count="4">
+      <div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:var(--ink);color:var(--cream);">
+        <div style="position:absolute;inset:0;opacity:0.8;"><image-slot id="{{ s.slot }}" shape="rect" src="{{ s.src }}" placeholder="{{ s.name }}"></image-slot></div>
+        <div style="position:absolute;inset:auto 0 0 0;padding:20px;background:linear-gradient(to top,rgba(20,17,15,0.92),transparent);">
+          <div style="font-family:var(--display);font-weight:900;font-size:30px;line-height:0.95;text-transform:uppercase;">{{ s.name }}</div>
+          <p style="margin:8px 0 0;font-size:13px;line-height:1.5;color:rgba(244,239,230,0.85);">{{ s.desc }}</p>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- pricing tiers -->
+<section data-screen-label="Pricing" style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px clamp(24px,4vw,72px);align-items:start;">
+  <div>
+    <div style="font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-2);">Volume pricing</div>
+    <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(44px,6vw,80px);line-height:0.9;text-transform:uppercase;margin:10px 0 0;">More jackets, lower price</h2>
+    <p style="color:var(--muted);line-height:1.6;margin:20px 0 0;max-width:40ch;">Discounts apply to the whole order, mixed sizes and colors included. Names, numbers and patches are priced once per design, not per jacket.</p>
+  </div>
+  <div style="display:grid;gap:0;">
+    <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="4">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:16px 24px;align-items:baseline;padding:18px 0;border-top:1px solid var(--ink);">
+        <div><div style="font-family:var(--display);font-weight:900;font-size:28px;line-height:1;text-transform:uppercase;">{{ t.range }}</div><div style="font-size:13px;color:var(--muted);margin-top:4px;">{{ t.note }}</div></div>
+        <div style="font-family:var(--display);font-weight:900;font-size:26px;color:var(--gold-2);">{{ t.off }}</div>
+        <div style="font-size:14px;color:var(--muted);white-space:nowrap;">from <strong style="font-family:var(--display);font-weight:900;font-size:24px;color:var(--ink);">{{ t.from }}</strong>/jacket</div>
+      </div>
+    </sc-for>
+    <div style="border-top:1px solid var(--ink);"></div>
+  </div>
+</section>
+
+<!-- process -->
+<section data-screen-label="Process" style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0;">
+  <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(40px,5vw,72px);line-height:0.9;text-transform:uppercase;margin:0 0 32px;">How a team order works</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px 24px;">
+    <div style="border-top:3px solid var(--ink);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">01</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">Request a quote</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">Send colors, logo, quantity and date. A specialist replies within one business day.</p></div>
+    <div style="border-top:3px solid var(--ink);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">02</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">Approve the mockup</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">Free digital proof of the exact jacket. A physical sample is available for orders of 25+.</p></div>
+    <div style="border-top:3px solid var(--ink);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">03</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">Send the roster</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">Names, numbers and sizes in a simple sheet. We double-check the sizing run with you.</p></div>
+    <div style="border-top:3px solid var(--gold);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">04</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">One delivery</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">3–4 weeks in production, labelled by name, shipped together to your office.</p></div>
+  </div>
+</section>
+
+<!-- faq -->
+<section id="faq" data-screen-label="FAQ" style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px clamp(24px,4vw,72px);">
+  <div>
+    <div style="font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-2);">FAQ</div>
+    <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(44px,6vw,80px);line-height:0.9;text-transform:uppercase;margin:10px 0 0;">Bulk order questions</h2>
+  </div>
+  <div>
+    <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="6">
+      <details style="border-top:1px solid var(--ink);padding:16px 0;">
+        <summary style="display:flex;justify-content:space-between;align-items:baseline;gap:24px;cursor:pointer;list-style:none;font-weight:600;font-size:17px;"><span>{{ f.q }}</span><span class="faq-plus" style="font-family:var(--display);font-weight:900;font-size:26px;line-height:1;color:var(--gold-2);transition:transform .2s;">+</span></summary>
+        <p style="margin:10px 0 0;color:var(--muted);line-height:1.6;max-width:60ch;">{{ f.a }}</p>
+      </details>
+    </sc-for>
+    <div style="border-top:1px solid var(--ink);"></div>
+  </div>
+</section>
+
+<footer style="background:var(--ink);color:var(--cream);">
+  <div style="max-width:1280px;margin:0 auto;padding:56px clamp(16px,4vw,48px) 28px;display:grid;grid-template-columns:minmax(260px,1.4fr) repeat(3,minmax(150px,1fr));gap:40px clamp(24px,3vw,48px);font-size:14px;">
+    <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px 48px;align-items:center;padding-bottom:40px;border-bottom:1px solid rgba(244,239,230,0.15);">
+      <div>
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);">Newsletter</div>
+        <div style="font-family:var(--display);font-weight:900;font-size:clamp(32px,3.5vw,48px);line-height:0.9;text-transform:uppercase;margin-top:8px;">Get 10% off your first jacket</div>
+      </div>
+      <form onSubmit="{{ footerNoop }}" style="display:flex;gap:0;max-width:520px;width:100%;">
+        <input type="email" placeholder="you@school.edu" aria-label="Email" style="flex:1;min-width:0;font:inherit;font-size:15px;padding:0 16px;height:52px;border:2px solid var(--cream);border-right:0;border-radius:2px 0 0 2px;background:transparent;color:var(--cream);">
+        <button type="submit" class="ez-btn ez-btn-gold" style="border-radius:0 2px 2px 0;">Join</button>
+      </form>
+    </div>
+    <div>
+      <img src="assets/easy-jacket-logo.png" alt="Easy Jacket" style="height:64px;filter:invert(1) brightness(1.1);">
+      <p style="margin:16px 0 0;color:rgba(244,239,230,0.7);line-height:1.6;max-width:34ch;">Custom varsity and letterman jackets in melton wool and genuine leather. Made to order, no minimums, shipped worldwide.</p>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <a href="#" aria-label="Instagram" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">IG</a>
+        <a href="#" aria-label="Facebook" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">FB</a>
+        <a href="#" aria-label="TikTok" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">TT</a>
+        <a href="#" aria-label="Pinterest" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">PT</a>
+      </div>
+    </div>
+    <div><div style="font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;color:var(--gold);">Shop</div><div style="display:grid;gap:10px;"><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Varsity Jackets</a><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Bomber Jackets</a><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Fleece Hoodies</a><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Coach Jackets</a><a href="Easy Jackets Landing v2.dc.html#bestsellers" style="text-decoration:none;color:rgba(244,239,230,0.8);">Bestsellers</a></div></div>
+    <div><div style="font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;color:var(--gold);">Custom</div><div style="display:grid;gap:10px;"><a href="Easy Jackets Design.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Design Your Own</a><a href="Easy Jackets Landing v2.dc.html#materials" style="text-decoration:none;color:rgba(244,239,230,0.8);">Materials &amp; Colors</a><a href="Easy Jackets Landing v2.dc.html#materials" style="text-decoration:none;color:rgba(244,239,230,0.8);">Patches &amp; Embroidery</a><a href="#bulk" style="text-decoration:none;color:rgba(244,239,230,0.8);">Bulk &amp; Team Orders</a><a href="Easy Jackets Product.dc.html#size" style="text-decoration:none;color:rgba(244,239,230,0.8);">Size Guide</a></div></div>
+    <div><div style="font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;color:var(--gold);">Help</div><div style="display:grid;gap:10px;"><a href="Easy Jackets FAQ.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">FAQ</a><a href="Easy Jackets Landing v2.dc.html#faq" style="text-decoration:none;color:rgba(244,239,230,0.8);">Shipping &amp; Delivery</a><a href="Easy Jackets Landing v2.dc.html#faq" style="text-decoration:none;color:rgba(244,239,230,0.8);">Returns &amp; Exchanges</a><a href="Easy Jackets Contact.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Contact Us</a><a href="Easy Jackets Blog.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Blog</a></div><div style="margin-top:20px;font-size:13px;color:rgba(244,239,230,0.6);line-height:1.6;">Mon–Fri, 9am–6pm ET<br><a href="mailto:hello@easyjackets.com" style="color:var(--cream);text-decoration:none;">hello@easyjackets.com</a></div></div>
+    <div style="grid-column:1/-1;border-top:1px solid rgba(244,239,230,0.15);padding-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;color:rgba(244,239,230,0.55);font-size:13px;">
+      <span>© 2020–2026 Easy Jackets. All rights reserved.</span>
+      <span style="display:flex;gap:20px;"><a href="Easy Jackets Privacy Policy.dc.html" style="color:inherit;text-decoration:none;">Privacy</a><a href="Easy Jackets Terms.dc.html" style="color:inherit;text-decoration:none;">Terms</a><span>Visa · Mastercard · Amex · PayPal</span></span>
+    </div>
+  </div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { org: 'School', addons: ['Names', 'Chenille letter'], sent: false, sentName: '' };
+  renderVals() {
+    const footerNoop = e => e.preventDefault();
+    const TJM = 'https://www.thejacketmaker.pk/cdn/shop/files/', CL = 'https://clothoo.com/frontend/images/customer-photos/';
+    const s = this.state;
+    return {
+      footerNoop,
+      notSent: !s.sent, sent: s.sent, sentName: s.sentName || 'there',
+      orgTypes: ['School', 'Sports team', 'Business', 'Club', 'Event', 'Other'].map(l => ({ label: l, active: s.org === l, select: () => this.setState({ org: l }) })),
+      addons: ['Names', 'Numbers', 'Chenille letter', 'Back logo', 'Sleeve patches', 'Custom lining'].map(l => ({ label: l, active: s.addons.includes(l), toggle: () => this.setState({ addons: s.addons.includes(l) ? s.addons.filter(x => x !== l) : [...s.addons, l] }) })),
+      submit: e => { e.preventDefault(); const name = (new FormData(e.target).get('name') || '').split(' ')[0]; this.setState({ sent: true, sentName: name }); },
+      reset: () => this.setState({ sent: false }),
+      segments: [
+        { slot: 'seg-1', name: 'Schools', desc: 'Letterman jackets for athletics, band and class of ’27.', src: TJM + 'School_1024x1024.webp?v=1775220778' },
+        { slot: 'seg-2', name: 'Teams', desc: 'Matching colors, individual names and numbers.', src: TJM + 'Team_1024x1024.webp?v=1775220777' },
+        { slot: 'seg-3', name: 'Businesses', desc: 'Branded jackets for staff, launches and gifting.', src: TJM + 'Brand_63f92eec-0544-42c1-8c33-0fe8dd40f4eb_1024x1024.webp?v=1775220871' },
+        { slot: 'seg-4', name: 'Clubs', desc: 'Car clubs, fraternities, esports and alumni groups.', src: CL + 'maroon-gold-varsity-jackets-with-hockey-crossed-sticks-logo-student-group-clothoo-600x395.jpg' },
+      ],
+      tiers: [
+        { range: '10–24 jackets', note: 'Mixed sizes and colors', off: '10% off', from: '$135' },
+        { range: '25–49 jackets', note: 'Free physical sample', off: '15% off', from: '$127' },
+        { range: '50–99 jackets', note: 'Dedicated specialist', off: '20% off', from: '$120' },
+        { range: '100+ jackets', note: 'Pantone matching included', off: 'Up to 30% off', from: '$105' },
+      ],
+      faqs: [
+        { q: 'What is the minimum for bulk pricing?', a: 'Ten jackets. Below that you can still order any quantity at regular price — there is no minimum order.' },
+        { q: 'Can everyone have a different size, name and number?', a: 'Yes. Send a roster sheet and each jacket is made and labelled individually. Mixed sizes and colors count toward the same volume tier.' },
+        { q: 'Can you match our school colors exactly?', a: 'We stock 40+ wool and leather colors and can Pantone-match rib knit and lining on orders of 100+. Send a swatch or code and we will confirm the closest match on the mockup.' },
+        { q: 'How long does a team order take?', a: 'Typically 3–4 weeks in production after mockup approval, plus 4–5 business days shipping. Tell us your deadline and we will confirm before you commit.' },
+        { q: 'Do you offer samples?', a: 'A free digital mockup for every quote. A physical sample jacket is available on orders of 25 or more, credited back against the order.' },
+        { q: 'How do payment and invoicing work?', a: '50% deposit to start production, balance before shipping. We issue invoices and W-9s for schools and businesses, and accept purchase orders from institutions.' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

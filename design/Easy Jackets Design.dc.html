@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <script src="./image-slot.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+  <style>
+    :root { --ink:#14110f; --ink-2:#2a2521; --cream:#f4efe6; --cream-2:#e9e1d2; --gold:#c9a227; --gold-2:#a8861c; --muted:#6b635a; --display:"Big Shoulders Display", Impact, sans-serif; --body:"Instrument Sans", system-ui, sans-serif; }
+    body { margin:0; background:var(--cream); color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased; text-wrap:pretty; }
+    a { color:var(--ink); } a:hover { color:var(--gold-2); }
+    .ez-nav a { text-decoration:none; font-family:var(--display); font-weight:800; font-size:19px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); position:relative; padding:6px 0; }
+    .ez-nav a:not(.ez-btn)::after { content:""; position:absolute; left:0; right:100%; bottom:0; height:3px; background:var(--gold); transition:right .25s ease; }
+    .ez-nav a:not(.ez-btn):hover::after { right:0; }
+    .ez-nav a.ez-btn-ink { color:var(--cream); } .ez-nav a.ez-btn-ink:hover { color:var(--ink); }
+    .ez-btn { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; padding:0 26px; font-family:var(--display); font-weight:800; font-size:20px; letter-spacing:0.06em; text-transform:uppercase; text-decoration:none; border-radius:2px; transition:transform .15s, background .15s, color .15s; cursor:pointer; border:2px solid var(--ink); }
+    .ez-btn:hover { transform:translateY(-2px); }
+    .ez-btn-ink { background:var(--ink); color:var(--cream); } .ez-btn-ink:hover { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+    .ez-type { display:flex; flex-direction:column; gap:16px; position:relative; text-decoration:none; color:inherit; border-radius:4px; overflow:hidden; background:#fbf8f2; border:1px solid var(--cream-2); padding:18px 18px 20px; transition:transform .25s ease, box-shadow .25s ease; }
+    .ez-type:hover { transform:translateY(-6px); box-shadow:0 24px 48px -20px rgba(20,17,15,0.45); }
+    .ez-type:hover .ez-type-cta { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+    .ez-type:hover .ez-type-img { transform:scale(1.04); }
+    .ez-type-img { transition:transform .5s ease; }
+    details summary::-webkit-details-marker { display:none; }
+    details[open] .faq-plus { transform:rotate(45deg); }
+    footer a:hover { color:var(--gold) !important; }
+    footer input::placeholder { color:rgba(244,239,230,0.5); }
+    @media (max-width:900px) { footer > div { grid-template-columns:1fr 1fr !important; } footer > div > div:nth-child(2) { grid-column:1/-1; } }
+    .ez-sub { position:relative; }
+    .ez-nav .ez-sub-trigger { display:flex !important; justify-content:space-between; align-items:center; gap:16px; }
+    .ez-sub-menu { position:absolute; top:-10px; left:100%; min-width:250px; padding:10px 0; background:#fbf8f2; border:1px solid var(--cream-2); border-radius:4px; box-shadow:0 24px 48px -20px rgba(20,17,15,0.4); opacity:0; visibility:hidden; transform:translateX(6px); transition:opacity .18s ease, transform .18s ease, visibility .18s; display:grid; }
+    .ez-sub:hover .ez-sub-menu, .ez-sub:focus-within .ez-sub-menu { opacity:1; visibility:visible; transform:translateX(0); }
+    .ez-sub:hover > .ez-sub-trigger { background:var(--cream); color:var(--gold-2); }
+    .ez-dd { position:relative; display:flex; align-items:center; }
+    .ez-dd > a { display:inline-flex; align-items:center; gap:6px; }
+    .ez-dd > a svg { transition:transform .2s; }
+    .ez-dd:hover > a svg, .ez-dd:focus-within > a svg { transform:rotate(180deg); }
+    .ez-dd-menu { position:absolute; top:100%; left:-16px; min-width:240px; padding:10px 0; background:#fbf8f2; border:1px solid var(--cream-2); border-radius:4px; box-shadow:0 24px 48px -20px rgba(20,17,15,0.4); opacity:0; visibility:hidden; transform:translateY(8px); transition:opacity .18s ease, transform .18s ease, visibility .18s; display:grid; z-index:30; }
+    .ez-dd:hover .ez-dd-menu, .ez-dd:focus-within .ez-dd-menu { opacity:1; visibility:visible; transform:translateY(0); }
+    .ez-nav .ez-dd-menu a { display:block; padding:10px 20px; font-family:var(--body); font-weight:600; font-size:15px; letter-spacing:0; text-transform:none; color:var(--ink); }
+    .ez-nav .ez-dd-menu a::after { display:none; }
+    .ez-nav .ez-dd-menu a:hover { background:var(--cream); color:var(--gold-2); }
+    @media (max-width:720px) { .ez-dd { display:none; } }
+    .ez-nav > div > a.ez-btn { white-space:nowrap; }
+    :focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+    @media (max-width:720px) { .ez-nav a { display:none; } }
+  </style>
+</helmet>
+
+<nav class="ez-nav" style="position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--cream) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--cream-2);">
+  <div style="max-width:1280px;margin:0 auto;padding:10px clamp(16px,4vw,48px);display:flex;align-items:center;gap:36px;">
+    <a href="Easy Jackets Landing v2.dc.html" style="display:flex;align-items:center;margin-right:auto;padding:0;"><img src="assets/easy-jacket-logo.png" alt="Easy Jacket" style="height:72px;width:auto;display:block;mix-blend-mode:multiply;"></a>
+    <div class="ez-dd"><a href="Easy Jackets Listing.dc.html">Shop <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2"/></svg></a>
+      <div class="ez-dd-menu" style="min-width:270px;"><div class="ez-sub"><a href="Easy Jackets Listing.dc.html?style" class="ez-sub-trigger">Jackets By Style <svg width="8" height="12" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2"/></svg></a><div class="ez-sub-menu"><a href="Easy Jackets Listing.dc.html?style=Varsity%20Jackets">Varsity Jackets</a><a href="Easy Jackets Listing.dc.html?style=Cropped%20Varsity%20Jackets">Cropped Varsity Jackets</a><a href="Easy Jackets Listing.dc.html?style=Bomber%20Jackets">Bomber Jackets</a><a href="Easy Jackets Listing.dc.html?style=Coach%20Jackets">Coach Jackets</a><a href="Easy Jackets Listing.dc.html?style=Hoodies">Hoodies</a></div></div><div class="ez-sub"><a href="Easy Jackets Listing.dc.html?material" class="ez-sub-trigger">By Material <svg width="8" height="12" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2"/></svg></a><div class="ez-sub-menu"><a href="Easy Jackets Listing.dc.html?material=Melton%20Wool">Melton Wool</a><a href="Easy Jackets Listing.dc.html?material=Faux%20Leather">Faux Leather</a><a href="Easy Jackets Listing.dc.html?material=Polyester%20Satin">Polyester Satin</a><a href="Easy Jackets Listing.dc.html?material=Cotton%20Fleece">Cotton Fleece</a><a href="Easy Jackets Listing.dc.html?material=Cotton%20Twill">Cotton Twill</a><a href="Easy Jackets Listing.dc.html?material=Sheep%20Leather">Sheep Leather</a><a href="Easy Jackets Listing.dc.html?material=Nylon">Nylon</a><a href="Easy Jackets Listing.dc.html?material=Cowhide%20Leather">Cowhide Leather</a><a href="Easy Jackets Listing.dc.html?material=Soft%20Shell">Soft Shell</a></div></div><a href="Easy Jackets Listing.dc.html">All Jackets</a></div></div>
+    <div class="ez-dd"><a href="Easy Jackets Design.dc.html" style="color:var(--gold-2);">Design Studio <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2"/></svg></a>
+      <div class="ez-dd-menu"><a href="Easy Jackets Design.dc.html">Design Your Own Jacket</a><a href="Easy Jackets How To Design.dc.html">How To Design</a></div></div>
+    <a href="Easy Jackets Bulk.dc.html">Bulk Orders</a>
+    <a href="Easy Jackets Blog.dc.html">Journal</a>
+    <div class="ez-dd"><a href="Easy Jackets FAQ.dc.html">Support <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2"/></svg></a>
+      <div class="ez-dd-menu"><a href="Easy Jackets Size Chart.dc.html">Size Chart</a><a href="Easy Jackets Material Colors.dc.html">Material Colors</a><a href="Easy Jackets Fabrics.dc.html">Fabrics</a><a href="Easy Jackets FAQ.dc.html">FAQs</a><a href="Easy Jackets Gallery.dc.html">Photo Gallery</a><a href="Easy Jackets About.dc.html">About</a><a href="Easy Jackets Contact.dc.html">Contact</a></div></div>
+    <a href="Easy Jackets Listing.dc.html" class="ez-btn ez-btn-ink" style="min-height:44px;padding:0 20px;font-size:17px;display:inline-flex;">Shop jackets</a>
+  </div>
+</nav>
+
+<section data-screen-label="Select a style" style="max-width:1280px;margin:0 auto;padding:clamp(48px,6vw,88px) clamp(16px,4vw,48px) clamp(56px,7vw,96px);text-align:center;">
+  <div style="font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-2);">Choose your style</div>
+  <h1 style="font-family:var(--display);font-weight:900;font-size:clamp(48px,7vw,96px);line-height:0.9;text-transform:uppercase;margin:12px 0 0;">Select a <span style="color:var(--gold-2);">jacket style</span></h1>
+  <p style="margin:18px auto 0;max-width:48ch;color:var(--ink-2);line-height:1.6;font-size:16px;">Pick a style below and launch the design lab to fully customize it.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-top:clamp(36px,5vw,56px);text-align:left;">
+    <sc-for list="{{ types }}" as="t" hint-placeholder-count="5">
+      <a href="{{ t.href }}" class="ez-type">
+        <div class="ez-type-img" style="aspect-ratio:1;overflow:hidden;border-radius:2px;"><image-slot id="{{ t.slot }}" shape="rect" src="{{ t.src }}" fit="contain" placeholder="{{ t.name }}"></image-slot></div>
+        <h2 style="font-family:var(--display);font-weight:900;font-size:26px;line-height:0.95;text-transform:uppercase;margin:0;text-align:center;">{{ t.name }}</h2>
+        <span class="ez-type-cta ez-btn ez-btn-ink" style="min-height:46px;font-size:18px;margin-top:auto;">Design now →</span>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<!-- send us your idea -->
+<section data-screen-label="Free proof" style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,48px);">
+  <div style="background:var(--ink);color:var(--cream);border-radius:4px;padding:clamp(28px,4vw,48px);display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px clamp(24px,4vw,64px);align-items:center;">
+    <div>
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);">Not sure where to start?</div>
+      <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(36px,4.5vw,64px);line-height:0.9;text-transform:uppercase;margin:8px 0 0;">Send us your idea, we'll draw it</h2>
+    </div>
+    <div>
+      <p style="margin:0;color:rgba(244,239,230,0.8);line-height:1.6;font-size:15px;">Email a sketch, a photo of an old jacket, or your school colors and logo. Our artists send back a free digital proof within two business days — no commitment until you love it.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:20px;">
+        <a href="Easy Jackets Contact.dc.html" class="ez-btn" style="background:var(--gold);border-color:var(--gold);color:var(--ink);">Get a free proof</a>
+        <a href="Easy Jackets Bulk.dc.html" class="ez-btn" style="color:var(--cream);border-color:var(--cream);">Team order? →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- how it works -->
+<section id="how" data-screen-label="Steps" style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0;">
+  <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(40px,5vw,72px);line-height:0.9;text-transform:uppercase;margin:0 0 32px;">What happens next</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px 24px;">
+    <div style="border-top:3px solid var(--ink);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">01</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">Pick a jacket type</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">Choose the silhouette above. You can change materials later.</p></div>
+    <div style="border-top:3px solid var(--ink);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">02</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">Customize live</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">Colors, sleeves, trim, lining, letters, names, numbers and logos. Price updates as you go.</p></div>
+    <div style="border-top:3px solid var(--ink);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">03</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">Approve the proof</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">We send a digital illustration of your exact jacket. Nothing is cut until you sign off.</p></div>
+    <div style="border-top:3px solid var(--gold);padding-top:16px;"><div style="font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--gold-2);">04</div><div style="font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;margin-top:10px;">Made &amp; shipped</div><p style="margin:8px 0 0;color:var(--muted);line-height:1.55;font-size:14px;">2–3 weeks in production, then tracked delivery. Rush available.</p></div>
+  </div>
+</section>
+
+<!-- faq -->
+<section id="faq" data-screen-label="FAQ" style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px clamp(24px,4vw,72px);">
+  <div>
+    <div style="font-size:13px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-2);">FAQ</div>
+    <h2 style="font-family:var(--display);font-weight:900;font-size:clamp(44px,6vw,80px);line-height:0.9;text-transform:uppercase;margin:10px 0 0;">Before you design</h2>
+    <p style="color:var(--muted);line-height:1.6;margin:20px 0 0;max-width:36ch;">Still stuck? Chat with us any time — we answer within the hour during business days.</p>
+  </div>
+  <div>
+    <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="6">
+      <details style="border-top:1px solid var(--ink);padding:16px 0;">
+        <summary style="display:flex;justify-content:space-between;align-items:baseline;gap:24px;cursor:pointer;list-style:none;font-weight:600;font-size:17px;"><span>{{ f.q }}</span><span class="faq-plus" style="font-family:var(--display);font-weight:900;font-size:26px;line-height:1;color:var(--gold-2);transition:transform .2s;">+</span></summary>
+        <p style="margin:10px 0 0;color:var(--muted);line-height:1.6;max-width:60ch;">{{ f.a }}</p>
+      </details>
+    </sc-for>
+    <div style="border-top:1px solid var(--ink);"></div>
+  </div>
+</section>
+
+<footer style="background:var(--ink);color:var(--cream);">
+  <div style="max-width:1280px;margin:0 auto;padding:56px clamp(16px,4vw,48px) 28px;display:grid;grid-template-columns:minmax(260px,1.4fr) repeat(3,minmax(150px,1fr));gap:40px clamp(24px,3vw,48px);font-size:14px;">
+    <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px 48px;align-items:center;padding-bottom:40px;border-bottom:1px solid rgba(244,239,230,0.15);">
+      <div>
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);">Newsletter</div>
+        <div style="font-family:var(--display);font-weight:900;font-size:clamp(32px,3.5vw,48px);line-height:0.9;text-transform:uppercase;margin-top:8px;">Get 10% off your first jacket</div>
+      </div>
+      <form onSubmit="{{ footerNoop }}" style="display:flex;gap:0;max-width:520px;width:100%;">
+        <input type="email" placeholder="you@school.edu" aria-label="Email" style="flex:1;min-width:0;font:inherit;font-size:15px;padding:0 16px;height:52px;border:2px solid var(--cream);border-right:0;border-radius:2px 0 0 2px;background:transparent;color:var(--cream);">
+        <button type="submit" class="ez-btn ez-btn-gold" style="border-radius:0 2px 2px 0;">Join</button>
+      </form>
+    </div>
+    <div>
+      <img src="assets/easy-jacket-logo.png" alt="Easy Jacket" style="height:64px;filter:invert(1) brightness(1.1);">
+      <p style="margin:16px 0 0;color:rgba(244,239,230,0.7);line-height:1.6;max-width:34ch;">Custom varsity and letterman jackets in melton wool and genuine leather. Made to order, no minimums, shipped worldwide.</p>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <a href="#" aria-label="Instagram" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">IG</a>
+        <a href="#" aria-label="Facebook" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">FB</a>
+        <a href="#" aria-label="TikTok" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">TT</a>
+        <a href="#" aria-label="Pinterest" style="width:40px;height:40px;display:grid;place-items:center;border:1.5px solid rgba(244,239,230,0.3);border-radius:2px;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:900;font-size:16px;">PT</a>
+      </div>
+    </div>
+    <div><div style="font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;color:var(--gold);">Shop</div><div style="display:grid;gap:10px;"><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Varsity Jackets</a><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Bomber Jackets</a><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Fleece Hoodies</a><a href="Easy Jackets Listing.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Coach Jackets</a><a href="Easy Jackets Landing v2.dc.html#bestsellers" style="text-decoration:none;color:rgba(244,239,230,0.8);">Bestsellers</a></div></div>
+    <div><div style="font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;color:var(--gold);">Custom</div><div style="display:grid;gap:10px;"><a href="Easy Jackets Design.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Design Your Own</a><a href="Easy Jackets Landing v2.dc.html#materials" style="text-decoration:none;color:rgba(244,239,230,0.8);">Materials &amp; Colors</a><a href="Easy Jackets Landing v2.dc.html#materials" style="text-decoration:none;color:rgba(244,239,230,0.8);">Patches &amp; Embroidery</a><a href="#bulk" style="text-decoration:none;color:rgba(244,239,230,0.8);">Bulk &amp; Team Orders</a><a href="Easy Jackets Product.dc.html#size" style="text-decoration:none;color:rgba(244,239,230,0.8);">Size Guide</a></div></div>
+    <div><div style="font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;color:var(--gold);">Help</div><div style="display:grid;gap:10px;"><a href="Easy Jackets FAQ.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">FAQ</a><a href="Easy Jackets Landing v2.dc.html#faq" style="text-decoration:none;color:rgba(244,239,230,0.8);">Shipping &amp; Delivery</a><a href="Easy Jackets Landing v2.dc.html#faq" style="text-decoration:none;color:rgba(244,239,230,0.8);">Returns &amp; Exchanges</a><a href="Easy Jackets Contact.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Contact Us</a><a href="Easy Jackets Blog.dc.html" style="text-decoration:none;color:rgba(244,239,230,0.8);">Blog</a></div><div style="margin-top:20px;font-size:13px;color:rgba(244,239,230,0.6);line-height:1.6;">Mon–Fri, 9am–6pm ET<br><a href="mailto:hello@easyjackets.com" style="color:var(--cream);text-decoration:none;">hello@easyjackets.com</a></div></div>
+    <div style="grid-column:1/-1;border-top:1px solid rgba(244,239,230,0.15);padding-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;color:rgba(244,239,230,0.55);font-size:13px;">
+      <span>© 2020–2026 Easy Jackets. All rights reserved.</span>
+      <span style="display:flex;gap:20px;"><a href="Easy Jackets Privacy Policy.dc.html" style="color:inherit;text-decoration:none;">Privacy</a><a href="Easy Jackets Terms.dc.html" style="color:inherit;text-decoration:none;">Terms</a><span>Visa · Mastercard · Amex · PayPal</span></span>
+    </div>
+  </div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const footerNoop = e => e.preventDefault();
+    const CU = 'https://custom.easyjackets.com/?id=', TJM = 'https://www.thejacketmaker.pk/cdn/shop/files/', CL = 'https://clothoo.com/frontend/images/home/';
+    const types = [
+      { id: 5893, name: 'Varsity Jackets', src: TJM + 'Premium_leather_material_used_in_custom_letterman_jackets_1024x1024.webp?v=1775237981' },
+      { id: 5894, name: 'Cropped Varsity Jackets', src: TJM + 'V-Printed_1024x1024.webp?v=1775219901' },
+      { id: 5895, name: 'Coach Jackets', src: CL + 'design-your-own-varsity-jacket-builder-online-clothoo-800.jpg' },
+      { id: 5896, name: 'Bomber Jackets', src: TJM + 'Nylon_fabric_used_in_lightweight_custom_varsity_jackets_1024x1024.webp?v=1775238145' },
+      { id: 5897, name: 'Hoodies', src: TJM + 'Technical_fabric_materials_used_for_modern_custom_varsity_jackets_1024x1024.webp?v=1775238114' },
+    ];
+    return {
+      footerNoop,
+      types: types.map(t => ({ ...t, slot: 'dz-' + t.id, href: CU + t.id })),
+      faqs: [
+        { q: 'Can I order just one jacket for myself?', a: 'Yes. There is no minimum order. Design a single jacket in the design lab or pick a ready style and add your letter and name.' },
+        { q: 'How do I design a letterman jacket online?', a: 'Pick a style above, choose materials and colors for body, sleeves and trim, upload your logo, and watch the live preview update. Add to cart when you are happy.' },
+        { q: 'How do I add my school logo or team patch?', a: 'Upload artwork in the design lab. Our artists redraw it for chenille or embroidery and send a digital proof for approval before production.' },
+        { q: 'How much does a custom jacket cost?', a: 'Fleece and satin start around $100; wool and leather builds from $150. Patches, names and numbers add to the total, shown live in the design lab.' },
+        { q: 'How long does it take?', a: 'Blank jackets 10–12 days; with embroidery or patches 2–3 weeks. Shipping adds 4–5 business days. Rush production is available at checkout.' },
+        { q: 'How can I order for my school or team?', a: 'Request a bulk quote and we will confirm pricing, a sizing run and a production timeline for your date.' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
