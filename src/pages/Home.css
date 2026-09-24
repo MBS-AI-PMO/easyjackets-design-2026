@@ -1,0 +1,5 @@
+/* Home: rules that only this page carries in the design export. */
+
+.pg-home .ez-btn-gold:hover { background:var(--cream); border-color:var(--cream); color:var(--ink); }
+.pg-home .ez-card:hover .ez-card-img { filter:contrast(1.05) saturate(1.05); }
+.pg-home .ez-card-img { transition:filter .25s; }

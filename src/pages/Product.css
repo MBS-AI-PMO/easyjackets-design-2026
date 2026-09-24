@@ -1,0 +1,19 @@
+/* Product: rules that only this page carries in the design export. */
+
+.pg-product .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; justify-content:center; gap:8px; min-width:44px; padding:10px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; font:inherit; font-size:14px; font-weight:600; cursor:pointer; color:var(--ink); transition:all .15s; }
+.pg-product .ez-swatch { display: revert; gap: revert; width:34px; height:34px; border-radius:50%; border:3px solid var(--cream); box-shadow:0 0 0 1.5px var(--cream-2); cursor:pointer; padding:0; transition:transform .15s; }
+.pg-product .ez-swatch:hover { transform:scale(1.1); }
+.pg-product .ez-swatch[aria-pressed="true"] { box-shadow:0 0 0 2.5px var(--ink); }
+.pg-product .ez-thumb { width:72px; height:90px; border-radius:2px; overflow:hidden; border:2px solid transparent; cursor:pointer; padding:0; background:var(--cream-2); }
+.pg-product .ez-thumb[aria-pressed="true"] { border-color:var(--ink); }
+.pg-product .ez-tab { background:none; border:0; border-bottom:3px solid transparent; font-family:var(--display); font-weight:900; font-size:22px; letter-spacing:0.08em; text-transform:uppercase; padding:10px 0; color:var(--muted); cursor:pointer; }
+.pg-product .ez-tab[aria-selected="true"] { color:var(--ink); border-color:var(--gold); }
+.pg-product .ez-input { height: revert; letter-spacing: revert; text-transform: revert; font-weight: revert; font:inherit; font-size:15px; padding:12px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; color:var(--ink); width:100%; box-sizing:border-box; }
+.pg-product .ez-table { width:100%; border-collapse:collapse; font-size:14px; }
+.pg-product .ez-table th, .pg-product .ez-table td { padding:10px 12px; text-align:center; border-bottom:1px solid var(--cream-2); }
+.pg-product .ez-table th { text-align: revert; padding: revert; border-bottom: revert; white-space: revert; font-family:var(--display); font-weight:800; font-size:17px; letter-spacing:0.06em; text-transform:uppercase; }
+.pg-product .ez-table td:first-child, .pg-product .ez-table th:first-child { text-align:left; font-weight:600; }
+@media (max-width:900px) {
+  .pg-product .ez-pdp { grid-template-columns:1fr !important; }
+  .pg-product .ez-buy { position:static !important; }
+}

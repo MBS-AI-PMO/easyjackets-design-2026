@@ -1,0 +1,72 @@
+/* Header — the design's nav rules, plus a real mobile menu. */
+.ez-nav {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--cream);
+  border-bottom: 1px solid var(--cream-2);
+}
+/* Solid bar: the design used a translucent blurred bar, which ghosts page content through it
+   when scrolled, breaks without backdrop-filter support, and was the main cause of the
+   scroll lag on phones. */
+.ez-nav-bar { max-width: 1280px; margin: 0 auto; padding: 10px clamp(16px, 4vw, 48px); display: flex; align-items: center; gap: 36px; }
+.ez-nav-logo { display: flex; align-items: center; margin-right: auto; padding: 0; }
+.ez-nav-logo img { height: 72px; width: auto; display: block; }
+
+.ez-nav a { text-decoration: none; font-family: var(--display); font-weight: 800; font-size: 19px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); position: relative; padding: 6px 0; }
+.ez-nav a.is-active { color: var(--gold-2); }
+.ez-nav a:not(.ez-btn)::after { content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 3px; background: var(--gold); transition: right .25s ease; }
+.ez-nav a:not(.ez-btn):hover::after { right: 0; }
+.ez-nav a.ez-btn-ink { color: var(--cream); }
+.ez-nav a.ez-btn-ink:hover { color: var(--ink); }
+/* `.ez-nav a` outranks a bare class, so the button rule carries the anchor selector too */
+.ez-nav a.ez-nav-cta { min-height: 44px; padding: 0 20px; font-size: 17px; letter-spacing: 0.06em; display: inline-flex; white-space: nowrap; }
+
+.ez-dd { position: relative; display: flex; align-items: center; }
+.ez-dd > a { display: inline-flex; align-items: center; gap: 6px; }
+.ez-dd > a svg { transition: transform .2s; }
+.ez-dd:hover > a svg, .ez-dd:focus-within > a svg { transform: rotate(180deg); }
+.ez-dd-menu { position: absolute; top: 100%; left: -16px; min-width: 240px; padding: 10px 0; background: #fbf8f2; border: 1px solid var(--cream-2); border-radius: 4px; box-shadow: 0 24px 48px -20px rgba(20,17,15,0.4); opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .18s ease, transform .18s ease, visibility .18s; display: grid; z-index: 30; }
+.ez-dd:hover .ez-dd-menu, .ez-dd:focus-within .ez-dd-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+.ez-nav .ez-dd-menu a { display: block; padding: 10px 20px; font-family: var(--body); font-weight: 600; font-size: 15px; letter-spacing: 0; text-transform: none; color: var(--ink); }
+.ez-nav .ez-dd-menu a::after { display: none; }
+.ez-nav .ez-dd-menu a:hover { background: var(--cream); color: var(--gold-2); }
+.ez-sub { position: relative; }
+.ez-nav .ez-sub-trigger { display: flex !important; justify-content: space-between; align-items: center; gap: 16px; }
+.ez-sub-menu { position: absolute; top: -10px; left: 100%; min-width: 250px; padding: 10px 0; background: #fbf8f2; border: 1px solid var(--cream-2); border-radius: 4px; box-shadow: 0 24px 48px -20px rgba(20,17,15,0.4); opacity: 0; visibility: hidden; transform: translateX(6px); transition: opacity .18s ease, transform .18s ease, visibility .18s; display: grid; }
+.ez-sub:hover .ez-sub-menu, .ez-sub:focus-within .ez-sub-menu { opacity: 1; visibility: visible; transform: translateX(0); }
+.ez-sub:hover > .ez-sub-trigger { background: var(--cream); color: var(--gold-2); }
+
+/* hamburger */
+.ez-burger { display: none; width: 44px; height: 44px; padding: 10px; border: 0; background: transparent; cursor: pointer; flex-direction: column; justify-content: center; gap: 5px; margin-left: -6px; }
+.ez-burger span { display: block; height: 3px; background: var(--ink); border-radius: 2px; }
+
+/* drawer */
+.ez-drawer-backdrop { position: fixed; inset: 0; background: rgba(20,17,15,0.55); z-index: 50; opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility .2s; }
+.ez-drawer-backdrop.is-open { opacity: 1; visibility: visible; }
+.ez-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(360px, 88vw); background: var(--cream); z-index: 60; box-shadow: -24px 0 48px -24px rgba(20,17,15,0.5); transform: translateX(100%); visibility: hidden; transition: transform .25s ease, visibility .25s; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+.ez-drawer.is-open { transform: translateX(0); visibility: visible; }
+.ez-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 12px 20px; border-bottom: 1px solid var(--cream-2); }
+.ez-drawer-head img { height: 48px; width: auto; display: block; }
+.ez-drawer-close { width: 44px; height: 44px; border: 0; background: transparent; font-size: 34px; line-height: 1; cursor: pointer; color: var(--ink); }
+.ez-drawer-links { display: grid; padding: 8px 0 24px; }
+.ez-drawer-links a { text-decoration: none; color: var(--ink); padding: 11px 24px; font-size: 16px; font-weight: 600; }
+.ez-drawer-links a:hover { background: #fbf8f2; color: var(--gold-2); }
+.ez-drawer-top { font-family: var(--display); font-weight: 800 !important; font-size: 22px !important; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 6px; border-top: 1px solid var(--cream-2); padding-top: 16px !important; }
+.ez-drawer-top:first-child { border-top: 0; margin-top: 0; }
+.ez-drawer-group { display: grid; padding-bottom: 6px; }
+.ez-drawer-group a { padding-left: 36px; font-weight: 500; }
+.ez-drawer-label { padding: 8px 24px 2px 36px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+/* narrow screens: links go into the drawer */
+@media (max-width: 1080px) {
+  .ez-nav-bar { gap: 14px; padding-top: 8px; padding-bottom: 8px; }
+  .ez-nav-logo img { height: 56px; }
+  .ez-nav-bar > .ez-dd, .ez-nav-bar > a:not(.ez-nav-logo) { display: none; }
+  .ez-burger { display: flex; }
+  .ez-nav-cta { display: none !important; } /* the call-to-action lives in the drawer whenever the menu button is shown */
+}
+/* phones: a shorter bar, logo and menu button the same height */
+@media (max-width: 720px) {
+  .ez-nav-bar { padding-top: 6px; padding-bottom: 6px; }
+  .ez-nav-logo img { height: 40px; }
+  .ez-burger { width: 40px; height: 40px; padding: 8px; margin-left: 0; }
+}

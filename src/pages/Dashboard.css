@@ -1,0 +1,18 @@
+/* Dashboard: rules that only this page carries in the design export. */
+
+.pg-dashboard .ez-side a, .pg-dashboard .ez-side button { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; box-sizing:border-box; text-align:left; font:inherit; font-family:var(--display); font-weight:800; font-size:20px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink); background:transparent; border:0; border-left:3px solid transparent; padding:10px 14px; cursor:pointer; text-decoration:none; transition:all .15s; }
+.pg-dashboard .ez-side button:hover, .pg-dashboard .ez-side a:hover { background:#fbf8f2; color:var(--gold-2); }
+.pg-dashboard .ez-side button[aria-current="true"] { background:var(--ink); color:var(--cream); border-left-color:var(--gold); }
+.pg-dashboard .ez-side button[aria-current="true"] .ez-side-n { color:var(--gold); }
+.pg-dashboard .ez-side-n { font-family:var(--body); font-weight:600; font-size:13px; letter-spacing:0; color:var(--muted); }
+.pg-dashboard .ez-stat { border-top:3px solid var(--ink); padding-top:14px; }
+.pg-dashboard .ez-stat b { display:block; font-family:var(--display); font-weight:900; font-size:clamp(38px,4vw,54px); line-height:1; }
+.pg-dashboard .ez-stat span { font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+.pg-dashboard .ez-pill { display:inline-flex; align-items:center; gap:7px; padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; }
+.pg-dashboard .ez-pill i { width:7px; height:7px; border-radius:50%; background:currentColor; font-style:normal; }
+.pg-dashboard .ez-panel { background:#fbf8f2; border:1px solid var(--cream-2); border-radius:4px; padding:clamp(20px,3vw,30px); }
+@media (max-width:900px) {
+  .pg-dashboard .ez-dash { grid-template-columns:1fr !important; }
+  .pg-dashboard .ez-side { display:flex !important; flex-wrap:wrap; position:static !important; }
+  .pg-dashboard .ez-side button { width:auto; border-left:0; border-bottom:3px solid transparent; }
+}

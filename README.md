@@ -1,16 +1,47 @@
-# React + Vite
+# Easy Jackets — storefront frontend (Vite + React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The 2026 redesign of easyjackets.com, converted from the Claude Design export
+into a real single-page app.
 
-Currently, two official plugins are available:
+```
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # production bundle in dist/
+npm run preview    # serve dist/ locally
+npm run lint
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Layout
 
-## React Compiler
+| Path | What it is |
+|---|---|
+| `src/pages/` | One component per page (29). Each keeps the design's data and handlers in a `renderVals()` function and its markup as JSX; a page-specific `.css` sits next to it when the design had page-only rules. |
+| `src/components/` | `Nav` (desktop dropdowns + mobile drawer), `Footer`, `ImageSlot` (lazy image with caption fallback), `A` (one link component for routes, hashes and external URLs), `ScrollManager`. |
+| `src/styles/tokens.css` | Design tokens, page-wide rules, motion/perf rules. |
+| `src/styles/ui.css` | The shared `.ez-*` classes from the design. |
+| `src/lib/` | `useDcState` (merging state setter the page logic was written against), `usePageProps` (design "props" as query params, e.g. `/cart?scenario=team`), `scroll`. |
+| `design/` | The original export, kept as the source of truth for re-conversion. |
+| `tools/convert-design.mjs` | Regenerates `src/pages/*` and `src/styles/ui.css` from `design/` (`npm run convert:design`). Four pages have small hand-conversions on top (see git history). |
+| `tools/verify-against-export.mjs` | Renders the export and the app in headless Chrome and diffs text, checks console errors and phone-width overflow (`node tools/verify-against-export.mjs <exportDir> <appUrl> <outDir>`). |
+| `tools/verify-app.mjs` | Behavioural checks against a running app: every internal link and hash target, overflow at 390/820/1366 px, and the interactive flows (drawer, shop filters, cart, checkout…). |
+| `tools/check-image-urls.mjs` | Fetches every image URL the pages reference. |
+| `tools/fetch-live-images.mjs` | Optional: downloads the client's own product photos and storefront shots into `public/images/`; then `EJ_LOCAL_IMAGES=1 npm run convert:design` swaps the design's third-party stock photos for them. Off by default. |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Routes
 
-## Expanding the Oxlint configuration
+`/` `/shop` `/product` `/design` `/how-to-design` `/bulk-orders` `/blog`
+`/blog/:slug` `/faq` `/size-chart` `/material-colors` `/fabrics` `/gallery`
+`/about` `/contact` `/reviews` `/shipping-returns` `/privacy-policy` `/terms`
+`/track-order` `/cart` `/checkout` `/order-confirmation` `/account`
+`/dashboard` `/united-states` `/united-states/:state` `/style-guide` and a 404.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Known design-content notes
+
+- Six links between Fabrics and Material Colors point at anchors the other page does not define (`#rib-knit`, `#lining`, `#sheep-leather`, `#cotton-twill`, `#nylon`, `#soft-shell`); they open the page at the top. Present in the export.
+- The About team portraits and the Size Chart measurement diagram have no image in the design; the caption shows.
+- Product and lifestyle photos are the design's own stock URLs (thejacketmaker.pk, clothoo.com), as are the "trusted by" marquee logos.
+
+## Deploy
+
+`Dockerfile` builds the app and serves `dist/` with nginx (`nginx.conf`, SPA
+fallback to `index.html`). Coolify: Dockerfile build pack, port 80.

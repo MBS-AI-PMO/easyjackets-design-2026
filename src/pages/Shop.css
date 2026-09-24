@@ -1,0 +1,12 @@
+/* Shop: rules that only this page carries in the design export. */
+
+.pg-shop .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; gap:8px; padding:8px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; font:inherit; font-size:14px; font-weight:500; cursor:pointer; color:var(--ink); transition:all .15s; }
+.pg-shop .ez-swatch { display: revert; gap: revert; width:28px; height:28px; border-radius:50%; border:2px solid var(--cream); box-shadow:0 0 0 1.5px var(--cream-2); cursor:pointer; padding:0; transition:transform .15s; }
+.pg-shop .ez-swatch:hover { transform:scale(1.12); }
+.pg-shop .ez-swatch[aria-pressed="true"] { box-shadow:0 0 0 2px var(--ink); }
+.pg-shop select.ez-select { font:inherit; font-weight:600; font-size:14px; padding:10px 36px 10px 14px; border:1.5px solid var(--ink); border-radius:2px; background:transparent; color:var(--ink); appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2314110f' stroke-width='2' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+@media (max-width:900px) {
+  .pg-shop .ez-side { position:static !important; }
+  .pg-shop .ez-layout { grid-template-columns:1fr !important; }
+  .pg-shop .ez-head { grid-template-columns:1fr !important; }
+}

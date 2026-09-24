@@ -1,0 +1,18 @@
+/* BlogPost: rules that only this page carries in the design export. */
+
+.pg-blog-post .ez-prose { max-width: revert; font-size:18px; line-height:1.7; color:var(--ink-2); }
+.pg-blog-post .ez-prose p { margin:0 0 1.4em; }
+.pg-blog-post .ez-prose h2 { font-family:var(--display); font-weight:900; font-size:clamp(32px,3.4vw,44px); line-height:0.95; text-transform:uppercase; color:var(--ink); margin:2.2em 0 0.6em; }
+.pg-blog-post .ez-prose h3 { font-family:var(--display); font-weight:800; font-size:26px; line-height:1; text-transform:uppercase; color:var(--ink); margin:1.8em 0 0.5em; }
+.pg-blog-post .ez-prose ul, .pg-blog-post .ez-prose ol { padding-left:1.2em; margin:0 0 1.4em; }
+.pg-blog-post .ez-prose li { margin-bottom:0.5em; }
+.pg-blog-post .ez-prose li::marker { color:var(--gold-2); font-weight:700; }
+.pg-blog-post .ez-prose a { color:var(--ink); text-decoration-color:var(--gold); text-decoration-thickness:2px; text-underline-offset:3px; }
+.pg-blog-post .ez-prose blockquote { margin:2em 0; padding:0 0 0 24px; border-left:4px solid var(--gold); font-family:var(--display); font-weight:800; font-size:clamp(26px,2.6vw,34px); line-height:1.05; text-transform:uppercase; color:var(--ink); }
+.pg-blog-post .ez-prose figure { margin:2.2em 0; }
+.pg-blog-post .ez-prose figcaption { font-size:13px; color:var(--muted); margin-top:10px; }
+@media (max-width:1200px) {
+  .pg-blog-post .ez-article { grid-template-columns:minmax(0,1fr) !important; justify-items:center; }
+  .pg-blog-post .ez-article > article { width:100%; max-width:720px; }
+  .pg-blog-post .ez-aside { display:none !important; }
+}

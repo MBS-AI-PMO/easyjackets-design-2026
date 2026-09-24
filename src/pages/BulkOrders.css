@@ -1,0 +1,8 @@
+/* BulkOrders: rules that only this page carries in the design export. */
+
+.pg-bulk-orders textarea.ez-input { height:auto; padding:14px; min-height:120px; resize:vertical; }
+.pg-bulk-orders .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; gap:8px; padding:10px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:#fbf8f2; font:inherit; font-size:14px; font-weight:600; cursor:pointer; color:var(--ink); transition:all .15s; letter-spacing:0; text-transform:none; }
+@media (max-width:960px) {
+  .pg-bulk-orders .ez-bulk { grid-template-columns:1fr !important; }
+  .pg-bulk-orders .ez-form-side { position:static !important; }
+}

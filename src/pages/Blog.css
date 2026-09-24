@@ -1,0 +1,6 @@
+/* Blog: rules that only this page carries in the design export. */
+
+.pg-blog .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; gap:8px; padding:8px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; font:inherit; font-size:14px; font-weight:600; cursor:pointer; color:var(--ink); transition:all .15s; }
+@media (max-width:900px) {
+  .pg-blog .ez-feat { grid-template-columns:1fr !important; }
+}

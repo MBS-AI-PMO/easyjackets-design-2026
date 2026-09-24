@@ -8,17 +8,22 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "design": "npx --yes http-server design -p 8099 -c-1 -o"
+    "convert:design": "node tools/convert-design.mjs design src --css && node tools/post-convert.mjs",
+    "verify:design": "node tools/verify-against-export.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "htmlparser2": "^12.0.0",
     "oxlint": "^1.81.0",
+    "playwright-core": "^1.63.0",
+    "sharp": "^0.35.4",
     "vite": "^8.3.0"
   }
 }
