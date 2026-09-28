@@ -22,7 +22,7 @@ import {
     deleteCommentController,
     SubmitContact,
     subscribeNewsletter
-} from '../controllers/FeatureController.js';
+} from '../controllers/featureController.js';
 import {
     createPageFaqController,
     deletePageFaqController,
