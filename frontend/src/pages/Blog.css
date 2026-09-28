@@ -1,0 +1,18 @@
+/* Blog: rules that only this page carries in the design export. */
+
+.pg-blog .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; gap:8px; padding:8px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; font:inherit; font-size:14px; font-weight:600; cursor:pointer; color:var(--ink); transition:all .15s; }
+@media (max-width:900px) {
+  .pg-blog .ez-feat { grid-template-columns:1fr !important; }
+}
+
+/* category chips: hover and the chosen one in ink (as on the shop) */
+.pg-blog .ez-chip:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:translateY(-2px); }
+.pg-blog .ez-chip[aria-pressed="true"], .pg-blog .ez-chip[aria-pressed="true"]:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:none; }
+.pg-blog .ez-chip:hover span, .pg-blog .ez-chip[aria-pressed="true"] span { color:var(--gold); opacity:1 !important; }
+
+/* categories: chips on desktop, a full-width native dropdown on phones */
+.pg-blog .bl-cats-select { display:none; }
+@media (max-width:640px) {
+  .pg-blog .bl-cats > button { display:none; }
+  .pg-blog .bl-cats-select { display:block; width:100%; }
+}

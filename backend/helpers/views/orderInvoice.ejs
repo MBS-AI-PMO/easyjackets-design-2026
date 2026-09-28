@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - <%= data.orderId %></title>
+    <style>
+        body { margin: 0; padding: 0; background: #ffffff; color: #211d18; font-family: Arial, Helvetica, sans-serif; }
+        table { border-collapse: collapse; }
+        .wrapper { width: 100%; background: #ffffff; padding: 28px 12px; }
+        .card { width: 100%; max-width: 760px; margin: 0 auto; background: #fffaf2; border: 1px solid #e4d6c3; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 50px rgba(33,29,24,.10); }
+        .hero { background: #11100e; padding: 34px; color: #f5eee3; }
+        .eyebrow { margin: 0 0 12px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+        h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 38px; line-height: 1.02; font-weight: 400; letter-spacing: -.03em; }
+        .hero-copy { margin: 14px 0 0; color: rgba(245,238,227,.68); font-size: 14px; line-height: 1.7; }
+        .content { padding: 32px; }
+        .section { margin-bottom: 22px; }
+        .panel { background: #ffffff; border: 1px solid #eadfce; border-radius: 14px; padding: 20px; }
+        .panel.alt { background: #f1e6d7; border-color: #e2d2bd; }
+        .title { margin: 0 0 14px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .row { border-top: 1px solid rgba(33,29,24,.09); }
+        .row:first-of-type { border-top: 0; }
+        .label { padding: 9px 0; color: #8a7c6d; font-size: 13px; width: 42%; vertical-align: top; }
+        .value { padding: 9px 0; color: #211d18; font-size: 13px; font-weight: 700; text-align: right; vertical-align: top; word-break: break-word; }
+        .two-col { width: 50%; vertical-align: top; }
+        .item-table th { color: #8a7c6d; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; text-align: left; padding: 12px; border-bottom: 1px solid #eadfce; }
+        .item-table td { padding: 14px 12px; border-bottom: 1px solid #eadfce; vertical-align: top; color: #433b32; font-size: 13px; line-height: 1.55; }
+        .product-img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid #eadfce; margin-right: 12px; }
+        .status { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .paid { background: #e7f6ea; color: #22723a; }
+        .unpaid { background: #fff2d6; color: #8a5a00; }
+        .pending { background: #e9eef8; color: #35527a; }
+        .total { text-align: right; font-size: 14px; color: #433b32; line-height: 2; }
+        .grand { color: #c4703a; font-family: Georgia, 'Times New Roman', serif; font-size: 30px; font-weight: 400; }
+        .cta { display: inline-block; background: #c4703a; color: #ffffff !important; text-decoration: none; padding: 10px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .footer { background: #11100e; color: rgba(245,238,227,.56); padding: 22px 32px; font-size: 12px; line-height: 1.7; }
+        .footer strong { color: #f5eee3; }
+        @media only screen and (max-width: 640px) { .wrapper { padding: 18px 10px !important; } .hero, .content, .footer { padding-left: 22px !important; padding-right: 22px !important; } h1 { font-size: 31px !important; } .two-col { display: block !important; width: 100% !important; padding: 0 0 12px !important; } .label, .value { display: block !important; width: 100% !important; text-align: left !important; padding-bottom: 2px !important; } .value { padding-top: 0 !important; } .item-table th:nth-child(2), .item-table td:nth-child(2) { display: none !important; } .product-img { width: 58px !important; height: 58px !important; } }
+    </style>
+</head>
+
+<body>
+    <% const cartData = Array.isArray(data.cartData) ? data.cartData : []; %>
+    <% const subtotal = cartData.reduce((sum, p) => sum + ((Number(p.price) || 0) * (Number(p.quantity) || 0)), 0); %>
+    <% const totalAmount = Number(data.totalAmount) || subtotal; %>
+    <% const shippingCost = totalAmount - subtotal; %>
+    <% const customer = data.billing_Details?.[0] || data.shipping_details?.[0] || {}; %>
+    <% const shipping = data.shipping_details?.[0] || {}; %>
+
+    <table class="wrapper" role="presentation" width="100%">
+        <tr>
+            <td>
+                <table class="card" role="presentation" width="100%">
+                    <tr>
+                        <td class="hero">
+                            <p class="eyebrow">Easy Jackets Order</p>
+                            <h1>Order #<%= data.orderId %></h1>
+                            <p class="hero-copy">Your order details, payment status, shipping information, and item summary.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+                            <div class="section">
+                                <div class="panel alt">
+                                    <p class="title">Order Summary</p>
+                                    <table role="presentation" width="100%">
+                                        <tr class="row"><td class="label">Order Date</td><td class="value"><%= data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A' %></td></tr>
+                                        <tr class="row"><td class="label">Order Status</td><td class="value"><span class="status pending"><%= data.status || 'Pending' %></span></td></tr>
+                                        <tr class="row"><td class="label">Payment Status</td><td class="value"><span class="status <%= data.paymentStatus === 'paid' ? 'paid' : 'unpaid' %>"><%= data.paymentStatus || 'Unpaid' %></span></td></tr>
+                                        <% if (data.cardLast4) { %><tr class="row"><td class="label">Payment Method</td><td class="value">Card ending <%= data.cardLast4 %></td></tr><% } %>
+                                        <% if (data.transactionId) { %><tr class="row"><td class="label">Transaction ID</td><td class="value"><%= data.transactionId %></td></tr><% } %>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="section">
+                                <table role="presentation" width="100%">
+                                    <tr>
+                                        <td class="two-col" style="padding-right: 8px;">
+                                            <div class="panel">
+                                                <p class="title">Customer</p>
+                                                <div style="color:#211d18;font-weight:700;margin-bottom:8px;"><%= customer.name || 'N/A' %></div>
+                                                <div style="color:#5f574c;font-size:13px;line-height:1.7;"><%= customer.email || 'N/A' %><br><%= customer.phone || 'N/A' %></div>
+                                            </div>
+                                        </td>
+                                        <td class="two-col" style="padding-left: 8px;">
+                                            <div class="panel">
+                                                <p class="title">Shipping Address</p>
+                                                <div style="color:#211d18;font-weight:700;margin-bottom:8px;"><%= shipping.name || customer.name || 'N/A' %></div>
+                                                <div style="color:#5f574c;font-size:13px;line-height:1.7;">
+                                                    <% if (typeof shipping.address === 'object' && shipping.address) { %>
+                                                        <%= shipping.address.line1 || '' %><br>
+                                                        <% if (shipping.address.line2) { %><%= shipping.address.line2 %><br><% } %>
+                                                        <%= [shipping.address.city, shipping.address.state].filter(Boolean).join(', ') %><br>
+                                                        <%= [shipping.address.country, shipping.address.postal_code].filter(Boolean).join(' - ') %>
+                                                    <% } else { %>
+                                                        <%= shipping.address || 'N/A' %>
+                                                    <% } %>
+                                                    <br>Phone: <%= shipping.phone || 'N/A' %>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div class="section">
+                                <div class="panel">
+                                    <p class="title">Items Summary</p>
+                                    <table class="item-table" role="presentation" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th style="text-align:center;">Qty</th>
+                                                <th style="text-align:right;">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% cartData.forEach(function(product) { %>
+                                                <tr>
+                                                    <td>
+                                                        <table role="presentation">
+                                                            <tr>
+                                                                <% if (product.frontImage) { %>
+                                                                    <td style="vertical-align:top;"><img class="product-img" src="<%= product.frontImage %>" alt=""></td>
+                                                                <% } %>
+                                                                <td style="vertical-align:top;">
+                                                                    <strong style="color:#211d18;"><%= product.name %></strong><br>
+                                                                    Size: <%= product.size || 'N/A' %> | Color: <%= product.color || 'N/A' %>
+                                                                    <%
+                                                                        /* A catalogue jacket carries a designId of its own, so testing
+                                                                           designId first sent shop products to the design studio under a
+                                                                           "View Design" button. `id` is what separates them: the product's
+                                                                           _id off the shelf, absent for a jacket the customer built. */
+                                                                        var isShopLine = Boolean(product.id);
+                                                                        var designRef = product.designId || product.d;
+                                                                        var lineSlug = String(product.slug || '').trim().toLowerCase();
+                                                                    %>
+                                                                    <% if (isShopLine && lineSlug) { %>
+                                                                        <div style="margin-top:10px;"><a class="cta" href="<%= data.clientUrl %>/product/<%= lineSlug %>">View Product</a></div>
+                                                                    <% } else if (!isShopLine && designRef) { %>
+                                                                        <div style="margin-top:10px;"><a class="cta" href="<%= data.clientUrl %>/Design/<%= designRef %>?custom=true">View Design</a></div>
+                                                                    <% } %>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                    <td style="text-align:center;"><%= product.quantity %></td>
+                                                    <td style="text-align:right;font-weight:700;color:#211d18;">$<%= (((Number(product.price) || 0) * (Number(product.quantity) || 0))).toFixed(2) %></td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="total">
+                                Subtotal: <strong>$<%= subtotal.toFixed(2) %></strong><br>
+                                <% if (shippingCost > 0) { %>Shipping: <strong>$<%= shippingCost.toFixed(2) %></strong><br><% } %>
+                                <span class="grand">Grand Total: $<%= totalAmount.toFixed(2) %></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer">
+                            <strong>Easy Jackets</strong><br>
+                            Automated order notification. Thank you for choosing Easy Jackets.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

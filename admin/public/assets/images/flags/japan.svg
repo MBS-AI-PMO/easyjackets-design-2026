@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 46.35 27.04">
+  <defs>
+    <clipPath id="clip-path">
+      <rect width="46.35" height="27.04" style="fill: #fff"/>
+    </clipPath>
+  </defs>
+  <title>japan</title>
+  <g id="Layer_2" data-name="Layer 2">
+    <g id="Layer_1-2" data-name="Layer 1">
+      <g id="japan">
+        <rect width="46.35" height="27.04" style="fill: #fff"/>
+        <g style="clip-path: url(#clip-path)">
+          <path d="M23.18,5.41a8.12,8.12,0,1,1-8.11,8.11,8.11,8.11,0,0,1,8.11-8.11" style="fill: #ad0018"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

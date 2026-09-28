@@ -1,47 +1,30 @@
-# Easy Jackets — storefront frontend (Vite + React)
+# Easy Jackets 2026
 
-The 2026 redesign of easyjackets.com, converted from the Claude Design export
-into a real single-page app.
+The storefront redesign and its API, side by side. The current live site and
+its backend are separate and untouched by this repo.
 
-```
-npm install
-npm run dev        # http://localhost:5173
-npm run build      # production bundle in dist/
-npm run preview    # serve dist/ locally
-npm run lint
-```
+| Folder | What | Local |
+|---|---|---|
+| `frontend/` | Vite + React storefront (converted from the Claude Design export) | `cd frontend && npm install && npm run dev` → http://localhost:5173 |
+| `backend/` | Express + Mongoose API ("Node Backend 2026", a copy of the current backend pointed at its own database) | `cd backend && npm install && npm run dev` → http://localhost:8080 |
 
-## Layout
+Each folder has its own README, Dockerfile and `.env.example`. Coolify deploys
+them as two apps from this repo: Base Directory `/frontend` (port 80) and
+`/backend` (port 8080).
 
-| Path | What it is |
-|---|---|
-| `src/pages/` | One component per page (29). Each keeps the design's data and handlers in a `renderVals()` function and its markup as JSX; a page-specific `.css` sits next to it when the design had page-only rules. |
-| `src/components/` | `Nav` (desktop dropdowns + mobile drawer), `Footer`, `ImageSlot` (lazy image with caption fallback), `A` (one link component for routes, hashes and external URLs), `ScrollManager`. |
-| `src/styles/tokens.css` | Design tokens, page-wide rules, motion/perf rules. |
-| `src/styles/ui.css` | The shared `.ez-*` classes from the design. |
-| `src/lib/` | `useDcState` (merging state setter the page logic was written against), `usePageProps` (design "props" as query params, e.g. `/cart?scenario=team`), `scroll`. |
-| `design/` | The original export, kept as the source of truth for re-conversion. |
-| `tools/convert-design.mjs` | Regenerates `src/pages/*` and `src/styles/ui.css` from `design/` (`npm run convert:design`). Four pages have small hand-conversions on top (see git history). |
-| `tools/verify-against-export.mjs` | Renders the export and the app in headless Chrome and diffs text, checks console errors and phone-width overflow (`node tools/verify-against-export.mjs <exportDir> <appUrl> <outDir>`). |
-| `tools/verify-app.mjs` | Behavioural checks against a running app: every internal link and hash target, overflow at 390/820/1366 px, and the interactive flows (drawer, shop filters, cart, checkout…). |
-| `tools/check-image-urls.mjs` | Fetches every image URL the pages reference. |
-| `tools/fetch-live-images.mjs` | Optional: downloads the client's own product photos and storefront shots into `public/images/`; then `EJ_LOCAL_IMAGES=1 npm run convert:design` swaps the design's third-party stock photos for them. Off by default. |
+## Backend additions in this repo (not in the current live backend)
 
-## Routes
-
-`/` `/shop` `/product` `/design` `/how-to-design` `/bulk-orders` `/blog`
-`/blog/:slug` `/faq` `/size-chart` `/material-colors` `/fabrics` `/gallery`
-`/about` `/contact` `/reviews` `/shipping-returns` `/privacy-policy` `/terms`
-`/track-order` `/cart` `/checkout` `/order-confirmation` `/account`
-`/dashboard` `/united-states` `/united-states/:state` `/style-guide` and a 404.
-
-## Known design-content notes
-
-- Six links between Fabrics and Material Colors point at anchors the other page does not define (`#rib-knit`, `#lining`, `#sheep-leather`, `#cotton-twill`, `#nylon`, `#soft-shell`); they open the page at the top. Present in the export.
-- The About team portraits and the Size Chart measurement diagram have no image in the design; the caption shows.
-- Product and lifestyle photos are the design's own stock URLs (thejacketmaker.pk, clothoo.com), as are the "trusted by" marquee logos.
-
-## Deploy
-
-`Dockerfile` builds the app and serves `dist/` with nginx (`nginx.conf`, SPA
-fallback to `index.html`). Coolify: Dockerfile build pack, port 80.
+- `GET /api/v1/product/product-filters` gained `sort` (new · popular · price-asc · price-desc · rating), `minPrice`/`maxPrice`, `view=card` (no long-text fields) and per-product `rating`/`reviewCount`; the effective price applies `discountPrice` as a percentage, as the storefront does.
+- `GET /api/v1/product/category-counts` — products per category.
+- `GET /api/v1/product/filter-options?category=<slug>` — the materials and colours the products are actually made in (with counts), for the shop’s filters.
+- `GET /api/v1/product/cutouts` — upload keys of product photos whose background has been removed, read from the file store (a cut-out keeps `<name>.original.<ext>` beside it); the storefront drops the white box around those. No database field.
+- `GET /api/v1/product/landing` — the landing page in one query: two random bestsellers per jacket category plus one random jacket per "popular pick" (wool & leather, all-leather, all-wool, satin). Category list cached for a minute.
+- `/uploads/<key>` mirrors the live site: a file missing locally is fetched once from `LEGACY_UPLOADS_URL` (`helpers/uploadMirror.js`) and kept, so the existing resizer serves `?w=320…1280` copies from this host. `node scripts/warmImageCache.mjs` pre-fills the mirror and the resized copies against a running backend.
+- `/api/v1/patches` — Embroidery & Patches photos, a sibling of `/gallery` with a `tags` field (Patches · Chenille · Embroidery · Rhinestone · Printed · Names & numbers); the admin app's new "Embroidery & Patches" screen (`admin/src/Components/patchPhotos.js`, reusing the gallery screen with an endpoint and tag picker) uploads to it. `pageFaq.category` (optional) groups the FAQ page; the admin's Storefront FAQs screen has the field.
+- `GET /api/v1/order/track?orderId=&email=` — guest order tracking for the storefront (customer-safe fields only). `create-checkout-session` / `create-guest-checkout-session` also return the Stripe session `url` (the live copy returns only `id`).
+- Deploy note: the backend's `CLIENT_URL` must be the new storefront's URL — Stripe sends buyers back to `{CLIENT_URL}/success/{CHECKOUT_SESSION_ID}` and `/cancel`, both routes of this frontend.
+- Background removal for product photos: `bg-remover/` is a small Python service (FastAPI + rembg, BiRefNet-general baked into its Docker image; isnet as the fast fallback) — a fourth Coolify app, Base Directory `/bg-remover`, port 7860, env `BG_API_KEY`, no public domain needed. The backend (`helpers/backgroundRemoval.js`, env `BG_REMOVER_URL`, `BG_REMOVER_KEY`, `BG_REMOVER_MODEL`, `AUTO_REMOVE_BG`) queues every new product photo after upload, replaces the stored file in place at the same pixel size (the original stays beside it as `*.original.*`, resized copies are purged) and never blocks the admin. `node scripts/removeProductBackgrounds.mjs [--apply | --out DIR] [--save DIR] [--keys …] [--category slug] [--limit N]` runs it over existing photos (dry run by default; `--save` keeps each original and its transparent PNG under DIR/<category>/<product>/). Masters are stored as **lossless** webp so the only lossy step is the resizer (quality 85, smart chroma subsampling); `node scripts/rebuildCutoutMasters.mjs --from DIR` re-encodes existing masters losslessly from those PNG copies. Tested on 43 photos: edges clean, white snaps on white sleeves kept, pixels inside the garment unchanged (mean difference ≈1/255 from WebP re-encoding); ≈30 s per photo on a laptop CPU with BiRefNet.
+- Admin app: `admin/` is the admin panel (a copy of `admin-easyjacket`, plus the FAQ category field and the Embroidery & Patches screen) — Coolify Base Directory `/admin`, port 80, build args `REACT_APP_API_URL`, `REACT_APP_FRONTEND_URL`, `REACT_APP_CUSTOM_URL` (see `admin/.env.example`). The live admin folder is untouched.
+- Photo tooling: `node scripts/enhancePhotos.mjs <manifest> <dir>` turns phone photos into web-ready WebP (levels, colour, Lanczos upscale to 1600 px, sharpen); `node scripts/uploadToLiveStorage.mjs <manifest> <dir>` stores them on the live site's upload storage through its admin image upload (a file store only — nothing on the live site displays them) and writes the URLs into the manifest, e.g. `frontend/src/data/embroidery-photos.json` for the Embroidery & Patches page.
+- `GET /api/v1/reviews/featured?limit=` — best approved reviews plus overall `total`/`averageRating`.
+- `config/db.js` honours `DNS_SERVERS` for machines whose resolver refuses the Atlas SRV lookup.

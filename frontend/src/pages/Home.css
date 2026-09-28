@@ -1,0 +1,33 @@
+/* Home: rules that only this page carries in the design export. */
+
+.pg-home .ez-btn-gold:hover { background:var(--cream); border-color:var(--cream); color:var(--ink); }
+.pg-home .ez-card:hover .ez-card-img { filter:contrast(1.05) saturate(1.05); }
+.pg-home .ez-card-img { transition:filter .25s; }
+/* Materials, patches and mosaic tiles use the Photo Gallery hover (.ez-gal / .ez-gal-cap in ui.css). */
+.pg-home .ez-tile { display:block; text-decoration:none; color:inherit; }
+.pg-home .ez-tile .ez-gal { aspect-ratio:4/3; margin-bottom:0; }
+.pg-home .ez-tile-name { font-family:var(--display); font-weight:800; font-size:22px; text-transform:uppercase; margin-top:10px; }
+.pg-home .ez-photo-grid .ez-gal { display:block; margin-bottom:0; text-decoration:none; color:var(--cream); }
+
+
+/* testimonials: ONE horizontal scrolling row at every width (native scroll, snap points, hidden scrollbar, no controls).
+   Fixed-width cards: about three on a wide screen with the next one peeking in, ~84% of the row on phones.
+   The row bleeds into the section's side padding (the same clamp as `section` in Home.jsx), so cards scroll edge to edge. */
+.pg-home .ez-quote-row { --ez-gutter: clamp(16px, 4vw, 48px); display: flex; gap: 20px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: var(--ez-gutter); margin: 0 calc(-1 * var(--ez-gutter)); padding: 0 var(--ez-gutter) 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.pg-home .ez-quote-row::-webkit-scrollbar { display: none; }
+.pg-home .ez-quote-row > * { flex: 0 0 min(400px, 84%); box-sizing: border-box; scroll-snap-align: start; }
+@media (max-width: 640px) { .pg-home .ez-quote-row { gap: 12px; } }
+
+/* jacket-type tiles: one horizontal scrolling row on phones (native scroll, snap points, no controls) */
+@media (max-width: 640px) {
+  .pg-home .ez-type-row { display: flex !important; overflow-x: auto; scroll-snap-type: x proximity; gap: 12px !important; margin: 0 -16px; padding: 0 16px 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .pg-home .ez-type-row::-webkit-scrollbar { display: none; }
+  .pg-home .ez-type-row > * { flex: 0 0 64%; scroll-snap-align: start; }
+}
+/* jacket-type tiles: the jacket grows a little on hover */
+.pg-home .ez-type-tile { overflow: visible !important; }
+.pg-home .ez-type-tile .ez-slot { transform: scale(1.1); transform-origin: 50% 55%; transition: transform .45s cubic-bezier(.2,.7,.2,1); }
+.pg-home .ez-type-tile:hover .ez-slot { transform: scale(1.16); }
+/* the end jackets grow inward, so the row's edges stay in line with the heading */
+.pg-home .ez-type-tile:first-child .ez-slot { transform-origin: 0 55%; }
+.pg-home .ez-type-tile:last-child .ez-slot { transform-origin: 100% 55%; }

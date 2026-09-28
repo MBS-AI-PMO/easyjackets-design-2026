@@ -1,0 +1,51 @@
+/* Product: rules that only this page carries in the design export. */
+
+.pg-product .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; justify-content:center; gap:8px; min-width:44px; padding:10px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; font:inherit; font-size:14px; font-weight:600; cursor:pointer; color:var(--ink); transition:all .15s; }
+.pg-product .ez-swatch { display: revert; gap: revert; width:34px; height:34px; border-radius:50%; border:3px solid var(--cream); box-shadow:0 0 0 1.5px var(--cream-2); cursor:pointer; padding:0; transition:transform .15s; }
+.pg-product .ez-swatch:hover { transform:scale(1.1); }
+.pg-product .ez-swatch[aria-pressed="true"] { box-shadow:0 0 0 2.5px var(--ink); }
+.pg-product .ez-thumb { width:72px; height:90px; border-radius:2px; overflow:hidden; border:2px solid transparent; cursor:pointer; padding:0; background:var(--cream-2); }
+.pg-product .ez-thumb[aria-pressed="true"] { border-color:var(--ink); }
+.pg-product .ez-thumb { transition:border-color .2s; }
+/* main photo: the product's photos stacked in the frame; the picked one fades in over the last */
+.pg-product .pdp-stage { position:relative; width:100%; height:100%; }
+.pg-product .pdp-layer { position:absolute; inset:0; opacity:0; transform:scale(1.015); transition:opacity .45s ease, transform .6s cubic-bezier(.2,.7,.2,1); pointer-events:none; }
+.pg-product .pdp-layer.is-on { opacity:1; transform:none; pointer-events:auto; }
+@media (prefers-reduced-motion: reduce) { .pg-product .pdp-layer { transition:none; transform:none; } }
+.pg-product .ez-tab { background:none; border:0; border-bottom:3px solid transparent; font-family:var(--display); font-weight:900; font-size:22px; letter-spacing:0.08em; text-transform:uppercase; padding:10px 0; color:var(--muted); cursor:pointer; transition:color .2s; }
+.pg-product .ez-tab:hover { color:var(--ink-2); }
+.pg-product .ez-tab[aria-selected="true"] { color:var(--ink); }
+.pg-product .ez-tab-ink { position:absolute; bottom:-1px; height:3px; background:var(--gold); transition:left .28s cubic-bezier(.4,0,.2,1), width .28s cubic-bezier(.4,0,.2,1); }
+.pg-product .ez-tab-panel { animation:ez-tab-in .24s ease both; }
+@keyframes ez-tab-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce) { .pg-product .ez-tab-ink { transition:none; } .pg-product .ez-tab-panel { animation:none; } }
+.pg-product .ez-input { height: revert; letter-spacing: revert; text-transform: revert; font-weight: revert; font:inherit; font-size:15px; padding:12px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; color:var(--ink); width:100%; box-sizing:border-box; }
+.pg-product .ez-table { width:100%; border-collapse:collapse; font-size:14px; }
+.pg-product .ez-table th, .pg-product .ez-table td { padding:10px 12px; text-align:center; border-bottom:1px solid var(--cream-2); }
+.pg-product .ez-table th { text-align: revert; padding: revert; border-bottom: revert; white-space: revert; font-family:var(--display); font-weight:800; font-size:17px; letter-spacing:0.06em; text-transform:uppercase; }
+.pg-product .ez-table td:first-child, .pg-product .ez-table th:first-child { text-align:left; font-weight:600; }
+/* desktop: photos over details on the left, the buy box beside both; phones: photos, buy box, details */
+.pg-product .ez-pdp { grid-template-areas:"gallery buy" "details buy"; grid-template-rows:auto 1fr; }
+.pg-product .pdp-gallery { grid-area:gallery; min-width:0; }
+.pg-product .pdp-details { grid-area:details; min-width:0; }
+.pg-product .ez-buy { grid-area:buy; }
+@media (max-width:900px) {
+  .pg-product .ez-pdp { grid-template-columns:minmax(0,1fr) !important; grid-template-areas:"gallery" "buy" "details"; grid-template-rows:none; }
+  .pg-product .ez-buy { position:static !important; }
+}
+.pg-product .ez-promise-link { transition: border-color .15s, transform .15s; }
+.pg-product .ez-promise-link:hover { border-color: var(--ink); transform: translateY(-2px); }
+/* sizes: two full-width rows; each chip grows with its label so none is cramped */
+.pg-product .ez-sizes { display:grid; gap:6px; }
+.pg-product .ez-sizes-row { display:flex; flex-wrap:wrap; gap:6px; }
+.pg-product .ez-sizes .ez-chip { flex:1 1 auto; min-width:0; padding:9px 8px; font-size:13px; letter-spacing:0; }
+/* phones: an even grid, so no size is left stretched across a row of its own */
+@media (max-width:640px) {
+  .pg-product .ez-sizes { grid-template-columns:repeat(4, minmax(0, 1fr)); }
+  .pg-product .ez-sizes-row { display:contents; }
+  .pg-product .ez-sizes .ez-chip { padding:10px 4px; }
+}
+/* chips (sizes and the like) hover like the shop chips and show the picked one in ink */
+.pg-product .ez-chip:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:translateY(-2px); }
+.pg-product .ez-chip[aria-pressed="true"], .pg-product .ez-chip[aria-pressed="true"]:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:none; }
+.pg-product .ez-input:focus { border-color:var(--ink); outline:none; }

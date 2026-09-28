@@ -1,0 +1,11 @@
+/* Fabrics: photographed swatches open larger on click */
+.pg-fabrics .fab-swatch { display: block; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: var(--ink); text-align: left; cursor: zoom-in; }
+.pg-fabrics .fab-swatch-img { position: relative; transition: transform .25s ease, box-shadow .25s ease, border-color .2s; }
+.pg-fabrics .fab-swatch-img .ez-slot { transition: transform .45s cubic-bezier(.2,.7,.2,1); }
+.pg-fabrics .fab-swatch-zoom { position: absolute; right: 8px; bottom: 8px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--cream); opacity: 0; transform: scale(.8); transition: opacity .2s, transform .2s; }
+.pg-fabrics .fab-swatch:hover .fab-swatch-img, .pg-fabrics .fab-swatch:focus-visible .fab-swatch-img { transform: translateY(-3px); border-color: var(--ink) !important; box-shadow: 0 14px 26px -16px rgba(20,17,15,.55); }
+.pg-fabrics .fab-swatch:hover .fab-swatch-img .ez-slot { transform: scale(1.08); }
+.pg-fabrics .fab-swatch:hover .fab-swatch-zoom, .pg-fabrics .fab-swatch:focus-visible .fab-swatch-zoom { opacity: 1; transform: none; }
+.pg-fabrics .fab-swatch:hover > div:last-child { color: var(--gold-2); }
+/* touch screens show the zoom badge all the time: there is no hover to reveal it */
+@media (hover: none) { .pg-fabrics .fab-swatch-zoom { opacity: .85; transform: none; width: 26px; height: 26px; } }

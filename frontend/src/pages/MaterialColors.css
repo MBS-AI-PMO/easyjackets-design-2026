@@ -1,0 +1,15 @@
+/* Material colors */
+
+/* material chips: a native dropdown takes their place on phones */
+.pg-material-colors .mc-jump-select { display: none; }
+/* sections land below the sticky navbar when jumped to */
+.pg-material-colors [id] { scroll-margin-top: 90px; }
+
+/* phones: four swatches to a row (the loading placeholders too) */
+@media (max-width: 640px) {
+  .pg-material-colors .mc-jump > :not(select) { display: none; }
+  .pg-material-colors .mc-jump-select { display: block; width: 100%; }
+  .pg-material-colors .mc-swatches { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 14px 10px !important; }
+  .pg-material-colors .mc-swatches .ez-swatch > div:nth-child(2) { font-size: 12px !important; }
+  .pg-material-colors .mc-swatches .ez-swatch > div:nth-child(3) { font-size: 10px !important; letter-spacing: 0 !important; }
+}

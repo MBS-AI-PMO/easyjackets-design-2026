@@ -1,0 +1,15 @@
+{
+  "short_name": "EJ Admin",
+  "name": "Easy Jackets Admin",
+  "icons": [
+    {
+      "src": "favicon.webp",
+      "sizes": "64x64",
+      "type": "image/webp"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1e88e5",
+  "background_color": "#f4f7fa"
+}

@@ -1,0 +1,489 @@
+<%
+// PhantomJS 2.1.1 is Qt WebKit from 2015: no flexbox, no grid, and shaky
+// support for `display: table` on divs. Everything below is real <table>
+// markup for that reason — it is the only layout primitive it renders
+// predictably. Keep it that way if you edit this file.
+//
+// Two rules govern the page structure, both learned the hard way:
+//
+//   1. Page padding comes from paperSize.border in helpers/fileEmail.js, not
+//      from markup. A cell's padding is laid down once at the start and once at
+//      the end of that cell, so wrapping the document in a single padded <td>
+//      left every continuation page flush against the sheet edge.
+//   2. `page-break-after: avoid` on a heading is ignored, which stranded
+//      section titles alone at the foot of a page with their content overleaf.
+//      Each section is therefore ONE table carrying `page-break-inside: avoid`,
+//      with the title as a row inside it, so a title cannot outrun its body.
+
+const previewList = Array.isArray(previews) ? previews : [];
+
+// The old template opened the artwork section whenever `designs` had any key,
+// but each row also required `.name` — so a design with no lettering printed a
+// bare table head with no rows under it. Filter first, then decide.
+const artwork = Object.keys(data.designs || {})
+  .map((section) => ({ section, entry: data.designs[section] }))
+  .filter(({ entry }) => entry && typeof entry === 'object' && entry.name)
+  .map(({ section, entry }) => ({
+    section: section.replace(/[-_]/g, ' '),
+    title: entry.name.title || 'Custom element',
+    font: entry.name.font || 'N/A',
+    appearance: entry.name.appearance || 'Standard',
+    fill: entry.name.fill || '#000000',
+    stroke: entry.name.stroke || '#ffffff',
+  }));
+
+const swatches = [
+  { label: 'Body Fabric', value: data.colors && data.colors.body },
+  { label: 'Sleeve Fabric', value: data.colors && data.colors.sleeves },
+  { label: 'Pocket Accents', value: data.colors && data.colors.pockets },
+].filter((item) => item.value);
+
+const styles = data.styles || {};
+const advance = data.advance || {};
+
+const fabric = [
+  ['Body Material', (data.materials && data.materials.body) || 'N/A'],
+  ['Sleeves Material', (data.materials && data.materials.sleeves) || 'N/A'],
+  ['Selected Size', (data.sizes && data.sizes.size) || 'N/A'],
+  ['Measurement Scale', (data.sizes && data.sizes.scale) || 'N/A'],
+];
+
+const configuration = [
+  ['Collar Style', styles.collar],
+  ['Sleeve Cut', styles.sleeves],
+  ['Closure Type', styles.closure],
+  ['Pocket Style', styles.pocket],
+  ['Knit Pattern', styles.knit],
+  ['Internal Lining', styles.lining],
+].filter(([, value]) => value);
+
+const features = [
+  ['Pocket Flaps', styles.flap],
+  ['Zip-out Lining', styles.zipout],
+  ['Chest Pocket', advance.chestPocket],
+  ['Sleeve Pocket', advance.sleevePocket],
+  ['Stripes', advance.stripes],
+];
+%><!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Custom Jacket Design - Easy Jackets</title>
+    <style>
+        /* The margin belongs to the paper, set by paperSize.border. One declared
+           here would stack on top of it. */
+        @page { margin: 0; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            /* White, so the margin the printer leaves is indistinguishable from
+               the page itself. Warmth comes from the cards, not the ground. */
+            background: #ffffff;
+            color: #211d18;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            -webkit-print-color-adjust: exact;
+        }
+
+        table { border-collapse: collapse; }
+        td { vertical-align: top; }
+
+        /* One section = one of these. Title row and body travel together. */
+        .block {
+            width: 100%;
+            page-break-inside: avoid;
+        }
+        /* Section spacing as a spacer row: a margin on the first element inside
+           a cell is unreliable here, a row height is not. */
+        .block td.gap { height: 22px; font-size: 0; line-height: 0; }
+
+        .section-title {
+            margin: 0 0 11px;
+            padding-bottom: 7px;
+            border-bottom: 1px solid #e2d2bd;
+            color: #211d18;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 2.4px;
+            text-transform: uppercase;
+        }
+
+        /* ---------- masthead ---------- */
+
+        .masthead td.band {
+            background: #11100e;
+            color: #f5eee3;
+            padding: 26px 30px;
+            border-radius: 14px;
+        }
+        .eyebrow {
+            margin: 0 0 9px;
+            color: #c4703a;
+            font-size: 8.5px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 29px;
+            line-height: 1.08;
+            font-weight: normal;
+            letter-spacing: -0.6px;
+        }
+        .hero-copy {
+            margin: 9px 0 0;
+            color: #a49c92;
+            font-size: 11px;
+        }
+        /* The total rides in the masthead rather than in a card of its own: it is
+           the one number that belongs beside the title, and folding it in buys
+           back the vertical space that was pushing sections onto page 2. */
+        .price-cell { width: 34%; text-align: right; }
+        .price-label {
+            margin: 0 0 4px;
+            color: #8a8078;
+            font-size: 8.5px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .price-value {
+            margin: 0;
+            color: #e08a4a;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 33px;
+            line-height: 1;
+        }
+
+        /* ---------- cards ---------- */
+
+        .card {
+            width: 100%;
+            background: #fffaf2;
+            border: 1px solid #eadfce;
+            border-radius: 10px;
+        }
+        /* The renders are letterboxed onto white, so their card is white too. */
+        .card-plain { background: #ffffff; }
+
+        .image-card { padding: 11px; text-align: center; }
+        /* Square by the time it gets here — see helpers/designImages.js. Both
+           dimensions are pinned so a page break can never be decided by an image
+           that has not finished loading. */
+        .image-card img {
+            display: block;
+            width: 168px;
+            height: 168px;
+            margin: 0 auto;
+        }
+        .image-label {
+            margin-top: 7px;
+            color: #8a7c6d;
+            font-size: 8.5px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .panel { padding: 15px 17px; }
+        .panel-title {
+            margin: 0 0 9px;
+            color: #c4703a;
+            font-size: 8.5px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .spec { width: 100%; }
+        .spec td {
+            padding: 6px 0;
+            border-top: 1px solid #eee2d2;
+            font-size: 11px;
+        }
+        .spec tr:first-child td { border-top: 0; }
+        .spec .k { color: #8a7c6d; }
+        .spec .v {
+            color: #211d18;
+            font-weight: bold;
+            text-align: right;
+            text-transform: capitalize;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .status-ok { background: #e2f0e6; color: #2c6b41; }
+        .status-no { background: #efe6da; color: #9a8d7e; }
+
+        .swatch-card { padding: 13px 10px; text-align: center; }
+        .swatch {
+            width: 38px;
+            height: 38px;
+            margin: 0 auto 7px;
+            border: 2px solid #ded2c1;
+            border-radius: 50%;
+        }
+        .swatch-name { color: #211d18; font-size: 10.5px; font-weight: bold; }
+        .swatch-code {
+            margin-top: 2px;
+            color: #8a7c6d;
+            font-size: 9px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ---------- artwork ---------- */
+
+        .artwork { width: 100%; }
+        .artwork th {
+            background: #f1e6d7;
+            border: 1px solid #eadfce;
+            color: #8a7c6d;
+            font-size: 8px;
+            font-weight: bold;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 8px 11px;
+        }
+        .artwork td {
+            background: #ffffff;
+            border: 1px solid #eadfce;
+            padding: 8px 11px;
+            color: #433b32;
+            font-size: 10.5px;
+        }
+        .artwork .sec {
+            color: #211d18;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+        .chip {
+            display: inline-block;
+            width: 17px;
+            height: 17px;
+            border: 1px solid #d8c8b4;
+            border-radius: 3px;
+        }
+
+        /* ---------- footer ---------- */
+
+        .footer td.band {
+            background: #11100e;
+            color: #8f8880;
+            padding: 18px 30px;
+            border-radius: 12px;
+            font-size: 10px;
+        }
+        .footer strong {
+            display: block;
+            color: #f5eee3;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+<table class="block masthead" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td class="band">
+            <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td>
+                        <p class="eyebrow">Easy Jackets Design Studio</p>
+                        <h1>Custom Jacket Specification</h1>
+                        <p class="hero-copy"><% if (data.shareName) { %>Prepared for <%= data.shareName %> &middot; <% } %><%= data.title || 'Custom jacket' %></p>
+                    </td>
+                    <td class="price-cell">
+                        <p class="price-label">Estimated Total</p>
+                        <p class="price-value">$<%= data.custom_price || '0.00' %></p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<% if (previewList.length) { %>
+    <table class="block" cellspacing="0" cellpadding="0" border="0">
+        <tr><td class="gap"></td></tr>
+        <tr>
+            <td>
+                <p class="section-title">Design Preview</p>
+                <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <% for (let i = 0; i < previewList.length; i += 2) { %>
+                        <tr>
+                            <% for (let j = i; j < i + 2; j++) { %>
+                                <td width="50%" style="padding: 0 <%= j % 2 ? '0' : '5px' %> 10px <%= j % 2 ? '5px' : '0' %>;">
+                                    <% if (previewList[j]) { %>
+                                        <table class="card card-plain" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td class="image-card">
+                                                    <img src="<%= previewList[j].src %>" alt="<%= previewList[j].label %> view">
+                                                    <div class="image-label"><%= previewList[j].label %> View</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    <% } %>
+                                </td>
+                            <% } %>
+                        </tr>
+                    <% } %>
+                </table>
+            </td>
+        </tr>
+    </table>
+<% } %>
+
+<table class="block" cellspacing="0" cellpadding="0" border="0">
+    <tr><td class="gap"></td></tr>
+    <tr>
+        <td>
+            <p class="section-title">Technical Specification</p>
+            <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td width="50%" style="padding: 0 5px 0 0;">
+                        <table class="card" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td class="panel">
+                                    <p class="panel-title">Fabric &amp; Fit</p>
+                                    <table class="spec" cellspacing="0" cellpadding="0" border="0">
+                                        <% fabric.forEach(function (row) { %>
+                                            <tr><td class="k"><%= row[0] %></td><td class="v"><%= row[1] %></td></tr>
+                                        <% }); %>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td width="50%" style="padding: 0 0 0 5px;">
+                        <table class="card" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td class="panel">
+                                    <p class="panel-title">Configuration</p>
+                                    <table class="spec" cellspacing="0" cellpadding="0" border="0">
+                                        <% if (configuration.length) { %>
+                                            <% configuration.forEach(function (row) { %>
+                                                <tr><td class="k"><%= row[0] %></td><td class="v"><%= row[1] %></td></tr>
+                                            <% }); %>
+                                        <% } else { %>
+                                            <tr><td class="k" colspan="2">No style options selected.</td></tr>
+                                        <% } %>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table class="block" cellspacing="0" cellpadding="0" border="0">
+    <tr><td class="gap"></td></tr>
+    <tr>
+        <td>
+            <p class="section-title">Features &amp; Detailing</p>
+            <table class="card" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td class="panel">
+                        <table class="spec" cellspacing="0" cellpadding="0" border="0">
+                            <% features.forEach(function (row) { %>
+                                <tr>
+                                    <td class="k"><%= row[0] %></td>
+                                    <td class="v"><span class="status <%= row[1] ? 'status-ok' : 'status-no' %>"><%= row[1] ? 'Included' : 'None' %></span></td>
+                                </tr>
+                            <% }); %>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<% if (swatches.length) { %>
+    <table class="block" cellspacing="0" cellpadding="0" border="0">
+        <tr><td class="gap"></td></tr>
+        <tr>
+            <td>
+                <p class="section-title">Colour Palette</p>
+                <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                        <% swatches.forEach(function (item, index) { %>
+                            <td width="<%= Math.floor(100 / swatches.length) %>%" style="padding: 0 <%= index === swatches.length - 1 ? '0' : '5px' %> 0 <%= index === 0 ? '0' : '5px' %>;">
+                                <table class="card" cellspacing="0" cellpadding="0" border="0">
+                                    <tr>
+                                        <td class="swatch-card">
+                                            <div class="swatch" style="background-color: <%= item.value %>;"></div>
+                                            <div class="swatch-name"><%= item.label %></div>
+                                            <div class="swatch-code"><%= item.value %></div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        <% }); %>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+<% } %>
+
+<% if (artwork.length) { %>
+    <table class="block" cellspacing="0" cellpadding="0" border="0">
+        <tr><td class="gap"></td></tr>
+        <tr>
+            <td>
+                <p class="section-title">Custom Artwork &amp; Typography</p>
+                <table class="artwork" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                        <th width="24%">Section</th>
+                        <th width="30%">Content</th>
+                        <th width="30%">Details</th>
+                        <th width="16%">Colours</th>
+                    </tr>
+                    <% artwork.forEach(function (row) { %>
+                        <tr>
+                            <td class="sec"><%= row.section %></td>
+                            <td><%= row.title %></td>
+                            <td><%= row.font %> &middot; <%= row.appearance %></td>
+                            <td>
+                                <span class="chip" style="background-color: <%= row.fill %>;"></span>
+                                <span class="chip" style="background-color: <%= row.stroke %>;"></span>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </table>
+            </td>
+        </tr>
+    </table>
+<% } %>
+
+<table class="block footer" cellspacing="0" cellpadding="0" border="0">
+    <tr><td class="gap"></td></tr>
+    <tr>
+        <td class="band">
+            <strong>Easy Jackets</strong>
+            Premium Varsity &amp; Letterman Jackets<br>
+            &copy; <%= new Date().getFullYear() %> Easy Jackets Design Studio. Confidential specification.
+        </td>
+    </tr>
+</table>
+
+</body>
+
+</html>

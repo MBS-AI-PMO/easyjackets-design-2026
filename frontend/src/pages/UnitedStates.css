@@ -1,0 +1,13 @@
+/* United States: where we ship most — six text cards in a row */
+.pg-united-states .us-top { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+.pg-united-states .us-top-card { position: relative; display: grid; align-content: start; gap: 6px; min-height: 176px; padding: 20px 18px 46px; border: 1.5px solid var(--cream-2); border-radius: 4px; background: #fbf8f2; color: var(--ink); text-decoration: none; box-sizing: border-box; transition: transform .25s, border-color .2s, background .2s, color .2s; }
+.pg-united-states .us-top-code { font-family: var(--display); font-weight: 900; font-size: 44px; line-height: .9; color: var(--gold-2); }
+.pg-united-states .us-top-name { margin-top: 8px; font-family: var(--display); font-weight: 900; font-size: 22px; line-height: .95; text-transform: uppercase; }
+.pg-united-states .us-top-note { font-size: 13px; line-height: 1.45; color: var(--muted); }
+.pg-united-states .us-top-arrow { position: absolute; left: 18px; bottom: 14px; font-size: 18px; color: var(--gold-2); transition: transform .2s; }
+.pg-united-states .us-top-card:hover { border-color: var(--ink); background: var(--ink); color: var(--cream); }
+.pg-united-states .us-top-card:hover .us-top-code, .pg-united-states .us-top-card:hover .us-top-arrow { color: var(--gold); }
+.pg-united-states .us-top-card:hover .us-top-note { color: rgba(244,239,230,.72); }
+.pg-united-states .us-top-card:hover .us-top-arrow { transform: translateX(6px); }
+@media (max-width: 1000px) { .pg-united-states .us-top { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .pg-united-states .us-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .pg-united-states .us-top-card { min-height: 150px; padding: 16px 14px 40px; } .pg-united-states .us-top-code { font-size: 36px; } .pg-united-states .us-top-name { font-size: 19px; } }

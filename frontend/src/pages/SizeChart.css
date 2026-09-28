@@ -1,0 +1,59 @@
+/* Size chart: the extra guides (components/SizeGuides.jsx) and the framed images */
+
+/* framed image: a cream panel over an ink offset shadow */
+.pg-size-chart .sc-frame { position: relative; }
+.pg-size-chart .sc-frame-shadow { position: absolute; inset: 14px -14px -14px 14px; background: var(--ink); border-radius: 4px; }
+.pg-size-chart .sc-frame-panel { position: relative; display: grid; place-items: center; padding: 6%; box-sizing: border-box; border-radius: 4px; overflow: hidden; background: #fbf8f2; }
+.pg-size-chart .sc-frame-panel .ez-slot { width: 100%; height: 100%; object-fit: contain; }
+
+/* guides */
+.pg-size-chart .sc-guide { max-width: 1280px; margin: 0 auto; padding: clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0; scroll-margin-top: 110px; }
+.pg-size-chart .sc-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 28px; padding-bottom: 18px; border-bottom: 2px solid var(--ink); }
+.pg-size-chart .sc-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-2); }
+.pg-size-chart .sc-h2 { margin: 10px 0 0; font-family: var(--display); font-weight: 900; font-size: clamp(40px,5.5vw,76px); line-height: .9; text-transform: uppercase; }
+.pg-size-chart .sc-h2 span { color: var(--gold-2); }
+.pg-size-chart .sc-unit button { padding: 8px 14px; font-size: 15px; }
+.pg-size-chart .sc-copy { margin: 0 0 22px; max-width: 62ch; color: var(--ink-2); font-size: 16px; line-height: 1.65; }
+.pg-size-chart .sc-split { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); gap: 36px clamp(28px,4vw,64px); align-items: start; margin-top: 28px; }
+.pg-size-chart .sc-split > .sc-frame, .pg-size-chart .sc-split > .sc-product { position: sticky; top: 130px; }
+.pg-size-chart .sc-wide { margin-top: 44px; }
+/* coach: the short text column sits centred against its picture */
+.pg-size-chart .sc-split.sc-split-center { align-items: center; }
+.pg-size-chart .sc-split.sc-split-center .sc-steps { margin-top: 20px; }
+
+/* tables: headers wrap, the qualifier on its own line */
+.pg-size-chart .sc-table th { white-space: normal; vertical-align: bottom; font-size: 16px; line-height: 1.05; }
+.pg-size-chart .sc-table th small { display: block; margin-top: 4px; font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--muted); }
+.pg-size-chart .sc-table td { font-variant-numeric: tabular-nums; }
+
+/* numbered steps */
+.pg-size-chart .sc-steps { list-style: none; counter-reset: sc-step; margin: 26px 0 0; padding: 0; display: grid; gap: 14px; }
+.pg-size-chart .sc-steps li { counter-increment: sc-step; display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 12px; align-items: start; color: var(--ink-2); font-size: 15px; line-height: 24px; }
+.pg-size-chart .sc-steps li::before { content: counter(sc-step); font-family: var(--display); font-weight: 900; font-size: 26px; line-height: 24px; color: var(--gold-2); }
+.pg-size-chart .sc-steps strong { color: var(--ink); }
+
+/* note: gold rule on the left */
+.pg-size-chart .sc-callout { margin-top: 24px; padding: 14px 18px; background: #fbf8f2; border: 1px solid var(--cream-2); border-left: 3px solid var(--gold); border-radius: 2px; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+.pg-size-chart .sc-callout strong { color: var(--ink); }
+
+/* note cards: ink rule on top, as the fit notes */
+.pg-size-chart .sc-notes { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px 24px; margin-top: 26px; }
+.pg-size-chart .sc-note-card { border-top: 3px solid var(--ink); padding-top: 14px; }
+.pg-size-chart .sc-note-card h3 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 22px; text-transform: uppercase; }
+.pg-size-chart .sc-note-card p { margin: 6px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+/* cropped: the catalog jacket */
+.pg-size-chart .sc-product { max-width: 420px; justify-self: center; width: 100%; }
+.pg-size-chart .sc-product-meta { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .pg-size-chart .sc-split { grid-template-columns: minmax(0,1fr); }
+  .pg-size-chart .sc-split > .sc-frame { position: relative; top: auto; } /* relative, so the shadow stays anchored to its frame */
+  .pg-size-chart .sc-split > .sc-product { position: static; }
+}
+@media (max-width: 640px) {
+  /* the shadow sticks out on the right; inset the frame by the same amount so the pair sits centred */
+  .pg-size-chart .sc-frame { margin-right: 14px; }
+  .pg-size-chart .sc-notes { grid-template-columns: minmax(0,1fr); }
+  .pg-size-chart .sc-head { align-items: flex-start; }
+}

@@ -1,0 +1,49 @@
+/* BulkOrders: rules that only this page carries in the design export. */
+
+.pg-bulk-orders textarea.ez-input { height:auto; padding:14px; min-height:120px; resize:vertical; }
+.pg-bulk-orders .ez-chip { display:inline-flex; align-items:center; white-space:nowrap; gap:8px; padding:10px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:#fbf8f2; font:inherit; font-size:14px; font-weight:600; cursor:pointer; color:var(--ink); transition:all .15s; letter-spacing:0; text-transform:none; }
+@media (max-width:960px) {
+  .pg-bulk-orders .ez-bulk { grid-template-columns:1fr !important; }
+  .pg-bulk-orders .ez-form-side { position:static !important; }
+}
+
+
+/* form dropdowns: navbar-style menu on desktop, the device's own picker on phones and tablets */
+.pg-bulk-orders .bo-select-native { display:none; }
+/* grid items default to their content's width; min-width:0 keeps a long label inside its column */
+.pg-bulk-orders .bo-select, .pg-bulk-orders .bo-select-desktop { display:block; min-width:0; }
+.pg-bulk-orders .bo-select > span:first-child { display:block; margin-bottom:8px; }
+.pg-bulk-orders .bo-select .ez-select-menu { display:block; min-width:0; }
+.pg-bulk-orders .bo-select .ez-select-trigger { width:100%; min-width:0; height:50px; padding:0 14px; border:1.5px solid var(--cream-2); background:#fbf8f2; font-size:15px; font-weight:400; letter-spacing:0; text-transform:none; }
+.pg-bulk-orders .bo-select .ez-select-trigger span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+.pg-bulk-orders .bo-select .ez-select-trigger:hover, .pg-bulk-orders .bo-select .ez-select-menu.is-open .ez-select-trigger { background:#fbf8f2; color:var(--ink); border-color:var(--ink); }
+.pg-bulk-orders .bo-select .ez-select-list { left:0; right:auto; max-height:320px; overflow-y:auto; letter-spacing:0; text-transform:none; }
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .pg-bulk-orders .bo-select-desktop { display:none; }
+  .pg-bulk-orders .bo-select-native { display:block; }
+}
+@media (max-width:640px) {
+  /* one field per row for name, organization, email and phone */
+  .pg-bulk-orders .bo-contact-row { grid-template-columns:minmax(0,1fr) !important; }
+}
+
+/* quote brief under the header photo */
+.pg-bulk-orders .bo-brief { margin-top:56px; padding:clamp(22px,3vw,36px); background:#fbf8f2; border:1px solid var(--cream-2); border-radius:4px; }
+.pg-bulk-orders .bo-brief-kicker { display:flex; align-items:center; gap:12px; font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-2); }
+.pg-bulk-orders .bo-brief-kicker::before { content:""; width:28px; height:2px; background:var(--gold); }
+.pg-bulk-orders .bo-brief-title { margin:12px 0 18px; font-family:var(--display); font-weight:900; font-size:clamp(32px,3.6vw,48px); line-height:.92; text-transform:uppercase; }
+.pg-bulk-orders .bo-brief p { margin:0 0 14px; color:var(--ink-2); font-size:15px; line-height:1.75; }
+.pg-bulk-orders .bo-brief-links { margin-top:24px; padding-top:20px; border-top:2px solid var(--ink); }
+.pg-bulk-orders .bo-brief-links-label { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-2); margin-bottom:12px; }
+.pg-bulk-orders .bo-brief-links-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.pg-bulk-orders .bo-brief-link { position:relative; display:grid; align-content:start; gap:6px; min-height:112px; padding:16px 16px 44px; border-radius:4px; background:var(--ink); color:var(--cream); text-decoration:none; transition:transform .2s, background .2s; }
+.pg-bulk-orders .bo-brief-link-name { font-family:var(--display); font-weight:900; font-size:20px; line-height:1; text-transform:uppercase; letter-spacing:.02em; }
+.pg-bulk-orders .bo-brief-link-note { font-size:13px; line-height:1.45; color:rgba(244,239,230,.72); }
+.pg-bulk-orders .bo-brief-link-arrow { position:absolute; left:16px; bottom:14px; font-size:20px; color:var(--gold); transition:transform .2s; }
+.pg-bulk-orders .bo-brief-link:hover { transform:translateY(-3px); background:#2a2521; color:var(--cream); }
+.pg-bulk-orders .bo-brief-link:hover .bo-brief-link-arrow { transform:translateX(6px); }
+@media (max-width:640px) {
+  .pg-bulk-orders .bo-brief-links-row { grid-template-columns:minmax(0,1fr); }
+  .pg-bulk-orders .bo-brief-link { min-height:0; padding:14px 48px 14px 16px; }
+  .pg-bulk-orders .bo-brief-link-arrow { left:auto; right:16px; bottom:auto; top:50%; margin-top:-12px; }
+}

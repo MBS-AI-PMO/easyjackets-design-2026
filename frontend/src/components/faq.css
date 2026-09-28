@@ -1,0 +1,19 @@
+/* FAQ rows: the design's look, with a smooth open/close. */
+.ez-faq { border-top: 1px solid var(--ink); }
+.ez-faq-end { border-top: 1px solid var(--ink); }
+.ez-faq-q { display: flex; width: 100%; justify-content: space-between; align-items: baseline; gap: 24px; padding: 16px 0; background: none; border: 0; font: inherit; font-weight: 600; font-size: 17px; text-align: left; color: var(--ink); cursor: pointer; }
+.ez-faq-q.ez-faq-sm { font-size: 16px; padding: 14px 0; }
+.ez-faq-q .faq-plus { font-family: var(--display); font-weight: 900; font-size: 26px; line-height: 1; color: var(--gold-2); transition: transform .25s ease; flex: none; }
+.ez-faq.is-open .faq-plus { transform: rotate(45deg); }
+.ez-faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+.ez-faq.is-open .ez-faq-a { grid-template-rows: 1fr; }
+.ez-faq-inner { overflow: hidden; }
+.ez-faq-inner > p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; max-width: 60ch; }
+.ez-faq-inner > :last-child { margin-bottom: 16px; }
+/* Answers from the admin's rich-text editor. */
+.ez-faq-rich { margin: 0 0 16px; color: var(--muted); line-height: 1.6; max-width: 60ch; }
+.ez-faq-rich p { margin: 0 0 12px; }
+.ez-faq-rich p:last-child { margin-bottom: 0; }
+.ez-faq-rich ul, .ez-faq-rich ol, .ez-faq-points { margin: 8px 0 16px; padding-left: 20px; color: var(--muted); line-height: 1.6; max-width: 60ch; }
+.ez-faq-rich a { color: var(--ink); }
+.ez-faq-rich b, .ez-faq-rich strong { color: var(--ink-2); font-weight: 600; }

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            color: #211d18;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        .wrapper {
+            width: 100%;
+            background: #ffffff;
+            padding: 28px 12px;
+        }
+
+        .email-card {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            background: #fffaf2;
+            border: 1px solid #e4d6c3;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 50px rgba(33, 29, 24, 0.10);
+        }
+
+        .hero {
+            background: #11100e;
+            padding: 38px 34px 34px;
+            color: #f5eee3;
+        }
+
+        .eyebrow {
+            color: #c4703a;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin: 0 0 14px;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 38px;
+            line-height: 1.02;
+            font-weight: 400;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-copy {
+            margin: 16px 0 0;
+            color: rgba(245, 238, 227, 0.72);
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 480px;
+        }
+
+        .content {
+            padding: 34px;
+        }
+
+        .content p {
+            margin: 0 0 18px;
+            color: #5f574c;
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        .panel {
+            background: #f1e6d7;
+            border: 1px solid #e2d2bd;
+            border-radius: 14px;
+            padding: 22px;
+            margin: 26px 0;
+        }
+
+        .panel-title {
+            margin: 0 0 14px;
+            color: #211d18;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .benefit {
+            padding: 10px 0;
+            border-top: 1px solid rgba(33, 29, 24, 0.10);
+            color: #433b32;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .benefit:first-of-type {
+            border-top: 0;
+        }
+
+        .cta {
+            display: inline-block;
+            background: #c4703a;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 15px 24px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .note {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #eadfce;
+            color: #8a7c6d;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .footer {
+            background: #11100e;
+            color: rgba(245, 238, 227, 0.56);
+            padding: 24px 34px;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .footer a {
+            color: #c4703a;
+            text-decoration: none;
+        }
+
+        @media only screen and (max-width: 520px) {
+            .hero,
+            .content,
+            .footer {
+                padding-left: 22px;
+                padding-right: 22px;
+            }
+
+            h1 {
+                font-size: 31px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <table class="wrapper" role="presentation" width="100%">
+        <tr>
+            <td>
+                <table class="email-card" role="presentation">
+                    <tr>
+                        <td class="hero">
+                            <p class="eyebrow">Easy Jackets Newsletter</p>
+                            <h1>You are on the list.</h1>
+                            <p class="hero-copy">
+                                Thanks for subscribing. We will send the good stuff: new drops, custom jacket ideas,
+                                limited offers, and notes from the design studio.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+                            <p>
+                                Welcome to Easy Jackets. Your inbox now gets first look at varsity jackets, hoodies,
+                                patches, embroidery ideas, and seasonal deals before they hit the regular crowd.
+                            </p>
+
+                            <div class="panel">
+                                <div class="panel-title">What to expect</div>
+                                <div class="benefit">Early access to jacket releases and limited collections.</div>
+                                <div class="benefit">Subscriber-only discounts, flash sale alerts, and bulk-order offers.</div>
+                                <div class="benefit">Styling, customization, patch, and embroidery inspiration.</div>
+                                <div class="benefit">Behind-the-scenes updates from the Easy Jackets team.</div>
+                            </div>
+
+                            <p>
+                                Ready to start browsing? Explore ready-made jackets or jump into the design studio when
+                                you want something made just for you.
+                            </p>
+
+                            <p style="margin: 26px 0 0;">
+                                <a href="https://easyjackets.com/shop" class="cta">Explore Jackets</a>
+                            </p>
+
+                            <div class="note">
+                                This confirmation was sent to <strong><%= data.email %></strong>. If you did not
+                                subscribe, you can safely ignore this email.
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer">
+                            <strong style="color:#f5eee3;">Easy Jackets</strong><br>
+                            Custom varsity jackets, patches, embroidery, and team orders.<br>
+                            <a href="https://easyjackets.com">easyjackets.com</a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

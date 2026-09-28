@@ -1,0 +1,59 @@
+/* Shop: rules that only this page carries in the design export. */
+
+.pg-shop .ez-chip { display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; gap:8px; padding:8px 14px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; font:inherit; font-size:14px; font-weight:500; cursor:pointer; color:var(--ink); transition:all .15s; }
+.pg-shop .ez-chip:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:translateY(-2px); }
+.pg-shop .ez-chip:hover span { color:var(--gold); opacity:1 !important; }
+.pg-shop .ez-chip[aria-pressed="true"], .pg-shop .ez-chip[aria-pressed="true"]:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:none; box-shadow:none; }
+.pg-shop .ez-chip[aria-pressed="true"] span { color:var(--gold); opacity:1 !important; }
+.pg-shop .ez-swatch { display: revert; gap: revert; width:28px; height:28px; border-radius:50%; border:2px solid var(--cream); box-shadow:0 0 0 1.5px var(--cream-2); cursor:pointer; padding:0; transition:transform .15s; }
+.pg-shop .ez-swatch:hover { transform:scale(1.12); }
+.pg-shop .ez-swatch[aria-pressed="true"] { box-shadow:0 0 0 2px var(--ink); }
+.pg-shop select.ez-select { font:inherit; font-weight:600; font-size:14px; padding:10px 36px 10px 14px; border:1.5px solid var(--ink); border-radius:2px; background:transparent; color:var(--ink); appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2314110f' stroke-width='2' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+/* phone filter drawer parts: hidden on desktop (the rules below this line re-show them on phones) */
+.pg-shop .ez-side-backdrop, .pg-shop .ez-side-close, .pg-shop .ez-side-done, .pg-shop .ez-filters-btn, .pg-shop .ez-side-types { display:none; }
+.pg-shop .ez-sort { display:flex; align-items:center; gap:10px; }
+@media (max-width:900px) {
+  /* the filters become a drawer that slides in from the left */
+  .pg-shop .ez-side { box-sizing:border-box; position:fixed !important; top:0 !important; left:0; bottom:0; width:min(86vw,360px); margin:0 !important; padding:22px 20px 0; background:var(--cream); z-index:60; overflow-y:auto; overscroll-behavior:contain; align-content:start; box-shadow:12px 0 40px -18px rgba(20,17,15,.45); transform:translateX(-104%); visibility:hidden; transition:transform .32s cubic-bezier(.4,0,.2,1), visibility 0s .32s; }
+  .pg-shop .ez-side.is-open { transform:none; visibility:visible; transition:transform .32s cubic-bezier(.4,0,.2,1), visibility 0s; }
+  .pg-shop .ez-side-backdrop { display:block; position:fixed; inset:0; background:rgba(20,17,15,.45); z-index:55; opacity:0; pointer-events:none; transition:opacity .32s; }
+  .pg-shop .ez-side-backdrop.is-open { opacity:1; pointer-events:auto; }
+  .pg-shop .ez-side-close { display:inline-flex; }
+  .pg-shop .ez-side-done { display:block; }
+  .pg-shop .ez-filters-btn { display:inline-flex; }
+  /* results bar as a 2x2 grid: jacket count and "Sort" on the top line, Filters and the sort picker below */
+  .pg-shop .ez-results-bar { display:grid !important; grid-template-columns:auto auto; justify-content:space-between; align-items:end; gap:6px 16px !important; }
+  .pg-shop .ez-results-bar .ez-results-tools, .pg-shop .ez-results-bar .ez-sort { display:contents !important; }
+  .pg-shop .ez-results-count { grid-column:1; grid-row:1; justify-self:start; align-self:baseline; }
+  .pg-shop #shop-sort-label { grid-column:2; grid-row:1; justify-self:start; align-self:baseline; }
+  .pg-shop .ez-results-bar .ez-filters-btn { grid-column:1; grid-row:2; justify-self:start; }
+  .pg-shop .ez-results-bar .ez-sort-native { grid-column:2; grid-row:2; }
+  /* the jacket-type tabs move into the drawer */
+  /* the tabs themselves go, their ink rule stays as the divider under the header image */
+  .pg-shop #picks { padding-bottom:0 !important; margin-top:28px !important; }
+  .pg-shop #picks > * { display:none !important; }
+  .pg-shop .ez-side-types { display:grid; gap:6px; }
+  .pg-shop .ez-layout { grid-template-columns:1fr !important; }
+  .pg-shop .ez-head { grid-template-columns:1fr !important; }
+}
+.pg-shop .ez-sort-native { display:none; }
+@media (max-width: 640px), (hover: none) and (pointer: coarse) { .pg-shop .ez-sort-desktop { display:none; } .pg-shop .ez-sort-native { display:inline-block; } }
+
+.pg-shop .ez-side-close { align-items:center; justify-content:center; width:36px; height:36px; border:1.5px solid var(--cream-2); border-radius:2px; background:transparent; color:var(--ink); cursor:pointer; }
+.pg-shop .ez-side-done { position:sticky; bottom:0; margin:4px -20px 0; padding:14px 20px 18px; background:var(--cream); border-top:1px solid var(--cream-2); }
+.pg-shop .ez-filters-btn { align-items:center; gap:8px; height:42px; padding:0 14px; border:1.5px solid var(--ink); border-radius:2px; background:transparent; color:var(--ink); font-family:var(--display); font-weight:800; font-size:17px; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; }
+.pg-shop .ez-filters-count { display:inline-grid; place-items:center; min-width:20px; height:20px; padding:0 5px; border-radius:10px; background:var(--gold); color:var(--ink); font-family:var(--body); font-size:12px; font-weight:700; letter-spacing:0; }
+@media (prefers-reduced-motion: reduce) { .pg-shop .ez-side, .pg-shop .ez-side-backdrop { transition:none !important; } }
+.pg-shop .ez-side-types .ez-chip { justify-content:space-between; width:100%; padding:11px 14px; font-size:14px; font-weight:600; }
+.pg-shop .ez-side-types .ez-chip span { font-size:12px; opacity:.7; }
+
+/* filters are links now (crawlable collection pages): no underline, and the current one is marked with aria-current */
+.pg-shop a.ez-chip { text-decoration:none; }
+.pg-shop a.ez-swatch { display:inline-block; text-decoration:none; }
+.pg-shop .ez-chip[aria-current="page"], .pg-shop .ez-chip[aria-current="page"]:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:none; box-shadow:none; }
+.pg-shop .ez-chip[aria-current="page"] span { color:var(--gold); opacity:1 !important; }
+.pg-shop .ez-swatch[aria-current="page"] { box-shadow:0 0 0 2px var(--ink); }
+/* quick answer: first thing in the buying-guide section, across both columns */
+.pg-shop .ez-quick-answer { grid-column:1 / -1; max-width:none; padding:14px 18px; background:#fbf8f2; border:1px solid var(--cream-2); border-left:3px solid var(--gold); border-radius:2px; }
+.pg-shop .ez-quick-answer-label { font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-2); margin-bottom:6px; }
+.pg-shop .ez-quick-answer p { margin:0; max-width:none; font-size:14px; line-height:1.6; color:var(--ink-2); }

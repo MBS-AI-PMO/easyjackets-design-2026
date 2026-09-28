@@ -1,0 +1,56 @@
+/* How to design: builder walkthrough */
+
+.pg-how-to-design .htd-wrap { max-width: 1280px; margin: 0 auto; padding-left: clamp(16px,4vw,48px); padding-right: clamp(16px,4vw,48px); box-sizing: border-box; }
+
+/* jacket styles under the intro */
+.pg-how-to-design .htd-chips { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.pg-how-to-design .htd-chips li { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1.5px solid var(--cream-2); border-radius: 2px; background: #fbf8f2; font-size: 13px; font-weight: 600; color: var(--ink); }
+.pg-how-to-design .htd-chips li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+
+/* screenshots: shown whole on white, framed like the builder */
+.pg-how-to-design .htd-shot { aspect-ratio: 16 / 9; background: #fff; border: 1px solid var(--cream-2); border-radius: 4px; overflow: hidden; box-sizing: border-box; }
+.pg-how-to-design .htd-shot .ez-slot { width: 100%; height: 100%; object-fit: contain; }
+.pg-how-to-design .htd-overview { aspect-ratio: 1187 / 437; max-width: 1000px; margin: 0 auto; background: #fff; border: 1px solid var(--cream-2); border-radius: 4px; overflow: hidden; }
+.pg-how-to-design .htd-overview .ez-slot { width: 100%; height: 100%; object-fit: contain; }
+
+/* steps */
+.pg-how-to-design .htd-steps { padding-top: clamp(48px,6vw,80px); display: grid; }
+.pg-how-to-design .htd-steps > * + * { margin-top: clamp(40px,5vw,64px); padding-top: clamp(40px,5vw,64px); border-top: 1px solid var(--cream-2); }
+.pg-how-to-design .htd-step { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 28px clamp(32px,5vw,80px); align-items: center; }
+.pg-how-to-design .htd-step.is-reverse .htd-step-copy { order: 2; }
+.pg-how-to-design .htd-num { font-family: var(--display); font-weight: 900; font-size: 64px; line-height: 1; color: var(--gold-2); }
+.pg-how-to-design .htd-title { font-family: var(--display); font-weight: 900; font-size: clamp(36px,4vw,56px); line-height: .9; text-transform: uppercase; margin: 8px 0 0; }
+.pg-how-to-design .htd-desc { margin: 16px 0 0; max-width: 52ch; color: var(--ink-2); font-size: 16px; line-height: 1.65; }
+.pg-how-to-design .htd-bullets { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; }
+.pg-how-to-design .htd-bullets li { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.pg-how-to-design .htd-bullets li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+.pg-how-to-design .htd-result { margin-top: 22px; }
+.pg-how-to-design .htd-result-caption { margin-bottom: 10px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+/* step 2: the six style options */
+.pg-how-to-design .htd-substeps { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; margin-top: 28px; }
+.pg-how-to-design .htd-substep { margin: 0; border: 1px solid var(--cream-2); border-radius: 4px; overflow: hidden; background: #fbf8f2; transition: transform .25s, box-shadow .25s, border-color .2s; }
+.pg-how-to-design .htd-substep:hover { transform: translateY(-4px); border-color: var(--ink); box-shadow: 0 16px 32px -20px rgba(20,17,15,.35); }
+.pg-how-to-design .htd-substep .htd-shot { border: 0; border-bottom: 1px solid var(--cream-2); border-radius: 0; }
+.pg-how-to-design .htd-substep figcaption { display: grid; gap: 4px; padding: 14px 16px; }
+.pg-how-to-design .htd-substep strong { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; }
+.pg-how-to-design .htd-substep span { font-size: 14px; color: var(--muted); }
+
+@media (max-width: 1000px) { .pg-how-to-design .htd-substeps { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 800px) {
+  .pg-how-to-design .htd-step { grid-template-columns: minmax(0,1fr); }
+  .pg-how-to-design .htd-step.is-reverse .htd-step-copy { order: 0; }
+  .pg-how-to-design .htd-num { font-size: 52px; }
+}
+@media (max-width: 560px) { .pg-how-to-design .htd-substeps { grid-template-columns: minmax(0,1fr); } }
+
+/* phones: the four jacket styles as two rows of two */
+@media (max-width: 640px) {
+  .pg-how-to-design .htd-chips { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); grid-auto-rows: 1fr; gap: 8px; } /* equal rows even when one label wraps */
+  .pg-how-to-design .htd-chips li { padding: 9px 10px; font-size: 12.5px; line-height: 1.25; }
+}
+/* phones: the two call-to-action buttons stacked, full width */
+@media (max-width: 640px) {
+  .pg-how-to-design .htd-cta-buttons { flex-direction: column; align-items: stretch; gap: 10px !important; }
+  .pg-how-to-design .htd-cta-buttons .ez-btn { width: 100%; }
+}
