@@ -1044,7 +1044,10 @@ export const productCategoryController = async (req, res) => {
   }
 };
 
+const braintreeOff = (res) => res.status(503).send({ success: false, message: "Braintree payments are not configured" });
+
 export const braintreeTokenController = async (req, res) => {
+  if (!gateway) return braintreeOff(res);
   try {
     gateway.clientToken.generate({}, function (err, response) {
       if (err) {
@@ -1060,6 +1063,7 @@ export const braintreeTokenController = async (req, res) => {
 
 //payment
 export const brainTreePaymentController = async (req, res) => {
+  if (!gateway) return braintreeOff(res);
   try {
     const { nonce, cart } = req.body;
     let total = 0;
