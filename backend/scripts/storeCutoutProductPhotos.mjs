@@ -17,7 +17,8 @@
 //   node scripts/storeCutoutProductPhotos.mjs --apply                copy files + update the products
 //   node scripts/storeCutoutProductPhotos.mjs --restore <backup>     put the previous addresses back
 //   --base <url>   address prefix for the new photos
-//                  (default https://api2.easyjackets.com/uploads/, the 2026 API in admin/Dockerfile)
+//                  (default https://api2.easyjackets.com/uploads/, the 2026 API in admin/Dockerfile);
+//                  run again with another --base to move photos already done onto a new address
 //
 // Previous addresses are saved to scripts/.product-photo-backup-<time>.json (git-ignored).
 import 'dotenv/config';
@@ -75,7 +76,10 @@ const planAddress = async (address, where) => {
   if (!address) return address;
   photos += 1;
   const key = decodeURIComponent(keyFromUrl(address));
-  if (/-nobg\.[a-z0-9]+$/i.test(key)) { done += 1; return address; } // already its own cut-out
+  if (/-nobg\.[a-z0-9]+$/i.test(key)) { // already its own cut-out: only the address prefix may change (--base)
+    if (address === addressOf(key)) { done += 1; return address; }
+    return addressOf(key);
+  }
   const from = resolveUploadPath(key);
   const fromOriginal = withSuffix(from, '.original');
   if (!(await exists(from)) || !(await exists(fromOriginal))) { problems.push(`${where}: no cut-out on disk for ${key}`); return address; }
