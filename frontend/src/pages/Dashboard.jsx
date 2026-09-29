@@ -83,8 +83,8 @@ export default function Dashboard() {
 
   const OrderCard = ({ o }) => (
     <div className="ez-panel" style={{ display: 'grid', gridTemplateColumns: '96px minmax(0,1fr) auto', gap: '20px', alignItems: 'center' }}>
-      <div className="ez-product-photo" style={{ aspectRatio: '4/5', borderRadius: '3px', overflow: 'hidden' }}>
-        <ImageSlot slot={`ord-${o.id}`} shape="rect" src={o.items[0]?.image} width={320} placeholder="Jacket" aria-label={o.items[0]?.name || 'Order'} />
+      <div className={`ez-product-photo${o.items[0]?.custom ? ' ez-design-photo' : ''}`} style={{ aspectRatio: '4/5', borderRadius: '3px', overflow: 'hidden' }}>
+        <ImageSlot slot={`ord-${o.id}`} shape="rect" src={o.items[0]?.image} width={320} knockout={!!o.items[0]?.custom} placeholder="Jacket" aria-label={o.items[0]?.name || 'Order'} />
       </div>
       <div>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
@@ -152,8 +152,8 @@ export default function Dashboard() {
                 {ordersLoading ? <div className="ez-skeleton" style={{ height: '160px' }} /> : current ? (
                   <div className="ez-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '26px clamp(24px,4vw,48px)', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
-                      <div className="ez-product-photo" style={{ width: '110px', aspectRatio: '4/5', borderRadius: '3px', overflow: 'hidden', flex: 'none' }}>
-                        <ImageSlot slot="dash-current" shape="rect" src={current.items[0]?.image} width={320} placeholder="Jacket" aria-label={current.items[0]?.name || 'Order'} />
+                      <div className={`ez-product-photo${current.items[0]?.custom ? ' ez-design-photo' : ''}`} style={{ width: '110px', aspectRatio: '4/5', borderRadius: '3px', overflow: 'hidden', flex: 'none' }}>
+                        <ImageSlot slot="dash-current" shape="rect" src={current.items[0]?.image} width={320} knockout={!!current.items[0]?.custom} placeholder="Jacket" aria-label={current.items[0]?.name || 'Order'} />
                       </div>
                       <div>
                         <div style={{ fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>Order #{current.orderId} · {current.dateLabel}</div>
@@ -269,8 +269,8 @@ export default function Dashboard() {
                   <div style={{ display: 'grid', gap: '16px' }}>
                     {order.items.map((l) => (
                       <div key={l.key} style={{ display: 'grid', gridTemplateColumns: '84px minmax(0,1fr) auto', gap: '16px', alignItems: 'center' }}>
-                        <div className="ez-product-photo" style={{ aspectRatio: '4/5', borderRadius: '3px', overflow: 'hidden' }}>
-                          <ImageSlot slot={`line-${order.id}-${l.key}`} shape="rect" src={l.image} width={320} placeholder="Jacket" aria-label={l.name} />
+                        <div className={`ez-product-photo${l.custom ? ' ez-design-photo' : ''}`} style={{ aspectRatio: '4/5', borderRadius: '3px', overflow: 'hidden' }}>
+                          <ImageSlot slot={`line-${order.id}-${l.key}`} shape="rect" src={l.image} width={320} knockout={!!l.custom} placeholder="Jacket" aria-label={l.name} />
                         </div>
                         <div>
                           <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '22px', textTransform: 'uppercase', lineHeight: '1' }}>{l.name}</div>

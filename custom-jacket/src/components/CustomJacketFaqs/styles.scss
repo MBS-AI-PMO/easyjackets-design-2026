@@ -1,0 +1,207 @@
+.cjd-custom-faq-section {
+  padding: clamp(48px, 6vw, 80px) 0;
+  background: var(--ej-bg);
+  color: var(--ej-fg);
+  font-family: var(--ej-font-sans);
+}
+
+.ej-container {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.ej-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ej-fg-muted);
+  font-family: var(--ej-font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ej-label::before {
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--ej-terracotta);
+  content: "";
+}
+
+.cjd-custom-faq-heading {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.cjd-custom-faq-heading .ej-label {
+  margin-bottom: 14px;
+}
+
+.cjd-custom-faq-heading h2 {
+  margin: 0;
+  color: var(--ej-fg);
+  font-family: var(--ej-font-serif);
+  font-size: clamp(24px, 3.1vw, 38px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+
+.cjd-custom-faq-heading em {
+  color: var(--ej-terracotta);
+  font-style: italic;
+}
+
+.cjd-custom-faq-shell {
+  width: min(680px, 100%);
+  margin: 0 auto;
+}
+
+.faq-editorial-item {
+  border-bottom: 1px solid var(--ej-border);
+  background: transparent;
+  transition: background 0.32s ease, box-shadow 0.32s ease;
+}
+
+.faq-editorial-item.is-active {
+  background: var(--ej-bg);
+  box-shadow: inset 0 1px 0 rgba(196, 112, 58, .06);
+}
+
+.cjd-custom-faq-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(20px, 3vw, 28px) 0 clamp(8px, 1vw, 12px);
+  background: none;
+  border: none;
+  color: var(--ej-fg);
+  cursor: pointer;
+  font-family: var(--ej-font-sans);
+  text-align: left;
+  outline: none;
+}
+
+.cjd-custom-faq-button span {
+  color: var(--ej-fg);
+  font-family: var(--ej-font-sans);
+  font-size: clamp(14px, 1.2vw, 16px);
+  font-weight: 500;
+  line-height: 1.35;
+  transition: color 0.3s ease;
+}
+
+.faq-editorial-item.is-active .cjd-custom-faq-button span {
+  color: var(--ej-terracotta);
+}
+
+.faq-toggle-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  margin-left: 12px;
+  border: 1px solid var(--ej-border-strong);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  transition: transform 0.42s var(--ej-ease-out), border-color 0.28s ease, background 0.28s ease;
+}
+
+.faq-editorial-item.is-active .faq-toggle-icon {
+  background: rgba(196, 112, 58, .06);
+  border-color: rgba(196, 112, 58, .24);
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    grid-template-rows 0.42s var(--ej-ease-out),
+    opacity 0.28s ease,
+    transform 0.42s var(--ej-ease-out),
+    padding-bottom 0.42s var(--ej-ease-out);
+  padding-bottom: 0;
+}
+
+.faq-answer.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  padding-bottom: 24px;
+}
+
+.faq-answer-inner {
+  overflow: hidden;
+}
+
+.faq-answer-body {
+  max-width: 88%;
+  margin: 0;
+  color: var(--ej-fg-muted);
+  font-family: var(--ej-font-serif);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.6;
+
+  > :first-child { margin-top: 0; }
+  > :last-child { margin-bottom: 0; }
+
+  p { margin: 0 0 12px; }
+
+  a {
+    color: #ad5d30;
+    font-weight: 700;
+    font-style: normal;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    transition: color 0.2s ease;
+
+    &:hover { color: #7c3f1f; }
+  }
+
+  strong,
+  b { font-weight: 700; }
+
+  ul,
+  ol {
+    margin: 10px 0;
+    padding-left: 1.5em;
+  }
+
+  ul { list-style: disc; }
+  ol { list-style: decimal; }
+
+  li {
+    display: list-item;
+    margin: 5px 0;
+
+    &::marker { color: #ad5d30; }
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 12px auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .ej-container {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .faq-answer-body {
+    max-width: 100%;
+  }
+}

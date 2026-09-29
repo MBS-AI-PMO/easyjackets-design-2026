@@ -39,6 +39,38 @@ function useIsPhone() {
   }, []);
   return phone;
 }
+// Product title: at most TITLE_MAX_LINES lines. It starts at its CSS size and steps down
+// until the whole name fits (never below TITLE_MIN_PX); only a name that still does not fit
+// at that size is cut with an ellipsis. Refits when the name, the fonts or the width change.
+const TITLE_SIZE = 'clamp(44px,5vw,72px)';
+const TITLE_LINE_HEIGHT = 0.88;
+const TITLE_MAX_LINES = 3;
+const TITLE_MIN_PX = 26;
+function useFitLines(ref, text) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !text) return undefined;
+    const fit = () => {
+      // back to the full size first (not '' — that would drop the size itself and leave the browser's small default)
+      Object.assign(el.style, { fontSize: TITLE_SIZE, display: '', WebkitLineClamp: '', WebkitBoxOrient: '', overflow: '' });
+      let size = parseFloat(getComputedStyle(el).fontSize);
+      const lines = () => Math.round(el.getBoundingClientRect().height / (size * TITLE_LINE_HEIGHT));
+      while (lines() > TITLE_MAX_LINES && size > TITLE_MIN_PX) {
+        size = Math.max(TITLE_MIN_PX, size - 2);
+        el.style.fontSize = `${size}px`;
+      }
+      if (lines() > TITLE_MAX_LINES) {
+        Object.assign(el.style, { display: '-webkit-box', WebkitLineClamp: String(TITLE_MAX_LINES), WebkitBoxOrient: 'vertical', overflow: 'hidden' });
+      }
+    };
+    fit();
+    let alive = true;
+    document.fonts?.ready?.then(() => { if (alive) fit(); });
+    window.addEventListener('resize', fit);
+    return () => { alive = false; window.removeEventListener('resize', fit); };
+  }, [ref, text]);
+}
+
 const stars = (n) => '★★★★★'.slice(0, Math.round(n)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(n));
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '');
 
@@ -53,9 +85,13 @@ export default function Product() {
   const categoryId = product?.category?.id;
   const { data: summary, reload: reloadSummary } = useAsync((signal) => (productId ? fetchReviewSummary(productId, signal) : null), [productId]);
   const { data: reviews, reload: reloadReviews } = useAsync((signal) => (productId ? fetchReviews(productId, signal) : []), [productId]);
-  const { data: related } = useAsync((signal) => (productId && categoryId ? fetchRelated(productId, categoryId, signal) : []), [productId, categoryId]);
+  const { data: related } = useAsync((signal) => (productId && categoryId ? fetchRelated(productId, categoryId, signal) : []), [productId, categoryId], { live: false }); // random per visit
   useEffect(() => { if (productId) trackView(productId); }, [productId]);
   usePageTitle(product?.name, product ? stripHtml(product.shortDescription || product.description).slice(0, 160) : undefined);
+
+  // the jacket's name never takes more than three lines: long names get a smaller size
+  const titleRef = useRef(null);
+  useFitLines(titleRef, product?.name);
 
   const [img, setImg] = useState(0);
   const [tab, setTab] = useState('fixed');
@@ -317,7 +353,7 @@ export default function Product() {
               <div style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)' }}>
                 {product.materialLabel || product.category?.name}
               </div>
-              <h1 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(44px,5vw,72px)', lineHeight: '0.88', textTransform: 'uppercase', margin: '8px 0 0' }}>{product.name}</h1>
+              <h1 ref={titleRef} style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: TITLE_SIZE, lineHeight: TITLE_LINE_HEIGHT, textTransform: 'uppercase', margin: '8px 0 0' }}>{product.name}</h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '14px', fontSize: '14px', flexWrap: 'wrap' }}>
                 {count ? (
                   <>
@@ -429,7 +465,9 @@ export default function Product() {
             <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(40px,5vw,72px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '0' }}>You might also letter</h2>
             <A href={catHref} style={{ fontWeight: '600', textDecoration: 'none', borderBottom: '2px solid var(--gold)' }}>All {product?.category?.name?.toLowerCase() || 'jackets'} →</A>
           </div>
-          <div className="ez-product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '28px 20px' }}>
+          {/* at most four per row, and a card keeps that size even when the category has only one or two others
+              (auto-fit stretched a lone card across the whole row) */}
+          <div className="ez-product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(max(220px, calc((100% - 60px) / 4)),1fr))', gap: '28px 20px' }}>
             {related.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} slotPrefix="rel" />)}
           </div>
         </section>

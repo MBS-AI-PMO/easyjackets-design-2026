@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.webp" type="image/webp" />
+  <script>
+    // The admin's favicon (Site Identity & Logos), remembered from the last visit by
+    // src/utils/favicon.js, replaces the built-in one before anything else loads.
+    (function () {
+      try {
+        var c = JSON.parse(localStorage.getItem('ej-builder-favicons') || 'null');
+        if (!c || (!c.light && !c.dark)) return;
+        document.querySelectorAll("link[rel*='icon']").forEach(function (l) { l.remove(); });
+        var add = function (href, media) {
+          var l = document.createElement('link'); l.rel = 'icon'; l.href = href;
+          if (media) l.media = media;
+          document.head.appendChild(l);
+        };
+        add(c.light || c.dark);
+        if (c.light) add(c.light, '(prefers-color-scheme: light)');
+        if (c.dark) add(c.dark, '(prefers-color-scheme: dark)');
+      } catch (e) { /* no storage: the built-in icon stays until the admin's loads */ }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+  <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <title>Custom Jacket Designer — Easy Jackets</title>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="cjd-root"></div>
+  <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+</body>
+
+</html>

@@ -9,7 +9,11 @@ const metadataSchema = new mongoose.Schema({
   // Per-page Open Graph / Twitter card image. Empty means the page falls back
   // to the site-wide default social card.
   ogImage: { type: String, default: '' },
+  // Site identity (route '/global-settings'), used by the storefront and the admin:
+  // `favicon` is the tab icon for light-themed browsers, `faviconDark` for dark ones
+  // (empty = the light one everywhere).
   favicon: { type: String },
+  faviconDark: { type: String },
   navbarLogo: { type: String },
   footerLogo: { type: String },
   navbarLogoHeight: { type: Number, default: 75 },

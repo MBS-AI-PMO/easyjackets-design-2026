@@ -14,6 +14,7 @@ import {
 import instance from '../constant/instance';
 import { toast } from 'react-toastify';
 
+import { uploadUrl } from '../constant/url';
 const ACCENT = '#37a6ff';
 
 const GRADE_COLORS = {
@@ -1007,7 +1008,7 @@ const SeoHealth = () => {
                   }}>
                     {editForm.ogImage ? (
                       <img
-                        src={editForm.ogImage} alt="Share preview"
+                        src={uploadUrl(editForm.ogImage)} alt="Share preview"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     ) : (

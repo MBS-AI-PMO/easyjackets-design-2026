@@ -40,6 +40,7 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+import { STOREFRONT_URL, uploadUrl } from '../constant/url';
 // Designs saved before the move to Coolify storage still carry an
 // s3.amazonaws.com URL for their preview. That bucket is gone, so those URLs
 // answer 403 and every jacket shows as a blank tile. The design document keeps
@@ -48,7 +49,6 @@ import autoTable from 'jspdf-autotable';
 // plain catalogue products, are untouched by this.
 // The public site these admin links open. Same value the rest of this screen
 // already hard-coded; named once so it is not repeated per link.
-const STOREFRONT_URL = process.env.REACT_APP_STOREFRONT_URL || 'https://easyjackets.com';
 
 const money = (value) => `$${(Number(value) || 0).toFixed(2)}`;
 
@@ -128,7 +128,7 @@ const OrderDetails = () => {
         toast.info("Converting SVG to high-quality WebP...", { autoClose: 2000 });
         const img = new Image();
         img.crossOrigin = "Anonymous";
-        img.src = imageUrl;
+        img.src = uploadUrl(imageUrl);
 
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -364,6 +364,7 @@ const OrderDetails = () => {
         }
       }
 
+      resolvedUrl = uploadUrl(resolvedUrl); // our uploads come from the new backend
       console.log(`[loadImageAsBase64] Final Target: ${resolvedUrl}`);
 
       // --- STAGE 3: Loading via Image Object ---
@@ -1739,7 +1740,7 @@ const OrderDetails = () => {
                           if (isColor && typeof value === 'string') {
                             const colorObj = properties.colors?.find(c => c.code?.toLowerCase() === value?.toLowerCase());
                             const colorCode = colorObj ? colorObj.code : (value.startsWith('#') ? value : null);
-                            const colorName = colorObj ? toTitleCase(colorObj.name) : (value.startsWith('#') ? '' : toTitleCase(value));
+                            const colorName = colorObj ? toTitleCase(colorObj.name) : (value.startsWith('#') ? value.toUpperCase() : toTitleCase(value));
 
                             if (colorCode) {
                               return (
@@ -1996,7 +1997,7 @@ const OrderDetails = () => {
                                       }}
                                       onClick={() => handleOpenModal(imageContent, mainLabel)}
                                     >
-                                      <img src={imageContent} alt="preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                      <img src={uploadUrl(imageContent)} alt="preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                                         onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
                                     </Box>
                                     <IconButton
@@ -2042,17 +2043,30 @@ const OrderDetails = () => {
                                     Font: {fontInfo}
                                   </Typography>
                                 )}
+                                {(value.appearance || value.name?.appearance || value.letters?.appearance) && (
+                                  <Typography variant="caption" sx={{ color: '#555', fontStyle: 'italic' }}>
+                                    Style: {value.appearance || value.name?.appearance || value.letters?.appearance}
+                                  </Typography>
+                                )}
                               </Box>
                             );
                           }
 
-                          if (typeof value === 'boolean') return value ? "Assigned" : "None";
+                          if (typeof value === 'boolean') return value ? "Included" : "None";
                           return toTitleCase(value?.toString() || "");
                         };
 
-                        const filterEntries = (entries) => {
-                          return entries.filter(([key]) => key.toLowerCase() !== 'defaults');
-                        };
+                        // builder bookkeeping, not part of the jacket
+                        const HIDDEN_SPEC_KEYS = ['defaults', 'section', 'price'];
+                        const filterEntries = (entries) => entries.filter(([key]) => {
+                          const k = key.toLowerCase();
+                          if (HIDDEN_SPEC_KEYS.includes(k)) return false;
+                          if (k === 'insertscount') return Boolean(design.advance?.inserts);
+                          return true;
+                        });
+                        const SPEC_NAMES = { custom: 'Custom Measurements', insertsCount: 'Number Of Inserts' };
+                        const keyLabel = (key) => SPEC_NAMES[key] || toTitleCase(String(key).replace(/([a-z])([A-Z])/g, '$1 $2'));
+                        const SCALES = { in: 'Inches', cm: 'Centimetres' };
 
                         const ALL_PATCH_POSITIONS = [
                           "Front Center", "Left Chest", "Right Chest",
@@ -2069,6 +2083,40 @@ const OrderDetails = () => {
 
                         return (
                           <Box sx={{ mt: 2, p: 2, bgcolor: '#f0f4f8', borderRadius: 2, border: '1px dashed #cfd8dc' }}>
+                            {(() => {
+                              // the four renders the builder saved with the design (front, back and both sides)
+                              const views = [['Front', design.custom_image], ['Back', design.custom_image_back], ['Left', design.custom_image_left], ['Right', design.custom_image_right]]
+                                .filter(([, src]) => typeof src === 'string' && src && !DEAD_IMAGE_HOST.test(src));
+                              if (!views.length) return null;
+                              return (
+                                <Box sx={{ mb: 2 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#37a6ff', mb: 1 }}>
+                                    Design Views
+                                  </Typography>
+                                  <Grid container spacing={1.5}>
+                                    {views.map(([label, src]) => (
+                                      <Grid item xs={6} sm={3} key={label}>
+                                        <Box sx={{ bgcolor: '#fff', border: '1px solid #e3e8ee', borderRadius: 2, p: 1, transition: 'border-color .2s', '&:hover': { borderColor: '#37a6ff' } }}>
+                                          <Box
+                                            component="img"
+                                            src={uploadUrl(src)}
+                                            alt={`${item.name} — ${label} view`}
+                                            onClick={() => handleOpenModal(uploadUrl(src), `${item.name} — ${label} view`)}
+                                            sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', display: 'block', cursor: 'zoom-in' }}
+                                          />
+                                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                                            <Typography variant="caption" sx={{ fontWeight: 700, color: '#555' }}>{label}</Typography>
+                                            <IconButton size="small" aria-label={`Download the ${label.toLowerCase()} view`} onClick={() => handleDownloadImage(uploadUrl(src), `${orderData?.orderId || 'order'}-${label.toLowerCase()}`)}>
+                                              <DownloadIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                          </Box>
+                                        </Box>
+                                      </Grid>
+                                    ))}
+                                  </Grid>
+                                </Box>
+                              );
+                            })()}
                             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#37a6ff', mb: 1 }}>
                               Custom Design Specifications
                             </Typography>
@@ -2076,35 +2124,35 @@ const OrderDetails = () => {
                               {filterEntries(Object.entries(design.styles || {})).map(([key, value]) => (
                                 <Grid item xs={6} sm={4} key={key}>
                                   <Typography component="div" variant="body2" sx={{ display: 'block', color: '#666' }}>
-                                    <span style={{ fontWeight: 600 }}>{toTitleCase(key)}:</span> {renderValue(value, false, key, productId)}
+                                    <span style={{ fontWeight: 600 }}>{keyLabel(key)}:</span> {renderValue(key === 'scale' ? (SCALES[value] || value) : value, false, key, productId)}
                                   </Typography>
                                 </Grid>
                               ))}
                               {filterEntries(Object.entries(design.advance || {})).map(([key, value]) => (
                                 <Grid item xs={6} sm={4} key={key}>
                                   <Typography component="div" variant="body2" sx={{ display: 'block', color: '#666' }}>
-                                    <span style={{ fontWeight: 600 }}>{toTitleCase(key)}:</span> {renderValue(value, false, key, productId)}
+                                    <span style={{ fontWeight: 600 }}>{keyLabel(key)}:</span> {renderValue(key === 'scale' ? (SCALES[value] || value) : value, false, key, productId)}
                                   </Typography>
                                 </Grid>
                               ))}
                               {filterEntries(Object.entries(design.colors || {})).map(([key, value]) => (
                                 <Grid item xs={6} sm={4} key={key}>
                                   <Typography component="div" variant="body2" sx={{ display: 'block', color: '#666' }}>
-                                    <span style={{ fontWeight: 600 }}>{toTitleCase(key)} Color:</span> {renderValue(value, true, key, productId)}
+                                    <span style={{ fontWeight: 600 }}>{keyLabel(key)} Color:</span> {renderValue(value, true, key, productId)}
                                   </Typography>
                                 </Grid>
                               ))}
                               {filterEntries(Object.entries(design.materials || {})).map(([key, value]) => (
                                 <Grid item xs={6} sm={4} key={key}>
                                   <Typography component="div" variant="body2" sx={{ display: 'block', color: '#666' }}>
-                                    <span style={{ fontWeight: 600 }}>{toTitleCase(key)} Material:</span> {renderValue(value, false, key, productId)}
+                                    <span style={{ fontWeight: 600 }}>{keyLabel(key)} Material:</span> {renderValue(value, false, key, productId)}
                                   </Typography>
                                 </Grid>
                               ))}
                               {filterEntries(Object.entries(design.sizes || {})).map(([key, value]) => (
                                 <Grid item xs={6} sm={4} key={key}>
                                   <Typography component="div" variant="body2" sx={{ display: 'block', color: '#666' }}>
-                                    <span style={{ fontWeight: 600 }}>{toTitleCase(key)}:</span> {renderValue(value, false, key, productId)}
+                                    <span style={{ fontWeight: 600 }}>{keyLabel(key)}:</span> {renderValue(key === 'scale' ? (SCALES[value] || value) : value, false, key, productId)}
                                   </Typography>
                                 </Grid>
                               ))}
@@ -2158,7 +2206,7 @@ const OrderDetails = () => {
                               >
                                 <Avatar
                                   id={`product-avatar-${index}`}
-                                  src={productImage}
+                                  src={uploadUrl(productImage)}
                                   variant="rounded"
                                   sx={{ width: 80, height: 80, bgcolor: '#eee', border: '1px solid #ddd' }}
                                 >
@@ -2271,7 +2319,7 @@ const OrderDetails = () => {
           <IconButton onClick={handleCloseModal}><CloseIcon /></IconButton>
         </Box>
         <DialogContent sx={{ p: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#e0e0e0', minHeight: '300px' }}>
-          {selectedImage?.url && <img src={selectedImage.url} alt="Preview" style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain' }} />}
+          {selectedImage?.url && <img src={uploadUrl(selectedImage.url)} alt="Preview" style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain' }} />}
         </DialogContent>
         <DialogActions sx={{ p: 2, bgcolor: '#fff', borderTop: '1px solid #eee' }}>
           <Button onClick={handleCloseModal} color="inherit" sx={{ textTransform: 'none', fontWeight: 'bold' }}>Close</Button>

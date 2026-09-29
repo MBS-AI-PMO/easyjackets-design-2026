@@ -1,22 +1,68 @@
-// The cart: what the visitor added on product pages (localStorage, see
-// lib/cart.jsx), with shipping from the admin's rate tiers.
+// The cart: what the visitor added on product pages and in the jacket builder
+// (localStorage, see lib/cart.jsx), with shipping from the admin's rate tiers.
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { useCart } from '../lib/cart';
-import { money, previewShipping } from '../lib/orders';
-import { useAsync } from '../lib/useAsync';
+import { designLine, editDesignUrl, fetchBuilderCarts, fetchDesign, isDesignLine } from '../lib/designs';
+import { money, useShipping } from '../lib/orders';
 import { usePageTitle } from '../lib/usePageTitle';
 import { productPath } from '../lib/urls';
 
 export default function Cart() {
   usePageTitle('Your cart', 'Review your custom jackets before checkout.');
   const cart = useCart();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const cancelled = params.get('cancelled') === '1';
-  const { data: shipping } = useAsync((signal) => (cart.count ? previewShipping(cart.count, 'US', cart.subtotal, signal) : Promise.resolve({ cost: 0 })), [cart.count, cart.subtotal]);
+  const [builderNotice, setBuilderNotice] = useState(null);
+
+  // The builder's Add to cart lands here as /cart?index=<saved cart ids>: add each design once
+  // (a reload or a second visit never doubles it), then drop the ids from the address.
+  const incoming = params.get('index');
+  const handled = useRef('');
+  const itemsRef = useRef(cart.items);
+  itemsRef.current = cart.items;
+  const { add, updateDesign } = cart;
+  useEffect(() => {
+    if (!incoming || handled.current === incoming) return;
+    handled.current = incoming;
+    const ids = incoming.split(',').map((s) => s.trim()).filter(Boolean);
+    fetchBuilderCarts(ids)
+      .then((saved) => {
+        const have = new Set(itemsRef.current.filter(isDesignLine).map((l) => l.designId));
+        let added = 0;
+        for (const c of saved) {
+          if (have.has(c.designId._id)) continue;
+          add(designLine(c.designId), Math.max(1, Number(c.product_qty) || 1));
+          added += 1;
+        }
+        setBuilderNotice(added
+          ? { tone: 'ok', text: `${added === 1 ? 'Your jacket is' : `${added} jackets are`} in the cart. Review each build below, then check out.` }
+          : { tone: 'ok', text: saved.length ? 'Those jackets are already in your cart.' : 'We could not find those jackets. Please use Add to cart in the design lab again.' });
+      })
+      .catch(() => setBuilderNotice({ tone: 'error', text: 'We could not load your jackets from the design lab. Please use Add to cart there again.' }))
+      .finally(() => setParams((p) => { const next = new URLSearchParams(p); next.delete('index'); return next; }, { replace: true }));
+  }, [incoming, add, setParams]);
+
+  // A design edited in the builder (Edit design -> Update cart) comes back here with a new price,
+  // size or image: reread every design line on arrival and whenever the tab is shown again.
+  const designIds = cart.items.filter(isDesignLine).map((l) => l.designId).join(',');
+  useEffect(() => {
+    if (!designIds) return undefined;
+    let alive = true;
+    const refresh = () => designIds.split(',').forEach((id) => {
+      fetchDesign(id).then((d) => { if (alive && d) updateDesign(id, designLine(d)); }).catch(() => { /* keep the line as it was */ });
+    });
+    const onShow = () => { if (document.visibilityState === 'visible') refresh(); };
+    refresh();
+    document.addEventListener('visibilitychange', onShow);
+    window.addEventListener('pageshow', onShow);
+    return () => { alive = false; document.removeEventListener('visibilitychange', onShow); window.removeEventListener('pageshow', onShow); };
+  }, [designIds, updateDesign]);
+  const shipping = useShipping(cart.count, 'US', cart.subtotal);
   const shipCost = shipping ? shipping.cost : null;
   const total = cart.subtotal + (shipCost || 0);
 
@@ -45,6 +91,11 @@ export default function Cart() {
                 Payment was cancelled. Your cart is still here whenever you are ready.
               </p>
             ) : null}
+            {builderNotice ? (
+              <p role="status" style={{ margin: '16px 0 0', padding: '12px 16px', background: '#fbf8f2', border: `1px solid ${builderNotice.tone === 'error' ? '#b3261e' : 'var(--gold)'}`, borderRadius: '4px', fontSize: '14px', color: 'var(--ink-2)' }}>
+                {builderNotice.text}
+              </p>
+            ) : null}
           </div>
         </div>
       </section>
@@ -56,15 +107,15 @@ export default function Cart() {
               <div style={{ display: 'grid', gap: '0' }}>
                 {cart.items.map((i) => (
                   <div key={i.key} style={{ display: 'grid', gridTemplateColumns: '120px minmax(0,1fr) auto', gap: '20px', padding: '24px 0', borderTop: '1px solid var(--ink)', alignItems: 'start' }}>
-                    <div className="ez-product-photo" style={{ aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden' }}>
-                      <ImageSlot slot={`cart-${i.key}`} shape="rect" src={i.image} width={320} placeholder="Jacket" aria-label={i.name} />
+                    <div className={`ez-product-photo${isDesignLine(i) ? ' ez-design-photo' : ''}`} style={{ aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden' }}>
+                      <ImageSlot slot={`cart-${i.key}`} shape="rect" src={i.image} width={320} knockout={isDesignLine(i)} placeholder="Jacket" aria-label={i.name} />
                     </div>
                     <div>
                       <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '26px', lineHeight: '0.95', textTransform: 'uppercase' }}>
                         {i.name}
                       </div>
                       <div style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '8px', lineHeight: '1.5' }}>
-                        {[i.color, i.size ? `Size ${i.size}` : ''].filter(Boolean).join(' · ') || 'Standard build'}
+                        {[isDesignLine(i) ? 'Your design' : '', i.color, i.size ? `Size ${i.size}` : ''].filter(Boolean).join(' · ') || 'Standard build'}
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', alignItems: 'center', marginTop: '16px' }}>
                         <div className="ez-qty">
@@ -76,6 +127,16 @@ export default function Cart() {
                           <A href={productPath(i.slug)} style={{ fontSize: '13px', fontWeight: '600', textDecoration: 'none', borderBottom: '2px solid var(--gold)' }}>
                             View jacket
                           </A>
+                        ) : null}
+                        {isDesignLine(i) ? (
+                          <>
+                            <A href={`/design/${encodeURIComponent(i.designId)}`} style={{ fontSize: '13px', fontWeight: '600', textDecoration: 'none', borderBottom: '2px solid var(--gold)' }}>
+                              Review design
+                            </A>
+                            <a href={editDesignUrl(i)} style={{ fontSize: '13px', fontWeight: '600', textDecoration: 'none', color: 'inherit', borderBottom: '2px solid var(--gold)' }}>
+                              Edit design
+                            </a>
+                          </>
                         ) : null}
                         <button type="button" onClick={() => cart.remove(i.key)} style={{ font: 'inherit', fontSize: '13px', fontWeight: '600', background: 'none', border: '0', color: 'var(--muted)', cursor: 'pointer', padding: '0' }}>
                           Remove

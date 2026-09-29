@@ -23,6 +23,7 @@ import OrderBulkTable from './Components/bulkOrderTable';
 import WebsiteDetails from './Components/websitedetail';
 import BlogManager from './Components/blogs';
 import UserTable from './Components/user';
+import Subscribers from './Components/Subscribers';
 import AdminTable from './Components/admin';
 import MetadataManager from './Components/metadata';
 import Colors from './Components/color';
@@ -33,6 +34,7 @@ import DeletedOrders from './Components/deletedOrder';
 import AnalyticsDashboard from './Components/AnalyticsDashboard';
 import EngineConfiguration from './Components/EngineConfiguration';
 import EmailConfiguration from './Components/EmailConfiguration';
+import PaymentConfiguration from './Components/PaymentConfiguration';
 import ShippingRates from './Components/ShippingRates';
 import FontsManager from './Components/fonts';
 import ProductReviews from './Components/ProductReviews';
@@ -43,6 +45,7 @@ import SeoHealth from './Components/SeoHealth';
 import IndexControl from './Components/IndexControl';
 import VisitorAnalytics from './Components/VisitorAnalytics';
 
+import { applyFavicons } from './utils/favicon';
 const getStoredAuthToken = () => {
    try {
       return JSON.parse(sessionStorage.getItem("auth"))?.token || "";
@@ -51,20 +54,6 @@ const getStoredAuthToken = () => {
    }
 };
 
-const applyFavicon = (favicon, version) => {
-   if (!favicon) return;
-
-   const href = `${favicon}${favicon.includes('?') ? '&' : '?'}v=${encodeURIComponent(version || Date.now())}`;
-   document.querySelectorAll("link[rel*='icon']").forEach((link) => link.remove());
-
-   ['icon', 'shortcut icon'].forEach((rel) => {
-      const link = document.createElement('link');
-      link.rel = rel;
-      link.type = 'image/webp';
-      link.href = href;
-      document.head.appendChild(link);
-   });
-};
 
 
 
@@ -82,7 +71,7 @@ export default function App() {
          try {
             const { data } = await axios.get(`${BASE_URL}/metadata/global-settings`);
             const metadata = data?.metadata;
-            applyFavicon(metadata?.favicon, metadata?.updatedAt || metadata?._id);
+            applyFavicons(metadata || {}, metadata?.updatedAt || metadata?._id);
          } catch (error) {
             console.error('Error fetching global favicon:', error);
          }
@@ -107,10 +96,12 @@ export default function App() {
                   <Route path="/custom-jacket-faqs" element={<StorefrontFaqs />} />
                   <Route path="/category" element={<Categories />} />
                   <Route path="/users" element={<UserTable />} />
+                  <Route path="/subscribers" element={<Subscribers />} />
                   <Route path="/admin" element={<AdminTable />} />
                   <Route path="/insights" element={<AnalyticsDashboard />} />
                   <Route path="/analytics-configuration" element={<EngineConfiguration />} />
                   <Route path="/email-configuration" element={<EmailConfiguration />} />
+                  <Route path="/payment-configuration" element={<PaymentConfiguration />} />
                   <Route path="/shipping-rates" element={<ShippingRates />} />
                   <Route path="/engine-configuration" element={<Navigate to="/analytics-configuration" replace />} />
 

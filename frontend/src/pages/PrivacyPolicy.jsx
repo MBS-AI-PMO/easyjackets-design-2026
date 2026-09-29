@@ -3,9 +3,14 @@ import A from '../components/A';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { usePageTitle } from '../lib/usePageTitle';
+import { fetchWebsiteDetails } from '../lib/site';
+import { useAsync } from '../lib/useAsync';
 
 export default function PrivacyPolicy() {
   usePageTitle('Privacy Policy', 'What Easy Jackets collects when you order a custom jacket, why it is needed, who it is shared with and how you control it.');
+  // questions go to the site's contact email from the admin (Website Details -> Contact Information)
+  const { data: site } = useAsync(fetchWebsiteDetails, []);
+  const email = site?.email || 'info@easyjackets.com';
 
   return (
     <div className="pg-privacy-policy">
@@ -98,7 +103,7 @@ export default function PrivacyPolicy() {
           <h2 id="rights">Your rights</h2>
           <p>
             You can ask us to give you a copy of your data, correct it, delete it, or stop using it for marketing. Email{' '}
-            <A href="mailto:privacy@easyjackets.com">privacy@easyjackets.com</A>
+            <A href={`mailto:${email}`}>{email}</A>
             {' '}and we will respond within 30 days. If you are in the EU or UK, you may also complain to your local data protection authority.
           </p>
           <h2 id="children">Children</h2>
@@ -108,7 +113,7 @@ export default function PrivacyPolicy() {
           <h2 id="contact-dpo">Contact</h2>
           <p>
             Questions about this policy:{' '}
-            <A href="mailto:privacy@easyjackets.com">privacy@easyjackets.com</A>
+            <A href={`mailto:${email}`}>{email}</A>
             , or through the{' '}
             <A href="/contact-us">contact page</A>
             .

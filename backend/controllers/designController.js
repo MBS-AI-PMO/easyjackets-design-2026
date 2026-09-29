@@ -20,7 +20,7 @@ import { fileURLToPath } from 'url';
 import uploadToS3, { bufferToS3, getPublicFileUrl } from '../helpers/fileUpload.js'
 import moment from "moment/moment.js";
 import { sendFileEmail } from "../helpers/fileEmail.js";
-import { resumeDesignUrl } from "../helpers/customJacketUrl.js";
+import { designReviewUrl, resumeDesignUrl } from "../helpers/customJacketUrl.js";
 import formidable from "formidable";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -431,6 +431,10 @@ const snapshotSharedDesign = async (req, design = {}) => {
   // every view render before it assembles the payload. Only the front is
   // required by the schema, so bail rather than write a half-built document.
   const isImage = (value) => /^data:image\//i.test(String(value || ''));
+  // shared again from the storefront's design page: the design is already saved, so link to it
+  if (!isImage(design.custom_image) && /^[0-9a-f]{24}$/i.test(String(design._id || ''))) {
+    return (await Design.exists({ _id: design._id })) ? { designId: String(design._id), categoryCode: String(categoryCode) } : null;
+  }
   if (!isImage(design.custom_image)) return null;
 
   const upload = async (value) => (isImage(value) ? bufferToS3(value) : undefined);
@@ -465,12 +469,16 @@ export const shareDesign = async (req, res) => {
       console.error("Could not snapshot the shared design - the email will link to the studio instead:".yellow, error?.message);
     }
 
+    const jacket = String(design?.globals?.catName || 'Jacket').trim().replace(/s$/i, '')
     const result = await sendFileEmail(
-      `easyjackets design - ${moment(Date.now()).format('MM-DD-YY')}`,
+      `Your custom ${jacket.toLowerCase()} design · Easy Jackets`,
       email,
       { ...design, shareName: name },
       '/views/design.ejs',
-      { resumeUrl: resumeDesignUrl(snapshot?.designId, snapshot?.categoryCode) }
+      {
+        resumeUrl: resumeDesignUrl(snapshot?.designId, snapshot?.categoryCode),
+        reviewUrl: designReviewUrl(snapshot?.designId),
+      }
     )
 
     return res.status(200).json({

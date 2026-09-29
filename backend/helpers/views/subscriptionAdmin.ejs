@@ -1,169 +1,60 @@
+<%
+  // New newsletter subscriber, to the team (POST /features/subscribe). Bulk quote email design.
+%>
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
-            color: #211d18;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        table {
-            border-collapse: collapse;
-        }
-
-        .wrapper {
-            width: 100%;
-            background: #ffffff;
-            padding: 28px 12px;
-        }
-
-        .email-card {
-            width: 100%;
-            max-width: 620px;
-            margin: 0 auto;
-            background: #fffaf2;
-            border: 1px solid #e4d6c3;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 18px 50px rgba(33, 29, 24, 0.10);
-        }
-
-        .header {
-            background: #11100e;
-            color: #f5eee3;
-            padding: 30px 32px;
-        }
-
-        .eyebrow {
-            color: #c4703a;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            margin: 0 0 12px;
-        }
-
-        h1 {
-            margin: 0;
-            font-family: Georgia, 'Times New Roman', serif;
-            font-size: 32px;
-            line-height: 1.08;
-            font-weight: 400;
-            letter-spacing: -0.03em;
-        }
-
-        .content {
-            padding: 32px;
-        }
-
-        .content p {
-            margin: 0 0 18px;
-            color: #5f574c;
-            font-size: 15px;
-            line-height: 1.7;
-        }
-
-        .detail-card {
-            background: #f1e6d7;
-            border: 1px solid #e2d2bd;
-            border-radius: 14px;
-            padding: 22px;
-            margin: 20px 0;
-        }
-
-        .label {
-            color: #8a7c6d;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .value {
-            color: #211d18;
-            font-size: 18px;
-            font-weight: 700;
-            line-height: 1.35;
-            word-break: break-word;
-        }
-
-        .meta-row {
-            padding-top: 16px;
-            margin-top: 16px;
-            border-top: 1px solid rgba(33, 29, 24, 0.10);
-        }
-
-        .footer {
-            background: #11100e;
-            color: rgba(245, 238, 227, 0.56);
-            padding: 20px 32px;
-            font-size: 12px;
-            line-height: 1.7;
-        }
-
-        @media only screen and (max-width: 520px) {
-            .header,
-            .content,
-            .footer {
-                padding-left: 22px;
-                padding-right: 22px;
-            }
-
-            h1 {
-                font-size: 28px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <title>New newsletter subscriber</title>
+  <style>
+    body { margin: 0; padding: 0; background: #f4efe6; -webkit-text-size-adjust: 100%; }
+    table { border-collapse: collapse; }
+    @media only screen and (max-width: 560px) {
+      .px { padding-left: 22px !important; padding-right: 22px !important; }
+      .h1 { font-size: 26px !important; }
+      .row td { display: block !important; width: auto !important; padding: 2px 0 !important; }
+      .row td.k { padding-top: 12px !important; }
+    }
+  </style>
 </head>
-
-<body>
-    <table class="wrapper" role="presentation" width="100%">
-        <tr>
-            <td>
-                <table class="email-card" role="presentation">
-                    <tr>
-                        <td class="header">
-                            <p class="eyebrow">Newsletter Signup</p>
-                            <h1>A new subscriber joined Easy Jackets.</h1>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="content">
-                            <p>
-                                Someone subscribed through the Easy Jackets website newsletter form.
-                            </p>
-
-                            <div class="detail-card">
-                                <div class="label">Subscriber Email</div>
-                                <div class="value"><%= data.email %></div>
-
-                                <div class="meta-row">
-                                    <div class="label">Subscription Date</div>
-                                    <div class="value" style="font-size:16px;"><%= data.date %></div>
-                                </div>
-                            </div>
-
-                            <p style="font-size:13px;color:#8a7c6d;">
-                                This email was generated automatically so the team can track new newsletter interest.
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="footer">
-                            Easy Jackets admin notification
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<body style="margin:0;padding:0;background:#f4efe6;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;"><%= data.email %> joined the Easy Jackets newsletter.</div>
+  <table role="presentation" width="100%" style="background:#f4efe6;">
+    <tr><td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="100%" style="max-width:620px;background:#fbf8f2;border:1px solid #e9e1d2;border-radius:6px;overflow:hidden;">
+        <tr><td style="height:6px;background:#c9a227;line-height:6px;font-size:0;">&nbsp;</td></tr>
+        <tr><td class="px" style="background:#14110f;padding:28px 36px 32px;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c9a227;text-transform:uppercase;">New newsletter subscriber</div>
+          <div class="h1" style="margin-top:12px;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-size:32px;line-height:1.05;font-weight:800;color:#f4efe6;word-break:break-all;"><%= data.email %></div>
+        </td></tr>
+        <tr><td class="px" style="padding:26px 36px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#a8861c;text-transform:uppercase;padding-bottom:10px;border-bottom:2px solid #14110f;">Details</div>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            <tr class="row">
+              <td class="k" width="32%" style="padding:11px 12px 11px 0;border-bottom:1px solid #e9e1d2;font-size:13px;color:#6b635a;">Email</td>
+              <td style="padding:11px 0;border-bottom:1px solid #e9e1d2;font-size:14px;font-weight:700;"><a href="mailto:<%= data.email %>" style="color:#14110f;text-decoration:underline;text-decoration-color:#c9a227;"><%= data.email %></a></td>
+            </tr>
+            <% if (data.date) { %>
+            <tr class="row">
+              <td class="k" width="32%" style="padding:11px 12px 11px 0;border-bottom:1px solid #e9e1d2;font-size:13px;color:#6b635a;">Subscribed</td>
+              <td style="padding:11px 0;border-bottom:1px solid #e9e1d2;font-size:14px;font-weight:700;color:#14110f;"><%= data.date %></td>
+            </tr>
+            <% } %>
+            <tr class="row">
+              <td class="k" width="32%" style="padding:11px 12px 11px 0;border-bottom:1px solid #e9e1d2;font-size:13px;color:#6b635a;">Signed up from</td>
+              <td style="padding:11px 0;border-bottom:1px solid #e9e1d2;font-size:14px;font-weight:700;color:#14110f;">Website footer (newsletter)</td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td class="px" style="padding:22px 36px 30px;">
+          <a href="mailto:<%= data.email %>?subject=<%= encodeURIComponent('Welcome to Easy Jackets') %>" style="display:inline-block;padding:13px 20px;background:#14110f;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;">Email them</a>
+          <p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#6b635a;">They have been sent the welcome email.</p>
+        </td></tr>
+        <tr><td style="background:#14110f;padding:16px 36px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:.14em;font-weight:900;color:#f4efe6;">EASY JACKETS</td></tr>
+      </table>
+    </td></tr>
+  </table>
 </body>
-
 </html>

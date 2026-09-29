@@ -9,7 +9,9 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { useAuth } from '../lib/auth';
 import { useCart } from '../lib/cart';
-import { COUNTRIES, checkoutProducts, countryName, createCodOrder, createStripeSession, money, previewShipping } from '../lib/orders';
+import { isDesignLine } from '../lib/designs';
+import { COUNTRIES, checkoutProducts, countryName, createCodOrder, createStripeSession, money, useShipping } from '../lib/orders';
+import { fetchWebsiteDetails } from '../lib/site';
 import { useAsync } from '../lib/useAsync';
 import { usePageTitle } from '../lib/usePageTitle';
 
@@ -23,6 +25,9 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [form, setForm] = useState(() => ({ ...splitName(user?.name), email: user?.email || '', phone: user?.phone || '', address: addressText(user?.address), address2: '', city: '', state: '', zip: '', country: 'US' }));
   const [pay, setPay] = useState('card');
+  const { data: site } = useAsync(fetchWebsiteDetails, []);
+  // switched off in the admin while cash on delivery was picked: back to card
+  useEffect(() => { if (site?.cod === false && pay === 'cod') setPay('card'); }, [site, pay]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,7 +38,7 @@ export default function Checkout() {
   // Nothing to pay for: back to the cart (but not while an order is being placed).
   useEffect(() => { if (!cart.items.length && !busy) navigate('/cart', { replace: true }); }, [cart.items.length, busy, navigate]);
 
-  const { data: shipping } = useAsync((signal) => (cart.count ? previewShipping(cart.count, form.country, cart.subtotal, signal) : Promise.resolve({ cost: 0 })), [cart.count, cart.subtotal, form.country]);
+  const shipping = useShipping(cart.count, form.country, cart.subtotal);
   const shipCost = shipping ? shipping.cost : null;
   const total = cart.subtotal + (shipCost || 0);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -159,7 +164,8 @@ export default function Checkout() {
             </div>
             <div style={{ display: 'grid', gap: '14px' }}>
               <h2 style={h2}><span style={{ color: 'var(--gold-2)' }}>04</span> Payment</h2>
-              {[['card', 'Credit or debit card', 'Secure Stripe page'], ['cod', 'Cash on delivery', 'Pay when it arrives']].map(([v, label, hint]) => (
+              {/* cash on delivery only when it is switched on in the admin (Website Details -> Checkout Settings) */}
+              {[['card', 'Credit or debit card', 'Secure Stripe page'], ...(site?.cod === false ? [] : [['cod', 'Cash on delivery', 'Pay when it arrives']])].map(([v, label, hint]) => (
                 <div key={v} className="ez-radio" role="radio" aria-checked={pay === v} onClick={() => setPay(v)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setPay(v); }}>
                   <span className="dot" />
                   <div style={{ flex: '1', fontWeight: '600' }}>{label}</div>
@@ -197,8 +203,8 @@ export default function Checkout() {
           <div style={{ display: 'grid', gap: '16px' }}>
             {cart.items.map((i) => (
               <div key={i.key} style={{ display: 'grid', gridTemplateColumns: '64px minmax(0,1fr) auto', gap: '14px', alignItems: 'center' }}>
-                <div className="ez-product-photo" style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '2px', overflow: 'visible' }}>
-                  <ImageSlot slot={`co-${i.key}`} shape="rect" src={i.image} width={320} placeholder="Jacket" aria-label={i.name} />
+                <div className={`ez-product-photo${isDesignLine(i) ? ' ez-design-photo' : ''}`} style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '2px', overflow: 'visible' }}>
+                  <ImageSlot slot={`co-${i.key}`} shape="rect" src={i.image} width={320} knockout={isDesignLine(i)} placeholder="Jacket" aria-label={i.name} />
                   <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--ink)', color: 'var(--cream)', fontSize: '11px', fontWeight: '700', width: '20px', height: '20px', borderRadius: '50%', display: 'grid', placeItems: 'center' }}>
                     {i.quantity}
                   </span>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46.35 27.04">
+  <title>korea</title>
+  <g id="Layer_2" data-name="Layer 2">
+    <g id="Layer_1-2" data-name="Layer 1">
+      <g id="korea">
+        <rect width="46.35" height="27.04" style="fill: #fff"/>
+        <g>
+          <rect x="30.51" y="4.51" width="1.13" height="3.1" transform="translate(1.85 18.23) rotate(-33.63)"/>
+          <polygon points="32.71 7.5 34.43 10.08 33.49 10.71 31.77 8.13 32.71 7.5"/>
+          <rect x="32.94" y="3.26" width="1.13" height="6.76" transform="translate(1.94 19.69) rotate(-33.68)"/>
+          <polygon points="33.49 2.58 35.21 5.16 34.27 5.78 32.55 3.21 33.49 2.58"/>
+          <rect x="35.35" y="5.68" width="1.13" height="3.1" transform="translate(2.01 21.1) rotate(-33.63)"/>
+          <rect x="13.7" y="16.08" width="1.13" height="6.76" transform="translate(-8.4 11.19) rotate(-33.7)"/>
+          <rect x="11.28" y="17.31" width="1.13" height="3.09" transform="translate(-8.47 9.74) rotate(-33.69)"/>
+          <rect x="13.31" y="20.37" width="1.13" height="3.1" transform="translate(-9.82 11.35) rotate(-33.63)"/>
+          <rect x="10.9" y="17.96" width="1.13" height="6.76" transform="translate(-9.91 9.94) rotate(-33.68)"/>
+          <polygon points="11.93 10.08 15.68 4.46 16.61 5.08 12.87 10.71 11.93 10.08"/>
+          <rect x="9.48" y="6.09" width="6.76" height="1.13" transform="translate(0.2 13.67) rotate(-56.32)"/>
+          <rect x="8.09" y="5.15" width="6.77" height="1.13" transform="translate(0.36 12.09) rotate(-56.35)"/>
+          <rect x="29.53" y="20.41" width="3.09" height="1.13" transform="translate(-3.62 35.17) rotate(-56.27)"/>
+          <polygon points="31.77 18.92 33.49 16.33 34.43 16.96 32.71 19.54 31.77 18.92"/>
+          <rect x="30.92" y="21.36" width="3.1" height="1.13" transform="translate(-3.78 36.79) rotate(-56.32)"/>
+          <rect x="32.97" y="18.3" width="3.1" height="1.13" transform="translate(-0.35 37.07) rotate(-56.23)"/>
+          <polygon points="32.55 23.83 34.27 21.26 35.21 21.88 33.49 24.46 32.55 23.83"/>
+          <polygon points="34.58 20.79 36.3 18.21 37.24 18.84 35.52 21.41 34.58 20.79"/>
+          <path d="M26.93,7.89a6.77,6.77,0,0,0-9.38,1.88,3.38,3.38,0,0,0,5.63,3.75,3.38,3.38,0,1,1,5.62,3.75,6.77,6.77,0,0,0-1.87-9.38" style="fill: #b50037"/>
+          <path d="M17.55,9.77a3.38,3.38,0,0,0,5.63,3.75,3.38,3.38,0,1,1,5.62,3.75,6.76,6.76,0,1,1-11.25-7.5" style="fill: #1e3476"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

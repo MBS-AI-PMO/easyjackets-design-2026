@@ -24,7 +24,7 @@ export default function StatePage() {
   const freeOver = rates?.enabled && rates.freeShippingOver > 0 ? money(rates.freeShippingOver) : '';
   // popular picks: real jackets from the catalogue (no hoodies), a fresh random set on every visit and state
   const { pathname } = useLocation();
-  const { data: picks, error: picksError } = useAsync((signal) => fetchRandomJackets(4, signal), [pathname]);
+  const { data: picks, error: picksError } = useAsync((signal) => fetchRandomJackets(4, signal), [pathname], { live: false }); // random per visit
   // customer quotes: the admin's testimonials (Features screen), as on the landing page
   const { data: testimonials } = useAsync((signal) => fetchTestimonials(signal), []);
 

@@ -1,49 +1,31 @@
 // Embroidery & Patches — the Photo Gallery layout, for stitched details only:
-// chenille letters, patches, embroidery, names and numbers. Tiles come from
-// the admin's Gallery (tagged by their captions) and the client's own detail
-// shots in public/images/site; both sets alternate down the grid.
+// chenille letters, patches, embroidery, names and numbers. Every tile comes from
+// the admin's "Embroidery & Patches" screen (GET /patches, newest first; tags =
+// the techniques shown), so photos are added, edited or removed there.
 import { useState } from 'react';
 import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
-import { fetchGallery, fetchPatchPhotos, patchTags } from '../lib/content';
+import { fetchPatchPhotos } from '../lib/content';
 import { useAsync } from '../lib/useAsync';
 import { usePageTitle } from '../lib/usePageTitle';
-import PHOTOS from '../data/embroidery-photos.json';
 
-const IMG = '/images/site';
-const TAGS = ['Patches', 'Chenille', 'Embroidery', 'Rhinestone', 'Printed', 'Names & numbers'];
-
-// Patch and lettering samples photographed in the workshop, hosted on the live
-// site's upload storage (scripts/uploadToLiveStorage.mjs fills in the urls).
-const SAMPLES = PHOTOS.filter((p) => p.url).map((p) => ({ id: p.slug, src: p.url, cap: p.cap, tags: p.tags }));
+// the usual techniques lead, in this order; tags the admin adds follow A-Z
+const TAG_ORDER = ['Patches', 'Chenille', 'Embroidery', 'Rhinestone', 'Printed', 'Names & numbers'];
 const RATIOS = ['4/5', '3/2', '1/1'];
-
-// (the other site photos — Moldrik, Robinson, AKA, Mya — were taken off this page at the client's request)
-const OWN = [
-  { id: 'own-s', src: `${IMG}/red-s-jacket.webp`, cap: 'Chenille letter, name & numbers', tags: ['Chenille', 'Patches', 'Names & numbers'] },
-];
-
-const interleave = (a, b) => {
-  const out = [];
-  for (let i = 0; i < Math.max(a.length, b.length); i += 1) { if (a[i]) out.push(a[i]); if (b[i]) out.push(b[i]); }
-  return out;
-};
 
 export default function EmbroideryPatches() {
   usePageTitle('Embroidery & Patches', 'Chenille letters, embroidered patches, crests, names and numbers on real custom varsity jackets — stitched, never printed.');
   const [tag, setTag] = useState('All');
-  const { data: gallery } = useAsync(fetchGallery, []);
-  // Photos uploaded in the admin's Embroidery & Patches screen come first; the
-  // launch set from the manifest follows (until it is re-uploaded there).
-  const { data: adminPhotos } = useAsync(fetchPatchPhotos, []);
+  const { data: adminPhotos, loading, error } = useAsync(fetchPatchPhotos, []);
 
-  const fromGallery = (gallery || []).map((g) => ({ id: g.id, src: g.image, cap: g.caption || 'Customer photo', tags: patchTags(g.caption || '') }));
-  const fromAdmin = (adminPhotos || []).map((p) => ({ id: p.id, src: p.image, cap: p.caption || 'Patch photo', tags: p.tags }));
-  const all = interleave(fromGallery, [...fromAdmin, ...SAMPLES, ...OWN]).map((p, i) => ({ ...p, ratio: RATIOS[i % RATIOS.length], slot: `emb-${p.id}` }));
+  const all = (adminPhotos || []).map((p, i) => ({ id: p.id, src: p.image, cap: p.caption || 'Patch photo', tags: p.tags, ratio: RATIOS[i % RATIOS.length], slot: `emb-${p.id}` }));
   const photos = all.filter((p) => tag === 'All' || p.tags.includes(tag));
-  const chips = ['All', ...TAGS].map((c) => ({ label: c, active: tag === c, select: () => setTag(c) }));
+  // filter chips = the tags the visible photos carry (defaults first, then the admin's own, A-Z)
+  const used = [...new Set(all.flatMap((p) => p.tags || []))];
+  const tags = [...TAG_ORDER.filter((t) => used.includes(t)), ...used.filter((t) => !TAG_ORDER.includes(t)).sort((a, b) => a.localeCompare(b))];
+  const chips = ['All', ...tags].map((c) => ({ label: c, active: tag === c, select: () => setTag(c) }));
 
   return (
     <div className="pg-embroidery">
@@ -96,6 +78,10 @@ export default function EmbroideryPatches() {
               {c.label}
             </button>
           ))}
+          {/* while the photos load: placeholder chips where the tags will be */}
+          {loading ? [92, 104, 124, 118, 96].map((w, i) => (
+            <span key={`sk-${i}`} className="ez-chip ez-skeleton" aria-hidden="true" style={{ width: `${w}px`, height: '42px', padding: 0, border: 0, pointerEvents: 'none' }} />
+          )) : null}
           {/* phones: the device's own dropdown instead of the chips */}
           <select className="ez-input ez-chip-select" aria-label="Filter photos" value={(chips.find((c) => c.active) || chips[0] || {}).label || ''} onChange={(e) => chips.find((c) => c.label === e.target.value)?.select()}>
             {chips.map((c) => <option key={c.label} value={c.label}>{c.label}</option>)}
@@ -104,8 +90,13 @@ export default function EmbroideryPatches() {
       </section>
       {/* grid */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '28px clamp(16px,4vw,48px) 0' }}>
+        {error ? <p role="alert" style={{ color: 'var(--muted)', margin: '0 0 16px' }}>The photos could not be loaded ({error.message}).</p> : null}
         <div style={{ columns: '3 280px', columnGap: '20px' }}>
-          {photos.map((p) => (
+          {loading ? Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="ez-gal" aria-busy="true" style={{ aspectRatio: RATIOS[i % RATIOS.length] }}>
+              <div className="ez-skeleton" style={{ position: 'absolute', inset: '0', borderRadius: '4px' }} />
+            </div>
+          )) : photos.map((p) => (
             <div key={p.id} className="ez-gal ez-reveal" style={{ aspectRatio: p.ratio }}>
               <ImageSlot slot={p.slot} shape="rect" src={p.src} width={640} placeholder={p.cap} aria-label={p.cap} />
               <div className="ez-gal-cap">
@@ -119,8 +110,10 @@ export default function EmbroideryPatches() {
             </div>
           ))}
         </div>
-        {!photos.length ? (
-          <p style={{ color: 'var(--muted)', margin: '8px 0 0' }}>No photos in this group yet — add some in the admin's Gallery and they appear here.</p>
+        {!loading && !error && !photos.length ? (
+          <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '40px 0', margin: '0' }}>
+            {all.length ? 'No photos with this tag yet. Try another.' : 'No photos yet. They appear here as soon as they are added in the admin (Embroidery & Patches).'}
+          </p>
         ) : null}
       </section>
       {/* CTA */}

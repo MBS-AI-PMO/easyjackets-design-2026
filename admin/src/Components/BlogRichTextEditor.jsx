@@ -38,6 +38,7 @@ import { toast } from 'react-toastify';
 import fileInstance from '../constant/filesInstance';
 import EditorPrompt from './EditorPrompt';
 
+import { FRONTEND_URL } from '../constant/url';
 /**
  * Sends one image to storage and returns its public URL.
  *
@@ -379,7 +380,7 @@ const BlogRichTextEditor = ({
     description: 'The text you selected becomes the link. Use a full address, or a path like /bulk-order for a page on this site.',
     confirmLabel: 'Insert link',
     fields: [
-      { name: 'href', label: 'Link URL', placeholder: 'https://easyjackets.com', autoFocus: true },
+      { name: 'href', label: 'Link URL', placeholder: `${FRONTEND_URL}/shop`, autoFocus: true },
     ],
     onSubmit: ({ href }) => {
       const url = normalizeUrl(href);

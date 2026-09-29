@@ -4,7 +4,7 @@ import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import Faq from '../components/Faq';
-import { fetchCategories } from '../lib/catalog';
+import { builderUrl, fetchCategories } from '../lib/catalog';
 import { fetchPageFaqs } from '../lib/content';
 import { useAsync } from '../lib/useAsync';
 import './Design.css';
@@ -18,12 +18,11 @@ export default function Design() {
 
   function renderVals() {
     const footerNoop = e => e.preventDefault();
-    const CU = 'https://custom.easyjackets.com/?id=';
     const types = (categories || []).filter((c) => c.code).map((c) => ({ id: c.code, name: c.name, src: c.image, alt: c.name }));
     return {
       footerNoop,
       typesLoading: !categories,
-      types: types.map(t => ({ ...t, slot: 'dz-' + t.id, href: CU + t.id })),
+      types: types.map(t => ({ ...t, slot: 'dz-' + t.id, href: builderUrl({ code: t.id }) })),
       faqs: [
         { q: 'Can I order just one jacket for myself?', a: 'Yes. There is no minimum order. Design a single jacket in the design lab or pick a ready style and add your letter and name.' },
         { q: 'How do I design a letterman jacket online?', a: 'Pick a style above, choose materials and colors for body, sleeves and trim, upload your logo, and watch the live preview update. Add to cart when you are happy.' },

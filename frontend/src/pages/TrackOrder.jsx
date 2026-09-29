@@ -120,8 +120,8 @@ export default function TrackOrder() {
               </h3>
               {order.items.map((i) => (
                 <div key={i.key} style={{ display: 'grid', gridTemplateColumns: '64px minmax(0,1fr)', gap: '14px', alignItems: 'center' }}>
-                  <div className="ez-product-photo" style={{ aspectRatio: '4/5', borderRadius: '2px', overflow: 'hidden' }}>
-                    <ImageSlot slot={`tr-${i.key}`} shape="rect" src={i.image} width={320} placeholder="Jacket" aria-label={i.name} />
+                  <div className={`ez-product-photo${i.custom ? ' ez-design-photo' : ''}`} style={{ aspectRatio: '4/5', borderRadius: '2px', overflow: 'hidden' }}>
+                    <ImageSlot slot={`tr-${i.key}`} shape="rect" src={i.image} width={320} knockout={i.custom} placeholder="Jacket" aria-label={i.name} />
                   </div>
                   <div>
                     <div style={{ fontWeight: '600', fontSize: '14px', lineHeight: '1.3' }}>{i.name} × {i.quantity}</div>

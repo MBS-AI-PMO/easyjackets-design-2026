@@ -1,0 +1,64 @@
+var map = {
+	"./1.svg": 4902,
+	"./10.svg": 358,
+	"./11.svg": 2030,
+	"./12.svg": 6369,
+	"./13.svg": 8642,
+	"./14.svg": 7656,
+	"./15.svg": 4540,
+	"./16.svg": 4938,
+	"./17.svg": 2472,
+	"./18.svg": 2821,
+	"./19.svg": 840,
+	"./2.svg": 6137,
+	"./20.svg": 9544,
+	"./21.svg": 7422,
+	"./22.svg": 5329,
+	"./23.svg": 4457,
+	"./24.svg": 4771,
+	"./25.svg": 903,
+	"./26.svg": 7031,
+	"./27.svg": 337,
+	"./28.svg": 9717,
+	"./29.svg": 5579,
+	"./3.svg": 1543,
+	"./30.svg": 5201,
+	"./31.svg": 2503,
+	"./32.svg": 3603,
+	"./33.svg": 5415,
+	"./34.svg": 2908,
+	"./35.svg": 4774,
+	"./36.svg": 3515,
+	"./37.svg": 4043,
+	"./38.svg": 1236,
+	"./39.svg": 2151,
+	"./4.svg": 7917,
+	"./40.svg": 183,
+	"./41.svg": 1878,
+	"./42.svg": 2194,
+	"./5.svg": 6175,
+	"./6.svg": 2216,
+	"./7.svg": 4894,
+	"./8.svg": 1063,
+	"./9.svg": 6529
+};
+
+
+function webpackContext(req) {
+	var id = webpackContextResolve(req);
+	return __webpack_require__(id);
+}
+function webpackContextResolve(req) {
+	if(!__webpack_require__.o(map, req)) {
+		var e = new Error("Cannot find module '" + req + "'");
+		e.code = 'MODULE_NOT_FOUND';
+		throw e;
+	}
+	return map[req];
+}
+webpackContext.keys = function webpackContextKeys() {
+	return Object.keys(map);
+};
+webpackContext.resolve = webpackContextResolve;
+module.exports = webpackContext;
+webpackContext.id = 2272;

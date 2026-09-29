@@ -25,6 +25,7 @@ import moment from "moment";
 import instance from '../constant/instance';
 import { useParams, useNavigate } from 'react-router-dom';
 
+import { uploadUrl } from '../constant/url';
 const BulkOrder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -96,7 +97,11 @@ const BulkOrder = () => {
                 {detailItem("Customer Name", data.name)}
                 {detailItem("Email Address", data.email, true)}
                 {detailItem("Phone Number", data.phone)}
-                {detailItem("Country", data.country)}
+                {data.country ? detailItem("Country", data.country) : null}
+                {data.organization ? detailItem("Organisation", `${data.organization}${data.orderType ? ` (${data.orderType})` : ''}`) : null}
+                {data.quantityRange ? detailItem("Quantity Range", `${data.quantityRange} jackets`) : null}
+                {data.neededBy ? detailItem("Needed By", moment(data.neededBy).isValid() ? moment(data.neededBy).format('MMMM D, YYYY') : data.neededBy) : null}
+                {data.budget ? detailItem("Budget per Jacket", data.budget) : null}
                 <TableRow>
                   <TableCell sx={{ color: '#666', fontWeight: 600, borderBottom: '1px solid #eee' }}>Message / Inquiry</TableCell>
                   <TableCell sx={{ color: '#333', borderBottom: '1px solid #eee', py: 2 }}>
@@ -146,7 +151,7 @@ const BulkOrder = () => {
                       <a href={image} target="_blank" rel="noopener noreferrer">
                         <Avatar
                           variant="rounded"
-                          src={image}
+                          src={uploadUrl(image)}
                           sx={{
                             width: '100%',
                             height: 120,

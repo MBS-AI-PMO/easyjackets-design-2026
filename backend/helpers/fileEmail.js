@@ -6,7 +6,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import ejs from 'ejs'
 import { prepareDesignImages } from './designImages.js';
-import { designStudioUrl } from './customJacketUrl.js';
+import { designStudioUrl, storefrontUrl } from './customJacketUrl.js';
+import { designSummary } from './designSummary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -61,140 +62,147 @@ async function generatePDF(htmlContent) {
 
 // Transport and addressing come from the admin-managed email configuration.
 
+// The shared-design email, in the same design as the bulk quote and newsletter emails
+// (helpers/views/bulkOrderCustomer.ejs): table layout and inline styles so it holds together in
+// Gmail, Outlook and phone mail apps; the storefront's ink, cream and gold; a text wordmark.
+const esc = (value) => String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const dot = (hex) => `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${esc(hex)};border:1px solid rgba(20,17,15,.25);vertical-align:-1px;"></span>`;
+
+const sectionTitle = (text, top = 28) => `
+        <tr><td class="px" style="padding:${top}px 36px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#a8861c;text-transform:uppercase;padding-bottom:10px;border-bottom:2px solid #14110f;">${esc(text)}</div>`;
+
+const rowsTable = (rows) => `
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            ${rows.map(([k, v]) => `
+            <tr class="row">
+              <td class="k" width="42%" style="padding:11px 12px 11px 0;border-bottom:1px solid #e9e1d2;font-size:13px;color:#6b635a;vertical-align:top;">${esc(k)}</td>
+              <td style="padding:11px 0;border-bottom:1px solid #e9e1d2;font-size:14px;font-weight:700;color:#14110f;vertical-align:top;">${v}</td>
+            </tr>`).join('')}
+          </table>`;
+
 const buildPreviewHtml = (previewImages = []) => {
     if (!previewImages.length) return '';
-
-    return `
-                            <p style="margin: 0 0 8px; color: #211d18; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;">Design Preview</p>
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 0 28px;">
-                                ${[0, 2].map(start => {
-                                    const row = previewImages.slice(start, start + 2);
-                                    if (!row.length) return '';
-
-                                    return `
-                                <tr>
-                                    ${row.map(item => `
-                                    <td class="preview-cell" width="50%" style="width: 50%; padding: 8px; vertical-align: top;">
-                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: #fffaf2; border: 1px solid #eadfce; border-radius: 14px;">
-                                            <tr>
-                                                <td style="padding: 16px; text-align: center;">
-                                                    <img src="cid:${item.cid}" alt="${item.label} jacket view" style="display: block; width: 100%; max-width: 230px; height: auto; margin: 0 auto;">
-                                                    <div style="margin-top: 10px; color: #8a7c6d; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;">${item.label} View</div>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                    `).join('')}
-                                    ${row.length === 1 ? '<td class="preview-cell" width="50%" style="width: 50%; padding: 8px;"></td>' : ''}
-                                </tr>`;
-                                }).join('')}
-                            </table>`;
+    const rows = [];
+    for (let i = 0; i < previewImages.length; i += 2) rows.push(previewImages.slice(i, i + 2));
+    return `${sectionTitle('Every view', 24)}
+          <table role="presentation" width="100%" style="margin-top:12px;">
+            ${rows.map((row) => `
+            <tr>
+              ${row.map((item) => `
+              <td class="view" width="50%" style="width:50%;padding:6px;vertical-align:top;">
+                <table role="presentation" width="100%" style="background:#ffffff;border:1px solid #e9e1d2;border-radius:4px;">
+                  <tr><td style="padding:14px;text-align:center;">
+                    <img src="cid:${item.cid}" alt="${esc(item.label)} view of the jacket" width="230" style="display:block;width:100%;max-width:230px;height:auto;margin:0 auto;border:0;">
+                    <div style="margin-top:10px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;color:#6b635a;text-transform:uppercase;">${esc(item.label)}</div>
+                  </td></tr>
+                </table>
+              </td>`).join('')}
+              ${row.length === 1 ? '<td class="view" width="50%" style="width:50%;padding:6px;"></td>' : ''}
+            </tr>`).join('')}
+          </table>
+        </td></tr>`;
 };
 
-const buildDesignEmailHtml = (subject, data, previewImages, supportEmail = 'info@easyjackets.com', resumeUrl = designStudioUrl()) => {
-    const previewHtml = buildPreviewHtml(previewImages);
-    const greeting = data.shareName ? `Hi ${data.shareName}, ` : '';
+export const buildDesignEmailHtml = (subject, data, previewImages, supportEmail = 'info@easyjackets.com', resumeUrl = designStudioUrl(), reviewUrl = '') => {
+    const first = String(data.shareName || '').trim().split(/\s+/)[0] || 'there';
+    const summary = designSummary(data);
+    const name = summary.name;
+    const price = Number(data.custom_price) || 0;
+    const priceText = `$${Number.isInteger(price) ? price : price.toFixed(2)}`;
+    const site = storefrontUrl();
+    const build = summary.build.map(([k, v]) => [k, esc(v)]);
+    const extras = summary.extras;
+    const colors = summary.colors;
+    const artwork = summary.artwork.map((a) => [a.place, a]);
 
-    return `
-<!DOCTYPE html>
+    const button = (href, text, dark) => `<a href="${esc(href)}" style="display:inline-block;margin:0 10px 10px 0;padding:14px 22px;background:${dark ? '#14110f' : '#fbf8f2'};color:${dark ? '#f4efe6' : '#14110f'};border:2px solid #14110f;text-decoration:none;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;">${esc(text)}</a>`;
+
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${subject}</title>
-    <style>
-        @media only screen and (max-width: 620px) {
-            .outer-pad { padding: 18px 10px !important; }
-            .email-card { width: 100% !important; max-width: 100% !important; border-radius: 14px !important; }
-            .hero, .content, .footer { padding-left: 22px !important; padding-right: 22px !important; }
-            .hero-title { font-size: 31px !important; }
-            .preview-cell, .summary-cell { display: block !important; width: 100% !important; box-sizing: border-box !important; padding-left: 0 !important; padding-right: 0 !important; }
-            .summary-cell + .summary-cell { padding-top: 10px !important; }
-            .cta { display: block !important; text-align: center !important; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <title>${esc(subject)}</title>
+  <style>
+    body { margin: 0; padding: 0; background: #f4efe6; -webkit-text-size-adjust: 100%; }
+    table { border-collapse: collapse; }
+    a { color: #a8861c; }
+    @media only screen and (max-width: 560px) {
+      .px { padding-left: 22px !important; padding-right: 22px !important; }
+      .h1 { font-size: 34px !important; }
+      .row td { display: block !important; width: auto !important; padding: 2px 0 !important; }
+      .row td.k { padding-top: 12px !important; }
+      .view { display: block !important; width: auto !important; }
+      .price td { display: block !important; text-align: left !important; }
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #ffffff; color: #211d18;">
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff;">
-        <tr>
-            <td class="outer-pad" style="padding: 30px 12px;">
-                <table class="email-card" role="presentation" cellspacing="0" cellpadding="0" border="0" width="640" style="width: 640px; max-width: 640px; margin: 0 auto; background-color: #fffaf2; border: 1px solid #e4d6c3; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 50px rgba(33, 29, 24, 0.10);">
-                    <tr>
-                        <td class="hero" style="background: #11100e; padding: 38px 34px 34px; color: #f5eee3;">
-                            <p style="margin: 0 0 14px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;">Easy Jackets Design Studio</p>
-                            <h1 class="hero-title" style="margin: 0; color: #f5eee3; font-family: Georgia, 'Times New Roman', serif; font-size: 38px; line-height: 1.02; font-weight: 400; letter-spacing: -.03em;">Your custom jacket design is ready.</h1>
-                            <p style="margin: 16px 0 0; color: rgba(245,238,227,.72); font-size: 15px; line-height: 1.7; max-width: 500px;">
-                                ${greeting}we saved a polished preview of your configuration. The full specification is attached as a PDF for review.
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="content" style="padding: 34px;">
-                            <p style="margin: 0 0 18px; color: #5f574c; font-size: 15px; line-height: 1.75;">
-                                Thanks for designing with <strong style="color: #211d18;">Easy Jackets</strong>. Your jacket preview and selected details are below, with the complete technical file attached.
-                            </p>
-
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 24px 0; background: #f1e6d7; border: 1px solid #e2d2bd; border-radius: 14px;">
-                                <tr>
-                                    <td style="padding: 22px; text-align: center;">
-                                        <p style="margin: 0 0 8px; color: #8a7c6d; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;">Estimated Total</p>
-                                        <p style="margin: 0; color: #c4703a; font-family: Georgia, 'Times New Roman', serif; font-size: 42px; line-height: 1; font-weight: 400;">$${data.custom_price || '0.00'}</p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            ${previewHtml}
-
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 0 28px;">
-                                <tr>
-                                    <td class="summary-cell" width="50%" style="width: 50%; padding: 0 8px 0 0; vertical-align: top;">
-                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: #ffffff; border: 1px solid #eadfce; border-radius: 14px;">
-                                            <tr>
-                                                <td style="padding: 18px;">
-                                                    <p style="margin: 0 0 12px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;">Materials</p>
-                                                    <p style="margin: 0 0 8px; color: #5f574c; font-size: 14px; line-height: 1.55;"><strong style="color:#211d18;">Body:</strong> ${data.materials?.body || 'N/A'}</p>
-                                                    <p style="margin: 0; color: #5f574c; font-size: 14px; line-height: 1.55;"><strong style="color:#211d18;">Sleeves:</strong> ${data.materials?.sleeves || 'N/A'}</p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                    <td class="summary-cell" width="50%" style="width: 50%; padding: 0 0 0 8px; vertical-align: top;">
-                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: #ffffff; border: 1px solid #eadfce; border-radius: 14px;">
-                                            <tr>
-                                                <td style="padding: 18px;">
-                                                    <p style="margin: 0 0 12px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;">Fit</p>
-                                                    <p style="margin: 0 0 8px; color: #5f574c; font-size: 14px; line-height: 1.55;"><strong style="color:#211d18;">Size:</strong> ${data.sizes?.size || 'N/A'}</p>
-                                                    <p style="margin: 0; color: #5f574c; font-size: 14px; line-height: 1.55;"><strong style="color:#211d18;">Scale:</strong> ${data.sizes?.scale || 'N/A'}</p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p style="margin: 0 0 24px; color: #5f574c; font-size: 15px; line-height: 1.75;">
-                                Please review the attached PDF before ordering. Not quite there yet? Pick up exactly where you left off &mdash; the button below reopens this jacket in the studio with every choice still in place.
-                            </p>
-
-                            <a href="${resumeUrl}" class="cta" style="display: inline-block; background: #c4703a; color: #ffffff; text-decoration: none; padding: 15px 24px; border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: .04em;">Continue Designing</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="footer" style="background: #11100e; color: rgba(245,238,227,.56); padding: 24px 34px; font-size: 12px; line-height: 1.7;">
-                            <strong style="color:#f5eee3;">Easy Jackets</strong><br>
-                            Custom varsity jackets, patches, embroidery, and team orders.<br>
-                            <p style="margin: 12px 0 0; color: rgba(245,238,227,.56); font-size: 12px; line-height: 1.7;">
-                                Questions? Email <a href="mailto:${supportEmail}" style="color: #c4703a; text-decoration: none;">${supportEmail}</a>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<body style="margin:0;padding:0;background:#f4efe6;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Your ${esc(name.toLowerCase())}: every view, the full spec and a link to keep designing.</div>
+  <table role="presentation" width="100%" style="background:#f4efe6;">
+    <tr><td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="100%" style="max-width:620px;background:#fbf8f2;border:1px solid #e9e1d2;border-radius:6px;overflow:hidden;">
+        <!-- gold stripe, like the site's section rule -->
+        <tr><td style="height:6px;background:#c9a227;line-height:6px;font-size:0;">&nbsp;</td></tr>
+        <!-- header -->
+        <tr><td class="px" style="background:#14110f;padding:30px 36px 34px;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:900;letter-spacing:.22em;color:#f4efe6;">EASY JACKETS</div>
+          <div style="height:26px;line-height:26px;font-size:0;">&nbsp;</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c9a227;text-transform:uppercase;">Design lab · ${esc(name)}</div>
+          <div class="h1" style="margin-top:10px;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-size:42px;line-height:.98;font-weight:800;letter-spacing:-.01em;color:#f4efe6;text-transform:uppercase;">Your jacket design is ready.</div>
+        </td></tr>
+        <!-- intro -->
+        <tr><td class="px" style="padding:30px 36px 6px;font-family:Arial,Helvetica,sans-serif;">
+          <p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#14110f;">Hi ${esc(first)},</p>
+          <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#2a2521;">Here is the jacket you built in the Easy Jackets design lab: every view, and every detail of the build. The full specification is attached as a PDF. Pick up where you left off any time; every choice is still in place.</p>
+        </td></tr>
+        <!-- price -->
+        <tr><td class="px" style="padding:10px 36px 0;">
+          <table role="presentation" width="100%" class="price" style="background:#14110f;border-radius:4px;">
+            <tr>
+              <td style="padding:18px 22px;font-family:Arial,Helvetica,sans-serif;">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.16em;color:#c9a227;text-transform:uppercase;">Estimated total</div>
+                <div style="margin-top:4px;font-size:12px;color:rgba(244,239,230,.62);">Includes all customizations · shipping at checkout</div>
+              </td>
+              <td align="right" style="padding:18px 22px;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-size:40px;line-height:1;font-weight:800;color:#c9a227;">${esc(priceText)}</td>
+            </tr>
+          </table>
+        </td></tr>
+        ${buildPreviewHtml(previewImages)}
+        <!-- build -->
+        ${sectionTitle('Your build')}
+          ${rowsTable(build)}
+        </td></tr>
+        ${extras.length ? `${sectionTitle('Advanced options', 22)}
+          <div style="padding-top:12px;font-family:Arial,Helvetica,sans-serif;">${extras.map((x) => `<span style="display:inline-block;margin:0 6px 8px 0;padding:6px 12px;border:1.5px solid #14110f;border-radius:2px;background:#14110f;color:#f4efe6;font-size:12px;font-weight:700;letter-spacing:.02em;">${esc(x)}</span>`).join('')}</div>
+        </td></tr>` : ''}
+        ${colors.length ? `${sectionTitle('Colors', 22)}
+          ${rowsTable(colors.map(([k, v]) => [k, `${dot(v)}&nbsp; ${esc(v)}`]))}
+        </td></tr>` : ''}
+        ${sectionTitle('Artwork & lettering', 22)}
+          ${artwork.length
+            ? rowsTable(artwork.map(([place, a]) => [place, `${esc(a.text)}${a.colors.length ? `<div style="margin-top:6px;">${a.colors.map(dot).join('&nbsp;')}</div>` : ''}`]))
+            : '<p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#2a2521;">No lettering, patches or artwork yet. Add a name, letters or your logo in the design lab.</p>'}
+        </td></tr>
+        <!-- actions -->
+        <tr><td class="px" style="padding:28px 36px 32px;font-family:Arial,Helvetica,sans-serif;">
+          <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#2a2521;">Ready to order? Open it in the design lab and add it to your cart. Questions about sizing or artwork? <strong>Reply to this email</strong> and our team will help.</p>
+          ${button(resumeUrl, 'Continue designing', true)}${reviewUrl ? button(reviewUrl, 'Review design', false) : ''}
+        </td></tr>
+        <!-- footer -->
+        <tr><td class="px" style="background:#14110f;padding:22px 36px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:rgba(244,239,230,.6);">
+          <strong style="color:#f4efe6;letter-spacing:.14em;">EASY JACKETS</strong><br>
+          Custom varsity and letterman jackets for schools, teams, businesses and clubs.<br>
+          Questions? <a href="mailto:${esc(supportEmail)}" style="color:#c9a227;text-decoration:none;">${esc(supportEmail)}</a> · <a href="${esc(site)}" style="color:#c9a227;text-decoration:none;">${esc(site.replace(/^https?:\/\//, ''))}</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
 </body>
-</html>
-  `;
+</html>`;
 };
 
 export const sendFileEmail = async (subject, email, data, location, options = {}) => {
@@ -233,7 +241,8 @@ export const sendFileEmail = async (subject, email, data, location, options = {}
         data,
         previewImages,
         settings.replyToEmail || settings.adminEmail || settings.fromEmail,
-        options.resumeUrl || designStudioUrl()
+        options.resumeUrl || designStudioUrl(),
+        options.reviewUrl || ''
     );
 
     const mailOptions = {

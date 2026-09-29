@@ -38,6 +38,7 @@ import {
   VisibilityOff,
 } from "@mui/icons-material";
 
+import { uploadUrl } from '../constant/url';
 const getSectionKey = (value) => {
   const key = String(value || "general").trim();
   return key || "general";
@@ -469,7 +470,7 @@ const Categories = () => {
                   <CardMedia
                     component="img"
                     height="160"
-                    image={category.image}
+                    image={uploadUrl(category.image)}
                     alt={category.name}
                     sx={{
                       objectFit: "contain",
@@ -674,7 +675,7 @@ const Categories = () => {
                     }}
                   >
                     <img
-                      src={imagePreview}
+                      src={uploadUrl(imagePreview)}
                       alt="Preview"
                       style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
                     />

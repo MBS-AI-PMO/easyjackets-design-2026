@@ -1,6 +1,7 @@
 // Editorial content the admin manages: top bar, blog posts, page FAQs, reviews.
 import { api, uploadUrl } from './api';
 import { stripHtml } from './html';
+import { onRevalidate } from './useAsync';
 
 const listOf = (res, ...keys) => { for (const k of keys) if (Array.isArray(res?.[k])) return res[k]; return Array.isArray(res) ? res : []; };
 
@@ -50,9 +51,11 @@ export const fetchBlog = async (slug, signal) => {
  * landing page, "/faq", "/bulk-order", …) or a template name
  * ("product-template", "catalog-template") whose questions carry
  * {placeholders}. Answers are the editor's HTML, sanitised where rendered.
- * Read-only; one request per key per session.
+ * Read-only; one request per key, until the page refreshes its live data.
  */
 const faqCache = new Map();
+// registered before any page mounts, so it runs ahead of the pages' own refreshes
+if (typeof window !== 'undefined') onRevalidate(() => faqCache.clear());
 export const fetchPageFaqs = (pageKey = '/') => {
   if (!faqCache.has(pageKey)) {
     faqCache.set(pageKey, api.get('/features/page-faqs', { params: { pageKey }, auth: false })

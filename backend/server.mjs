@@ -30,6 +30,7 @@ import fontRoutes from './routes/fontRoutes.js'
 import productReviewRoutes from './routes/productReviewRoutes.js'
 import fabricColorRoutes from './routes/fabricColorRoutes.js'
 import emailConfigRoutes from './routes/emailConfigRoutes.js'
+import paymentConfigRoutes from './routes/paymentConfigRoutes.js'
 import shippingRateRoutes from './routes/shippingRateRoutes.js'
 import sitemapRoutes from './routes/sitemapRoutes.js'
 import seoHealthRoutes from './routes/seoHealthRoutes.js'
@@ -110,6 +111,7 @@ app.use('/api/v1/fonts', fontRoutes)
 app.use('/api/v1/reviews', productReviewRoutes)
 app.use('/api/v1/fabric-colors', fabricColorRoutes)
 app.use('/api/v1/email-config', emailConfigRoutes)
+app.use('/api/v1/payment-config', paymentConfigRoutes)
 app.use('/api/v1/shipping-rates', shippingRateRoutes)
 app.use('/api/v1/seo-health', seoHealthRoutes)
 app.use('/api/v1/visitor-analytics', visitorAnalyticsRoutes)

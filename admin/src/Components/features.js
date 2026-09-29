@@ -19,6 +19,7 @@ import fileInstance from '../constant/filesInstance';
 import instance from '../constant/instance';
 import { toast } from 'react-toastify';
 
+import { uploadUrl } from '../constant/url';
 function FeatureForm() {
   const [reviews, setReviews] = useState([{ comment: "", author: "" }]);
   const [images, setImages] = useState([]);
@@ -239,7 +240,7 @@ function FeatureForm() {
                   {existingImageUrls.map((src, index) => (
                     <Grid item xs={6} key={`ext-${index}`}>
                       <Box sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', border: '1px solid #ddd', bgcolor: '#eee' }}>
-                        <img src={src} alt="banner" style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
+                        <img src={uploadUrl(src)} alt="banner" style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
                         <IconButton
                           size="small"
                           sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)', color: '#ff5252', '&:hover': { bgcolor: 'white' } }}
@@ -254,7 +255,7 @@ function FeatureForm() {
                   {imagePreviews.map((src, index) => (
                     <Grid item xs={6} key={`new-${index}`}>
                       <Box sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', border: '2px dashed #37a6ff', bgcolor: '#f0faff' }}>
-                        <img src={src} alt="new" style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
+                        <img src={uploadUrl(src)} alt="new" style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
                         <IconButton
                           size="small"
                           sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)', color: '#ff5252', '&:hover': { bgcolor: 'white' } }}

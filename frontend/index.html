@@ -6,7 +6,9 @@
     <meta name="theme-color" content="#f4efe6" />
     <title>Easy Jackets — Custom Varsity & Letterman Jackets</title>
     <meta name="description" content="Design your own varsity, letterman and bomber jackets online. Wool, leather and satin builds, chenille patches, no minimums, free design proof." />
-    <link rel="icon" type="image/png" href="/easy-jacket-logo.png" />
+    <!-- first-visit fallbacks; the admin's favicons (light + dark browsers) and navbar logo replace them at once (src/lib/siteIdentity.js) -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preload" href="/logo-navbar.webp" as="image" type="image/webp" fetchpriority="high" />
     <!-- Self-hosted fonts (tools/fetch-fonts.mjs): preloaded so the first paint already has them -->
     <link rel="preload" href="/fonts/big-shoulders-display-900-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/big-shoulders-display-800-latin.woff2" as="font" type="font/woff2" crossorigin />

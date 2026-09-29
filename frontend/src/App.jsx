@@ -1,7 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { productPath } from './lib/urls';
-import { CUSTOMIZER } from './lib/catalog';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollManager from './components/ScrollManager';
 import Seo from './components/Seo';
@@ -12,6 +11,7 @@ const Home = lazy(() => import('./pages/Home'));
 const Shop = lazy(() => import('./pages/Shop'));
 const Product = lazy(() => import('./pages/Product'));
 const Design = lazy(() => import('./pages/Design'));
+const DesignReview = lazy(() => import('./pages/DesignReview'));
 const HowToDesign = lazy(() => import('./pages/HowToDesign'));
 const BulkOrders = lazy(() => import('./pages/BulkOrders'));
 const Blog = lazy(() => import('./pages/Blog'));
@@ -45,13 +45,6 @@ function ParamRedirect({ to }) {
   const { search } = useLocation();
   const target = to(params);
   return <Navigate to={target.includes('?') ? target : `${target}${search}`} replace />;
-}
-
-/** The live site's /Design/<id> links open that design in the jacket builder. */
-function DesignLabRedirect() {
-  const { id } = useParams();
-  window.location.replace(`${CUSTOMIZER}/?design=${encodeURIComponent(id)}`);
-  return null;
 }
 
 export default function App() {
@@ -103,7 +96,7 @@ export default function App() {
           <Route path="/products" element={<Navigate to="/shop" replace />} />
           <Route path="/products/:slug" element={<ParamRedirect to={(p) => productPath(p.slug)} />} />
           <Route path="/design" element={<Navigate to="/design-custom-jacket" replace />} />
-          <Route path="/design/:id" element={<DesignLabRedirect />} />
+          <Route path="/design/:id" element={<DesignReview />} />
           <Route path="/how-to-design" element={<Navigate to="/how-to-design-jacket" replace />} />
           <Route path="/guide" element={<Navigate to="/how-to-design-jacket" replace />} />
           <Route path="/bulk-orders" element={<Navigate to="/bulk-order" replace />} />

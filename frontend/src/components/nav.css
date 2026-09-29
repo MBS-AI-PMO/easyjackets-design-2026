@@ -9,7 +9,7 @@
    scroll lag on phones. */
 .ez-nav-bar { max-width: 1280px; margin: 0 auto; padding: 10px clamp(16px, 4vw, 48px); display: flex; align-items: center; gap: 36px; }
 .ez-nav-logo { display: flex; align-items: center; margin-right: auto; padding: 0; }
-.ez-nav-logo img { height: 72px; width: auto; display: block; }
+.ez-nav-logo img { height: var(--ez-logo-h, 72px); width: auto; display: block; } /* --ez-logo-h: the admin's navbar size */
 
 .ez-nav a { text-decoration: none; font-family: var(--display); font-weight: 800; font-size: 19px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); position: relative; padding: 6px 0; }
 .ez-nav a.is-active { color: var(--gold-2); }
@@ -59,7 +59,7 @@
 /* narrow screens: links go into the drawer */
 @media (max-width: 1080px) {
   .ez-nav-bar { gap: 14px; padding-top: 8px; padding-bottom: 8px; }
-  .ez-nav-logo img { height: 56px; }
+  .ez-nav-logo img { height: calc(var(--ez-logo-h, 72px) * 0.78); }
   .ez-nav-bar > .ez-dd, .ez-nav-bar > a:not(.ez-nav-logo) { display: none; }
   .ez-burger { display: flex; }
   .ez-nav-cta { display: none !important; } /* the call-to-action lives in the drawer whenever the menu button is shown */
@@ -67,7 +67,7 @@
 /* phones: a shorter bar, logo and menu button the same height */
 @media (max-width: 720px) {
   .ez-nav-bar { padding-top: 6px; padding-bottom: 6px; }
-  .ez-nav-logo img { height: 40px; }
+  .ez-nav-logo img { height: calc(var(--ez-logo-h, 72px) * 0.56); }
   .ez-burger { width: 40px; height: 40px; padding: 8px; margin-left: 0; }
 }
 /* Account link beside the call-to-action; folds into the drawer with it on small screens. */

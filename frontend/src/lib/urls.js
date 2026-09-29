@@ -69,7 +69,9 @@ export const PRIVATE_ROUTES = [/^\/cart$/, /^\/checkout$/, /^\/account$/, /^\/da
  * with every query parameter dropped except a shop page number above 1.
  */
 export const canonicalPath = (pathname = '/', search = '') => {
-  const keepCase = /^\/new-blog\//i.test(pathname);
+  // blog slugs, and addresses that carry a case-sensitive id: Stripe's checkout session
+  // (/success/cs_test_a1B2…, lower-casing it made "No such checkout.session") and order numbers
+  const keepCase = /^\/(new-blog|success|order-confirmation)\//i.test(pathname);
   const decode = (seg) => { try { return decodeURIComponent(seg); } catch { return seg; } };
   // every segment decoded and re-encoded, so "%E2%80%99", "%e2%80%99" and "’" are one address
   let path = (pathname.replace(/\/+$/, '') || '/').split('/')

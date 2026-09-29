@@ -16,13 +16,14 @@ import CloseIcon from '@mui/icons-material/Close';
 import { toast } from "react-toastify";
 import instance from '../constant/instance';
 
+import { uploadUrl } from '../constant/url';
 // Designs saved before the move to Coolify storage still point at the old
 // s3.amazonaws.com bucket, which is gone and answers 403. Treat those as no
 // image at all so the row shows the placeholder instead of a broken tile.
 const DEAD_IMAGE_HOST = /amazonaws\.com/i;
 
 const livingUrl = (url) => (
-  typeof url === 'string' && url.trim() && !DEAD_IMAGE_HOST.test(url) ? url.trim() : ''
+  typeof url === 'string' && url.trim() && !DEAD_IMAGE_HOST.test(url) ? uploadUrl(url.trim()) : ''
 );
 
 // A catalogue jacket carries a design of its own, so preferring the design

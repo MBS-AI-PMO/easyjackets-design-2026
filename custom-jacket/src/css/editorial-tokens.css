@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* EasyJackets Editorial Design Tokens
+   Shared token layer — mirrors easyjackets/src/components/CSS/editorial.css
+   Only :root variables, no component classes. */
+
+:root {
+  /* Brand */
+  --ej-terracotta: #C4703A;
+  --ej-terracotta-600: #B25F28;
+  --ej-terracotta-700: #9A4F1E;
+  --ej-terracotta-50: #FBF1E8;
+  --ej-terracotta-100: #F5DFC8;
+  --ej-cream: #F5EEE3;
+  --ej-ink: #141210;
+  --ej-ink-800: #26211C;
+
+  /* Neutrals */
+  --ej-white: #ffffff;
+  --ej-paper: #FAF7F2;
+  --ej-stone-50: #F6F3EE;
+  --ej-stone-100: #EDE8DF;
+  --ej-stone-200: #DCD4C6;
+  --ej-stone-300: #B9AE9B;
+  --ej-stone-400: #8F8371;
+  --ej-stone-500: #5E5648;
+  --ej-stone-600: #3E392F;
+  --ej-stone-700: #262320;
+  --ej-stone-800: #1A1815;
+  --ej-stone-900: #0E0D0B;
+
+  /* Accent */
+  --ej-navy: #1E2B4A;
+  --ej-forest: #2C4A3A;
+  --ej-crimson: #8C2A1E;
+  --ej-gold: #C9A44C;
+
+  /* Radii */
+  --ej-r-sm: 6px;
+  --ej-r-md: 12px;
+  --ej-r-lg: 20px;
+  --ej-r-xl: 28px;
+  --ej-r-2xl: 40px;
+  --ej-r-pill: 999px;
+
+  /* Shadows */
+  --ej-shadow-sm: 0 1px 2px rgba(20, 18, 16, .06), 0 1px 1px rgba(20, 18, 16, .04);
+  --ej-shadow-md: 0 8px 24px rgba(20, 18, 16, .08), 0 2px 6px rgba(20, 18, 16, .04);
+  --ej-shadow-lg: 0 24px 60px rgba(20, 18, 16, .12), 0 6px 18px rgba(20, 18, 16, .06);
+  --ej-shadow-glow: 0 20px 60px rgba(196, 112, 58, .25);
+
+  /* Motion */
+  --ej-ease-out: cubic-bezier(.22, .61, .36, 1);
+  --ej-ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ej-ease-smooth: cubic-bezier(.6, .05, .1, 1);
+
+  /* Semantic tokens — light mode */
+  --ej-bg: #FAF7F2;
+  --ej-bg-raised: #ffffff;
+  --ej-bg-elev: #ffffff;
+  --ej-fg: #141210;
+  --ej-fg-muted: #5E5648;
+  --ej-fg-subtle: #8F8371;
+  --ej-border: rgba(20, 18, 16, .08);
+  --ej-border-strong: rgba(20, 18, 16, .14);
+  --ej-card: #ffffff;
+  --ej-card-hover: #FBF8F2;
+
+  /* Font stacks */
+  --ej-font-sans: 'Inter', 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+  --ej-font-serif: 'Fraunces', 'Playfair Display', Georgia, serif;
+}
+
+[data-theme="dark"] {
+  --ej-bg: #0B0A08;
+  --ej-bg-raised: #141210;
+  --ej-bg-elev: #1C1915;
+  --ej-fg: #F5EEE3;
+  --ej-fg-muted: #A89D89;
+  --ej-fg-subtle: #6E6553;
+  --ej-border: rgba(245, 238, 227, .08);
+  --ej-border-strong: rgba(245, 238, 227, .16);
+  --ej-card: rgba(245, 238, 227, .03);
+  --ej-card-hover: rgba(245, 238, 227, .06);
+}

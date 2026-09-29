@@ -1,0 +1,2815 @@
+@import "./assets/scss/variables";
+
+@font-face {
+  font-family: "Ballpark";
+  src: url("./assets/fonts/ballpark-weiner.eot");
+  src: url("./assets/fonts/ballpark-weiner.eot?#iefix") format("embedded-opentype"),
+    url("./assets/fonts/ballpark-weiner.ttf") format("truetype"),
+    url("./assets/fonts/ballpark-weiner.svg#Ballpark") format("svg");
+}
+
+@font-face {
+  font-family: "Baseball";
+  src: url("./assets/fonts/baseball-webfont.eot");
+  src: url("./assets/fonts/baseball-webfont.eot?#iefix") format("embedded-opentype"),
+    url("./assets/fonts/baseball-webfont.ttf") format("truetype"),
+    url("./assets/fonts/baseball-webfont.woff") format("truetype"),
+    url("./assets/fonts/baseball-webfont.woff2") format("truetype"),
+    url("./assets/fonts/baseball-webfont.svg#Baseball") format("svg");
+}
+
+@font-face {
+  font-family: "Rookie";
+  src: url("./assets/fonts/rookiejnl-webfont.woff") format("truetype"),
+    url("./assets/fonts/rookiejnl-webfont.woff2") format("truetype");
+}
+
+@font-face {
+  font-family: "Franchise";
+  src: url("./assets/fonts/franchise-bold-webfont.woff") format("truetype"),
+    url("./assets/fonts/franchise-bold-webfont.woff2") format("truetype"),
+    url("./assets/fonts/franchise-bold-webfont.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Geek";
+  src: url("./assets/fonts/geek.eot");
+  src: url("./assets/fonts/geek.eot?#iefix") format("embedded-opentype"),
+    url("./assets/fonts/geek.woff") format("truetype"),
+    url("./assets/fonts/geek.woff2") format("truetype"),
+    url("./assets/fonts/geek.ttf") format("truetype"),
+    url("./assets/fonts/geek.svg#Geek") format("svg");
+}
+
+.panel-mbl {
+  display: none;
+}
+
+.cjd-main {
+  display: flex;
+  width: 100%;
+  background: var(--ej-bg);
+  height: calc(100vh - #{$chrome-height});
+  height: calc(100dvh - #{$chrome-height});
+  overflow: hidden;
+  transition: background .3s var(--ej-ease-out);
+}
+
+.cjd-sidebar-wrapper-open {
+  display: flex;
+  flex-direction: column;
+  width: 570px;
+  height: calc(100vh - #{$chrome-height});
+  height: calc(100dvh - #{$chrome-height});
+  background: var(--ej-bg-raised);
+  border-right: 1px solid var(--ej-border);
+
+  .cjd-hamburger-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  .cjd-title-wrapper {
+    padding-left: 10px;
+    color: $white;
+  }
+}
+
+.cjd-sidebar-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 339px;
+  height: calc(100vh - #{$chrome-height});
+  height: calc(100dvh - #{$chrome-height});
+  background: var(--ej-bg-raised);
+  border-right: 1px solid var(--ej-border);
+
+  .cjd-hamburger-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    cursor: pointer;
+  }
+
+  .cjd-title-wrapper {
+    text-align: center;
+    color: $white;
+  }
+}
+
+.cjd-sidebar {
+  width: 100%;
+  flex: 1;
+  background: var(--ej-bg-raised);
+  border-right: 1px solid var(--ej-border);
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.cjd-guides {
+  display: none;
+}
+
+.cjd-content-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  // The canvas height is fixed by the control panel next to it, so this padding is
+  // taken straight out of the jacket - keep only enough on top to clear the floating
+  // guides pill (absolute, top: 16px).
+  padding-bottom: 32px;
+  padding-top: 56px;
+  padding-right: 60px;
+  width: 100%;
+  height: 100%;
+  background: var(--ej-bg);
+
+  .cjd-jacket-guides {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 10;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .cjd-guides-pill {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 252, 247, .9);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(94, 86, 72, .12);
+      border-radius: 999px;
+      padding: 4px 5px 4px 12px;
+      gap: 6px;
+      box-shadow: 0 12px 30px rgba(33, 24, 16, .08);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background-color .25s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        border-color: rgba(196, 112, 58, .24);
+        box-shadow: 0 16px 34px rgba(33, 24, 16, .12);
+      }
+
+      .cjd-guides-label {
+        font-family: var(--ej-font-sans);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--ej-fg-muted);
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        margin-right: 0;
+      }
+
+      .cjd-guides-toggle,
+      .cjd-canvas-bg-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-family: var(--ej-font-sans);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        transition: background .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+        padding: 0;
+        line-height: 1;
+        background: rgba(94, 86, 72, .08);
+        color: var(--ej-fg-muted);
+        border: 1px solid transparent;
+        flex-shrink: 0;
+
+        &:hover {
+          transform: translateY(-1px);
+        }
+
+        &:focus-visible {
+          outline: none;
+          border-color: rgba(196, 112, 58, .42);
+          box-shadow: 0 0 0 3px rgba(196, 112, 58, .14);
+        }
+      }
+
+      .cjd-guides-toggle {
+        min-width: 48px;
+        height: 30px;
+        padding: 0 12px;
+
+        &.on {
+          background: linear-gradient(135deg, #c4703a 0%, #ad5d30 100%);
+          color: #fff;
+          box-shadow: 0 8px 18px rgba(196, 112, 58, .28);
+        }
+
+        &:not(.on):hover {
+          background: rgba(196, 112, 58, .12);
+          color: var(--ej-terracotta);
+        }
+      }
+
+      .cjd-canvas-bg-toggle {
+        width: 30px;
+        height: 30px;
+
+        &.on {
+          background: linear-gradient(135deg, #1f1a16 0%, #2a231d 100%);
+          color: #f5eee3;
+          box-shadow: 0 8px 18px rgba(20, 18, 16, .18);
+        }
+
+        &:not(.on):hover {
+          background: rgba(196, 112, 58, .12);
+          color: var(--ej-terracotta);
+        }
+
+        svg {
+          width: 14px !important;
+          height: 14px !important;
+          background-color: transparent !important;
+          padding: 0;
+          margin: 0;
+          border-radius: 0;
+        }
+      }
+    }
+
+    &.cjd-price {
+      display: none;
+      left: auto;
+      right: 20px;
+
+      @include respond-to("medium") {
+        display: block;
+      }
+    }
+
+    .cjd-guides-pill.cjd-action-pill {
+      cursor: pointer;
+      padding: 0 12px !important;
+      background: rgba(250, 247, 242, 0.95) !important;
+      border: 1px solid rgba(94, 86, 72, 0.18) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      height: 32px !important;
+      width: auto !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+
+      svg {
+        color: var(--ej-terracotta) !important;
+        margin-right: 6px !important;
+        width: 14px !important;
+        height: 14px !important;
+        background: transparent !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        margin-bottom: 0 !important;
+        margin-left: 0 !important;
+        box-shadow: none !important;
+        flex-shrink: 0 !important;
+      }
+
+      .cjd-guides-label {
+        color: var(--ej-ink) !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.05em !important;
+        font-size: 10px !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+      }
+
+      &:hover {
+        background: #fff !important;
+        border-color: var(--ej-terracotta) !important;
+        transform: translateY(-1px) !important;
+      }
+
+      @media (min-width: 769px) {
+        display: none !important;
+      }
+    }
+  }
+
+  &.canvas-dark > svg {
+    background-color: #1C1915 !important;
+  }
+
+  > svg {
+    height: auto;
+    background-color: $white;
+    border-radius: 25px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 25px;
+
+    text {
+      paint-order: stroke fill;
+    }
+
+    // Everything below is rendered artwork: names, letter stacks, and the nested
+    // <svg> blocks that carry badges, mascots and flags. It is drawn after the
+    // design area's guide rect, and painted SVG content captures clicks by
+    // default, so a click that landed on a letter hit the artwork - which has no
+    // handler - and the modal never opened. Only the slack around the artwork
+    // still worked, which is why a filled design box appeared to respond on one
+    // side only. The artwork is decorative; the guide rect owns the click.
+    text,
+    .name,
+    .letters,
+    svg {
+      pointer-events: none;
+    }
+  }
+
+  .cjd-guides {
+    display: block;
+    fill: transparent;
+    stroke: red;
+    // stroke-dasharray: 10;
+    cursor: pointer;
+    // pointer-events inherits, so state it here rather than rely on no artwork
+    // rule above ever ending up as an ancestor of a guide. `transparent` is a
+    // paint, not `none`, so the whole interior stays hit-testable.
+    pointer-events: auto;
+
+    &.cjd-guides-hide {
+      stroke-width: 0;
+
+      &:hover {
+        stroke-width: 1;
+      }
+    }
+  }
+
+  pre {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    margin-bottom: 0;
+    overflow: auto;
+    max-width: 300px;
+  }
+
+  .cjd-color-hover:hover path,
+  .cjd-color-hover:hover {
+    // stroke-dasharray: 5, 5;
+    stroke-width: 1 !important;
+    stroke: $red !important;
+    cursor: pointer;
+  }
+}
+
+.cjd-color-hover path,
+.cjd-color-hover {
+  // stroke-dasharray: 5, 5;
+  stroke-width: 1;
+  stroke: #cacae8;
+  cursor: pointer;
+}
+
+.cjd-cd-wrapper {
+  border: 1px solid var(--ej-border);
+
+  .cjd-cd-box {
+    position: relative;
+    padding: 15px;
+    padding-left: 40px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.6;
+    background-color: var(--ej-bg-raised);
+    color: var(--ej-fg);
+    cursor: pointer;
+    transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+
+    // &:before {
+    //   position: absolute;
+    //   left: 10px;
+    //   width: 20px;
+    //   height: 20px;
+    //   background-color: $white;
+    //   border: $bc;
+    //   border-radius: 10px;
+    //   content: '';
+    // }
+
+    +.cjd-cd-box {
+      border-top: 1px solid var(--ej-border);
+    }
+
+    .cjd-delete-cd {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px 10px;
+      width: 30px;
+      height: 29px;
+      background: transparent url("../assets/images/icon-expand.svg") center center no-repeat;
+      background-size: auto 18px;
+      z-index: 1;
+      cursor: pointer;
+    }
+
+    &:hover {
+      background: rgba(196, 112, 58, 0.06);
+      color: var(--ej-terracotta);
+      transform: translateX(4px);
+      box-shadow: inset 3px 0 0 var(--ej-terracotta);
+    }
+
+    &.cjd-done {
+      &:before {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 9px;
+        color: $white;
+        background-color: $green;
+        border-color: $light-grey;
+        content: "✔";
+      }
+
+      .cjd-delete-cd {
+        background-image: url("../assets/images/icon-delete.svg");
+      }
+    }
+  }
+}
+
+.cjd-done {
+  &:before {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 9px;
+    color: $white;
+    background-color: $green;
+    border-color: $light-grey;
+    content: "✔";
+  }
+}
+
+// Modal
+.cjd-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 95%;
+  max-width: 788px;
+  height: auto;
+  max-height: 90vh;
+  background: var(--ej-bg-raised);
+  color: var(--ej-fg);
+  transform: translate(-50%, -50%);
+  outline: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &.cjd-modal-save {
+    height: 270px;
+  }
+
+  &.cjd-modal-share {
+    height: 470px;
+  }
+
+  &.cjd-modal-guide {
+    width: 500px;
+    height: 472px;
+  }
+
+  &.cjd-modal-guide-mobile {
+    width: 300px;
+    height: 380px;
+  }
+
+  &.cjd-modal-notifs {
+    width: 500px;
+    height: auto;
+  }
+
+  // The design modal carries the live preview alongside the form, so it needs noticeably
+  // more room than the save / share / guide / notification dialogs that share this shell.
+  &.cjd-modal-design {
+    max-width: 1040px;
+
+    .cjd-modal-header,
+    .cjd-modal-footer {
+      padding: 12px 28px;
+      height: 68px;
+    }
+
+    .cjd-modal-header h4 {
+      font-size: 16px;
+    }
+
+    .cjd-modal-form-wrapper {
+      padding: 28px;
+    }
+
+    // Only the wide, short name bands take the extra room the bigger modal frees up.
+    // Square previews (chest, pocket, sleeve) would grow into a tall block instead and
+    // push the colour picker below the fold. The swatch row is sized by the same rule as
+    // the preview it sits under, so the two always share an edge.
+    .cjd-mock-preview[data-wide="true"],
+    .cjd-preview-colors-wrapper[data-wide="true"] {
+      max-width: 100%;
+    }
+
+    .cjd-mock-preview[data-wide="true"] {
+      padding: 24px;
+    }
+  }
+
+  .cjd-modal-header,
+  .cjd-modal-footer {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    width: 100%;
+    height: 60px;
+    flex-shrink: 0;
+  }
+
+  .cjd-modal-header {
+    border-bottom: 1px solid #dcdcdc;
+
+    h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+
+    .cjd-modal-close {
+      margin-left: auto;
+      padding: 5px;
+      font-size: 20px;
+      color: #666666;
+      cursor: pointer;
+    }
+  }
+
+  .cjd-modal-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .cjd-modal-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+  }
+
+  .cjd-modal-footer {
+    border-top: 1px solid #dcdcdc;
+    margin-top: auto;
+    flex-shrink: 0;
+
+    .cjd-btn {
+      width: 120px;
+
+      +.cjd-btn {
+        margin-left: auto;
+        width: 200px;
+        // display: flex;
+        // justify-content: flex-end;
+        // align-items: center;
+      }
+
+      &.cjd-btn-primary {
+        background-color: var(--ej-terracotta);
+        color: #fff;
+      }
+
+      &.cjd-btn-secondary {
+        background-color: rgba(196, 112, 58, 0.2);
+        color: #C4703A;
+        border: 1px solid rgba(196, 112, 58, 0.5);
+
+        &:hover {
+          background-color: #C4703A;
+          color: #fff;
+          border-color: #C4703A;
+          opacity: 1;
+        }
+      }
+
+      &:hover,
+      &:focus {
+        background-color: rgba(196, 112, 58, 0.15);
+        color: #C4703A;
+        opacity: 1;
+      }
+
+      &.cjd-btn-primary:hover,
+      &.cjd-btn-primary:focus {
+        background-color: var(--ej-terracotta);
+        color: #fff;
+        opacity: 0.9;
+      }
+    }
+
+    .cjd-btn-modal {
+      width: 90px !important;
+    }
+  }
+}
+
+.cjd-remove-image {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  background: transparent url("../assets//images/icon-delete.svg") center center no-repeat;
+  background-size: 18px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.once-cookie {
+  position: absolute;
+  left: 20px;
+  bottom: 80px;
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.cjd-modal-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+
+  .cjd-tab-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    flex: 1 1 auto;
+    min-width: 80px;
+    min-height: 42px;
+    font-size: 13px;
+    line-height: 1.2;
+    text-transform: none;
+    color: #8089a2;
+    background-color: transparent;
+    border: $bc;
+    cursor: pointer;
+    outline: 0 !important;
+
+    +.cjd-tab-option {
+      border-left: 0;
+    }
+
+    &.cjd-active:only-child {
+      display: none;
+    }
+
+    &:hover {
+      background-color: rgba(196, 112, 58, 0.05);
+      color: var(--ej-terracotta);
+    }
+
+    &.cjd-active {
+      color: #fff !important;
+      background-color: var(--ej-terracotta);
+      border-color: var(--ej-terracotta);
+
+      &:hover {
+        color: #fff !important;
+        background-color: var(--ej-terracotta);
+      }
+    }
+
+    svg {
+      height: 25px;
+      width: 25px;
+    }
+  }
+}
+
+.cjd-modal-form-wrapper {
+  padding: 20px;
+
+  .cjd-row {
+    display: flex;
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+
+  .cjd-modal-half {
+    width: 50%;
+    padding: 0 15px;
+  }
+
+  @media (max-width: 1024px) {
+    padding: 15px;
+
+    .cjd-row {
+      flex-direction: column-reverse;
+      margin: 0;
+    }
+
+    .cjd-modal-half {
+      width: 100%;
+      padding: 0;
+
+      &+.cjd-modal-half {
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+    }
+  }
+
+  .cjd-form-group {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      margin-bottom: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: none;
+    }
+
+    .cjd-form-control {
+      display: block;
+      margin: 0;
+      padding: 7px 12px;
+      width: auto;
+      height: auto;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 1.5;
+      color: #495057;
+      background-color: #fff;
+      background-clip: padding-box;
+      border: 1px solid #cbcbcb;
+      border-radius: 0px;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      outline: 0;
+      -webkit-text-fill-color: #3c3c3c;
+      -webkit-box-shadow: 0 0 0 40px white inset;
+      box-shadow: 0 0 0 40px white inset;
+    }
+
+    +.cjd-form-group {
+      margin-top: 20px;
+    }
+
+    &.cjd-btn-group {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+
+      label {
+        width: 100%;
+      }
+
+      .cjd-btn {
+        width: 50%;
+        flex: 1;
+        justify-content: center;
+        min-height: 42px;
+        padding: 10px 18px !important;
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 1.2;
+        text-transform: none;
+        cursor: pointer;
+        background-color: #C4703A;
+        border: 1px solid #C4703A;
+        color: #fff;
+
+        +.cjd-btn {
+          margin: 0;
+        }
+
+        &:not(.cjd-btn-secondary) {
+          background-color: #C4703A !important;
+          border-color: #C4703A !important;
+          color: #fff !important;
+        }
+
+        &:not(.cjd-btn-secondary):hover,
+        &:not(.cjd-btn-secondary):focus {
+          background-color: #ad5d30 !important;
+          border-color: #ad5d30 !important;
+          color: #fff !important;
+          opacity: 1;
+        }
+
+        &.cjd-btn-secondary {
+          background-color: rgba(196, 112, 58, 0.16) !important;
+          border-color: rgba(196, 112, 58, 0.42) !important;
+          color: #C4703A !important;
+        }
+
+        &:hover,
+        &:focus {
+          background-color: rgba(196, 112, 58, 0.22);
+          border-color: rgba(196, 112, 58, 0.58);
+          color: #ad5d30;
+          opacity: 1;
+        }
+
+        &.cjd-btn-secondary:hover,
+        &.cjd-btn-secondary:focus {
+          background-color: rgba(196, 112, 58, 0.24) !important;
+          color: #ad5d30 !important;
+          border-color: rgba(196, 112, 58, 0.65) !important;
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .cjd-mock-preview {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    max-height: 400px;
+    background-color: #f4f4f4;
+    border: 1px solid darken($grey, 10%);
+    overflow: hidden;
+    margin: 0 auto;
+    flex-shrink: 0; // Prevent squashing in flex containers
+
+    @media (max-width: 1024px) {
+      max-width: 100% !important;
+      max-height: 550px !important;
+
+      &[data-square="true"],
+      &[data-pocket="true"] {
+        max-width: 550px !important;
+        max-height: 550px !important;
+      }
+    }
+
+    // For square design areas (chest, pockets) - maintain square aspect
+    &[data-square="true"] {
+      aspect-ratio: 1 / 1;
+      max-width: 300px;
+      max-height: 300px;
+    }
+
+    // For pockets (smaller square)
+    &[data-pocket="true"] {
+      aspect-ratio: 1 / 1;
+      max-width: 300px;
+      max-height: 300px;
+    }
+
+    // For wide horizontal areas (Front Center, Back Top, etc)
+    &[data-wide="true"] {
+      aspect-ratio: auto;
+    }
+
+    .cjd-name-area {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      max-height: 100%;
+      overflow: visible;
+    }
+
+    text {
+      paint-order: stroke fill;
+    }
+
+  }
+
+  .cjd-preview-colors-wrapper {
+    display: flex;
+    flex-direction: column;
+    margin-top: -1px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+
+    .cjd-color-selector {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      width: 100%;
+      font-size: 14px;
+      line-height: 1.3;
+      color: #8089a2;
+      background-color: #fff;
+      border: 1px solid #cbcbcb;
+      cursor: pointer;
+
+      &:after {
+        display: block;
+        position: absolute;
+        right: 14px;
+        top: 5px;
+        font-family: FontAwesome;
+        font-size: 25px;
+        font-style: normal;
+        font-weight: 400;
+        color: #d1d7e2;
+        content: "\f107";
+      }
+
+      .cjd-color-pointer {
+        position: relative;
+        margin-right: 10px;
+        flex: 0 0 20px;
+        width: 20px;
+        height: 20px;
+        background-color: pink;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden; // Added to clip any internal misalignment
+
+        &:before {
+          width: 14px;
+          height: 14px;
+          background-color: inherit;
+          border: 1px solid white;
+          border-radius: 50%;
+          content: "";
+          flex-shrink: 0;
+        }
+
+        &.cjd-border-pointer {
+          &:before {
+            width: 12px;
+            height: 12px;
+            border-width: 2px;
+          }
+        }
+      }
+    }
+
+    &.cjd-multiple {
+      flex-direction: row;
+      flex-wrap: wrap;
+
+      // Match the width of square preview boxes
+      &[data-square="true"] {
+        max-width: 300px;
+        margin: 0 auto;
+
+        @media (max-width: 1024px) {
+          max-width: 550px !important;
+        }
+
+        .cjd-color-selector {
+          padding: 10px 14px;
+          justify-content: center;
+          font-size: 14px;
+
+          @media (max-width: 1024px) {
+            padding: 15px 20px;
+            font-size: 16px;
+          }
+
+          .cjd-color-pointer {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+
+            @media (max-width: 1024px) {
+              width: 24px !important;
+              height: 24px !important;
+              flex: 0 0 24px !important;
+            }
+
+            &:before {
+              top: 2px;
+              left: 2px;
+              width: 16px;
+              height: 16px;
+            }
+          }
+        }
+      }
+
+      // For pockets (smaller square)
+      &[data-pocket="true"] {
+        max-width: 300px;
+        margin: 0 auto;
+
+        @media (max-width: 1024px) {
+          max-width: 550px !important;
+        }
+      }
+
+      // Fix color grid overflow — fewer columns for narrow square containers
+      .cjd-color-box {
+        padding: 30px 10px 10px;
+        width: 100% !important;
+        max-height: 250px;
+        overflow-y: auto !important;
+        overflow-x: visible !important;
+        scrollbar-width: thin;
+        -ms-overflow-style: auto;
+
+        &::-webkit-scrollbar {
+          display: block;
+          width: 5px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #ccc;
+          border-radius: 10px;
+        }
+
+        .cjd-select-wrapper {
+          grid-template-columns: repeat(6, 1fr) !important;
+          grid-gap: 6px;
+          justify-items: center;
+          align-items: center;
+
+          .cjd-colors-box {
+            width: 30px !important;
+            height: 24px !important;
+          }
+        }
+      }
+
+      .cjd-color-selector {
+        flex: 1;
+        width: 25%;
+
+        +.cjd-color-selector {
+          border-left: 0;
+        }
+
+        &:after {
+          content: "";
+        }
+      }
+
+      .cjd-color-box {
+        width: 100%;
+      }
+    }
+
+    .cjd-color-box {
+      display: block;
+      margin-bottom: 23px;
+      padding: 30px 14px 0;
+      width: 100%;
+      height: auto; // Remove fixed height to prevent clipping
+      min-height: 184px;
+      background-color: #fff;
+      border: $bc;
+      border-top: 0;
+      overflow: visible !important;
+
+      .cjd-select-wrapper {
+        grid-template-columns: repeat(7, 1fr);
+        grid-column-gap: 3px;
+      }
+
+      .cjd-note {
+        display: flex;
+        font-size: 12px;
+        text-transform: capitalize;
+
+        .cjd-close-color-box {
+          margin-left: auto;
+          width: 10px;
+          height: 10px;
+          font-size: 16px;
+          line-height: 0.6;
+          cursor: pointer;
+        }
+      }
+
+      .cjd-colors-list {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 25px 0 20px;
+      }
+
+      .cjd-color-wrapper {
+        width: 27px;
+        height: 27px;
+      }
+    }
+  }
+}
+
+.cjd-rtu-wrapper {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.cjd-alphabets-wrapper {
+  margin-top: 15px;
+  height: 310px;
+  overflow: auto;
+
+  .cjd-font-option {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(1, 1fr);
+    grid-gap: 6px;
+
+    +.cjd-font-option {
+      margin-top: 20px;
+    }
+
+    .cjd-letter-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 49px;
+      height: 49px;
+      border: 1px dashed $grey;
+      cursor: pointer;
+
+      &.cjd-active-letter,
+      &.cjd-active {
+        border: 2px solid #C4703A !important;
+        background-color: rgba(196, 112, 58, 0.12) !important;
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.75),
+          0 0 0 2px rgba(196, 112, 58, 0.12) !important;
+      }
+
+      &.cjd-letter-width svg {
+        max-width: 45px;
+      }
+
+      svg {
+        max-width: 30px;
+        height: 30px;
+        pointer-events: none;
+      }
+
+      img {
+        max-width: 30px;
+      }
+    }
+
+    @include respond-to("medium") {
+      grid-template-columns: repeat(4, 1fr);
+
+      .cjd-letter-wrapper {
+        width: 100%;
+        height: 44px;
+
+        svg {
+          max-width: 26px;
+          height: 26px;
+        }
+
+        &.cjd-letter-width svg {
+          max-width: 38px;
+        }
+      }
+    }
+
+    @include respond-to("mobile") {
+      grid-template-columns: repeat(3, minmax(86px, 1fr));
+      justify-content: center;
+      grid-gap: 6px;
+
+      .cjd-letter-wrapper {
+        height: 40px;
+        padding: 5px;
+
+        svg {
+          max-width: 22px;
+          height: 22px;
+        }
+
+        &.cjd-letter-width svg {
+          max-width: 32px;
+        }
+      }
+    }
+  }
+}
+
+.cjd-note {
+  display: block;
+  padding: 5px;
+  padding-left: 30px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  background: $white url("../assets/images/icon-info.svg") left center no-repeat;
+  background-size: 20px;
+}
+
+
+.cjd-modal-overlay {
+  position: fixed;
+  top: -5%;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  // transform: translate(50%,-50%);
+  background-color: rgba(35, 35, 35, 0.8);
+  overflow: auto;
+  z-index: 9999;
+}
+
+
+.cjd-jacket-nav {
+  position: absolute;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  margin-top: 40px;
+  width: 100px;
+
+  .cjd-nav-item {
+    position: relative;
+    margin: 5px;
+    padding: 20px;
+    width: 100%;
+    height: 90px;
+    text-align: center;
+    background-color: $light-grey;
+    border: $bc;
+    cursor: pointer;
+    border-radius: 10px;
+
+    &.cjd-active-nav {
+      border-color: $primary-stroke;
+
+      &:before {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 50px;
+        height: 100%;
+        color: $primary-stroke;
+        //background-color: $blue;
+        content: "✓";
+      }
+    }
+
+    img {
+      height: 100%;
+    }
+  }
+}
+
+#front-center-wrapper g,
+#right-chest g,
+#left-chest g,
+#right-pocket g,
+#left-pocket g,
+#back-top g,
+#back-middle g,
+#back-bottom g,
+#right-chest-verticle g,
+#left-chest-verticle g {
+  pointer-events: none;
+}
+
+// Custom Sizer
+.cjd-custom-sizer {
+  position: relative;
+  margin-top: 20px;
+
+  .cjd-label {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+
+    input {
+      margin-right: 10px;
+    }
+
+    >span {
+      margin-top: 10px;
+    }
+  }
+
+  .cjd-custom-form {
+    margin-top: 10px;
+  }
+
+  .cjd-form-group {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1.7fr 0.7fr 0.6fr;
+    grid-gap: 6px;
+    align-items: center;
+    font-size: 14px;
+
+    input {
+      padding: 5px 10px;
+      max-width: 65px;
+      border: $bc;
+      border-radius: 0;
+      outline: none;
+    }
+  }
+}
+
+.cjd-tab-options-open {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  width: 232px;
+  height: 100%;
+  background-color: $gray-stroke;
+  border-right: $bc;
+  list-style: none;
+
+  .cjd-save,
+  .cjd-share {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    bottom: 140px;
+    width: 80px;
+    height: 80px;
+    color: $white;
+    background-color: $black-800;
+    border-top: $bc;
+
+    &:hover {
+      color: $white;
+      background-color: $black-900;
+    }
+  }
+
+  .cjd-share {
+    bottom: 60px;
+    color: $black;
+    background-color: $light-grey;
+
+    &:hover {
+      color: $black;
+      background-color: darken($light-grey, 5%);
+    }
+  }
+}
+
+.cjd-tab-options {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  width: 80px;
+  height: 100%;
+  background-color: $gray-stroke;
+  border-right: $bc;
+  list-style: none;
+
+  .cjd-save,
+  .cjd-share {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    bottom: 140px;
+    width: 80px;
+    height: 80px;
+    color: $white;
+    background-color: $black-800;
+    border-top: $bc;
+
+    &:hover {
+      color: $white;
+      background-color: $black-900;
+    }
+  }
+
+  .cjd-share {
+    bottom: 60px;
+    color: $black;
+    background-color: $light-grey;
+
+    &:hover {
+      color: $black;
+      background-color: darken($light-grey, 5%);
+    }
+  }
+}
+
+.cjd-tab-option-open {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  //padding: 15px 0px;
+  //padding-top: 40px;
+  width: 100%;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center 15px;
+  background-size: 20px auto;
+  transition: background 250ms ease;
+  margin-left: -16px;
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
+  //padding-right: 10px;
+  cursor: pointer;
+  outline: 0;
+
+  +.cjd-tab-option {
+    border-top: $bc;
+  }
+
+  p {
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 15px;
+    color: $gray-inside;
+  }
+
+  svg {
+    --svg-fill-color: #7b818d;
+    --svg-stroke-color: black;
+  }
+
+  .svg-container {
+    border-right: 1px solid $gray-inside;
+    padding-right: "10px";
+    padding-left: "20px";
+  }
+
+  &:hover,
+  &.cjd-active {
+    background-color: $primary-stroke;
+    background-clip: content-box;
+    margin-left: -16px;
+    border-top-right-radius: 50px;
+    border-bottom-right-radius: 50px;
+    //padding-right: 10px;
+
+    p {
+      color: $white;
+    }
+
+    .svg-container {
+      border-right: 1px solid $white;
+      padding-right: "10px";
+      padding-left: "20px";
+    }
+
+    svg {
+      --svg-fill-color: #ffffff;
+      --svg-stroke-color: #ffffff;
+    }
+  }
+
+
+
+
+  &.cjd-save {
+    background-image: url(../assets/images/icon-save.svg);
+  }
+
+  &.cjd-share {
+    background-image: url(../assets/images/icon-share.svg);
+  }
+
+  &.cjd-active:only-child {
+    display: none;
+  }
+}
+
+.cjd-tab-option {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0px;
+  //padding-top: 40px;
+  width: 79px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center 15px;
+  background-size: 20px auto;
+  transition: background 250ms ease;
+  cursor: pointer;
+  outline: 0;
+
+  +.cjd-tab-option {
+    border-top: $bc;
+  }
+
+  p {
+    display: none;
+  }
+
+  svg {
+    --svg-fill-color: #7b818d;
+    --svg-stroke-color: black;
+  }
+
+  &:hover,
+  &.cjd-active {
+    background-color: $primary-stroke;
+
+    svg {
+      --svg-fill-color: #ffffff;
+      --svg-stroke-color: #ffffff;
+    }
+  }
+
+
+
+
+  &.cjd-save {
+    background-image: url(../assets/images/icon-save.svg);
+  }
+
+  &.cjd-share {
+    background-image: url(../assets/images/icon-share.svg);
+  }
+
+  &.cjd-active:only-child {
+    display: none;
+  }
+}
+
+.cjd-tab-content {
+  padding: 15px;
+  width: 339px;
+  height: calc(100% - #{$header-height});
+  overflow: auto;
+}
+
+.cjd-links-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+
+  a {
+    width: auto;
+    padding: 2px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: $blue;
+    // text-decoration: none;
+    // border-bottom: 1px solid $blue;
+
+    +a {
+      margin-top: 10px;
+    }
+  }
+}
+
+@include respond-to("medium") {
+  .outer {
+    width: min(520px, calc(100vw - 48px)) !important;
+    height: 118px;
+    white-space: nowrap;
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 6px 14px;
+    scrollbar-width: auto;
+    scrollbar-color: rgba(196, 112, 58, 0.5) rgba(20, 18, 16, 0.18);
+
+    &::-webkit-scrollbar {
+      height: 12px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(20, 18, 16, 0.14);
+      border-radius: 999px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(196, 112, 58, 0.62);
+      border-radius: 999px;
+    }
+  }
+
+  .outer div {
+    width: 96px;
+    background-color: #fff;
+    float: none;
+    height: 96px;
+    margin: 0 6px;
+    display: inline-block;
+    zoom: 1;
+  }
+
+  .cjd-main {
+    display: block;
+    height: auto;
+    padding-bottom: 100px;
+    overflow: hidden;
+  }
+
+  .cjd-jacket-nav {
+    position: relative;
+    flex-direction: row;
+    width: auto;
+    right: auto;
+
+    .cjd-nav-item {
+      //width: 100px;
+
+      &.cjd-active-nav:before {
+        &:before {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 300px;
+          height: 100%;
+          color: $primary-stroke;
+          //background-color: $blue;
+          content: "✓";
+        }
+
+        //width: 100%;
+        height: 4px;
+        // top: auto;
+        // bottom: 0;
+      }
+    }
+
+    img {
+      height: 100%;
+      width: 100px;
+    }
+  }
+
+  .cjd-content-wrapper {
+    order: 1;
+    padding: 10px;
+    padding-top: 62px;
+
+    .cjd-jacket-nav {
+      margin-bottom: 10px;
+      justify-content: flex-start;
+
+      .cjd-nav-item {
+        padding: 8px;
+        width: 96px;
+        height: 96px;
+
+        img {
+          height: 100%;
+          width: 100px;
+        }
+      }
+    }
+
+    > svg {
+      min-height: 414px;
+      max-height: 414px;
+      padding-left: 10px;
+      padding-right: 10px;
+      // On phones the jacket was width-limited by the old 80%, wasting the bottom of
+      // the card. Give it a little more width, capped at the width the artwork reaches
+      // when it hits the 414px height limit (366.7 + 20 padding), so the card keeps
+      // hugging the jacket on tablets rather than padding it out with whitespace.
+      width: 90%;
+      max-width: 390px;
+    }
+  }
+
+  .cjd-sidebar-wrapper {
+    flex-direction: column;
+    width: 100%;
+    order: 2;
+
+    .cjd-tab-options {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 auto;
+      margin-top: 72px;
+      padding: 10px;
+      width: 100%;
+      height: auto;
+
+      .cjd-tab-option {
+        width: calc(100% / 3);
+        border: $bc;
+
+        &.cjd-save,
+        &.cjd-share {
+          top: -75px;
+          bottom: auto;
+          width: 50%;
+          height: 70px;
+        }
+
+        &.cjd-save {
+          right: 0;
+        }
+      }
+    }
+
+    .cjd-tab-content {
+      margin: 0 auto;
+      padding-left: 10px;
+      padding-right: 10px;
+      width: 100%;
+
+      .cjd-select-wrapper {
+        grid-template-columns: repeat(5, 1fr);
+        grid-gap: 5px;
+
+        &.cjd-single {
+          grid-template-columns: repeat(6, 1fr);
+          grid-gap: 10px;
+          justify-items: center;
+
+          @include respond-to("mobile") {
+            grid-template-columns: repeat(4, 1fr);
+          }
+        }
+      }
+    }
+  }
+
+  .cjd-modal {
+    top: 50%;
+    left: 50%;
+    width: calc(100% - 40px);
+    max-width: 600px;
+    transform: translate(-50%, -50%);
+    height: auto;
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+
+    &.cjd-modal-guide-mobile {
+      width: calc(100% - 40px);
+      max-width: 400px;
+      height: auto;
+    }
+
+    // .cjd-modal.cjd-modal-design out-specifies the plain .cjd-modal cap above, so the
+    // breakpoint has to restate it or the design modal ignores this width entirely.
+    &.cjd-modal-design {
+      max-width: 600px;
+
+      .cjd-modal-header,
+      .cjd-modal-footer {
+        padding: 10px 20px;
+        height: 60px;
+      }
+
+      .cjd-modal-form-wrapper {
+        padding: 15px;
+      }
+
+      .cjd-mock-preview[data-wide="true"] {
+        padding: 20px;
+      }
+    }
+
+    &.cjd-modal-notifs {
+      width: calc(100% - 40px);
+      max-width: 400px;
+      height: auto;
+    }
+
+    .cjd-modal-header,
+    .cjd-modal-footer {
+      flex-shrink: 0;
+    }
+
+    .cjd-modal-content {
+      padding: 15px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+      height: auto !important;
+
+      .cjd-modal-form-wrapper .cjd-row {
+        flex-direction: column;
+
+        .cjd-modal-half {
+          width: 100%;
+
+          &:nth-child(1) {
+            order: 2;
+          }
+
+          &:nth-child(2) {
+            margin-bottom: 20px;
+            order: 1;
+          }
+        }
+      }
+
+      .cjd-mock-preview {
+        max-height: 267px;
+        padding: 12px;
+
+        &[data-square="true"] {
+          max-width: 85px;
+          max-height: 85px;
+        }
+
+        &[data-pocket="true"] {
+          max-width: 55px;
+          max-height: 55px;
+        }
+
+        svg {
+          max-width: 100%;
+          max-height: 100%;
+        }
+      }
+
+      .cjd-preview-colors-wrapper {
+        width: 100%;
+        max-width: 267px;
+
+        &[data-square="true"] {
+          width: 85px;
+          max-width: 85px;
+        }
+
+        &[data-pocket="true"] {
+          width: 55px;
+          max-width: 55px;
+        }
+      }
+
+      .cjd-btn-group .cjd-btn,
+      .cjd-modal-footer .cjd-btn {
+        justify-content: center;
+        padding-right: 18px !important;
+        text-align: center;
+      }
+    }
+  }
+}
+
+@include respond-to("medium") {
+  .cjd-jacket-nav {
+    position: relative;
+    flex-direction: row;
+    width: auto;
+    right: auto;
+    margin-bottom: 10px;
+
+    .cjd-nav-item {
+      //width: 100px;
+
+      &.cjd-active-nav:before {
+        &:before {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 300px;
+          height: 100%;
+          color: $primary-stroke;
+          //background-color: $blue;
+          content: "✓";
+        }
+
+        //width: 100%;
+        height: 4px;
+        // top: auto;
+        // bottom: 0;
+      }
+
+      img {
+        height: 100%;
+        width: 100px;
+      }
+    }
+  }
+}
+
+@media (min-width: 681px) and (max-width: 1200px) {
+  .cjd-modal {
+    .cjd-modal-header h4 {
+      font-size: 16px;
+    }
+
+    .cjd-modal-footer .cjd-btn {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .cjd-modal-content {
+      .cjd-form-group {
+        label {
+          font-size: 15px;
+        }
+
+        .cjd-form-control,
+        .Dropdown-root,
+        .Dropdown-control {
+          font-size: 14px;
+        }
+
+        &.cjd-btn-group .cjd-btn {
+          font-size: 15px;
+          font-weight: 600;
+        }
+      }
+
+      .cjd-preview-colors-wrapper .cjd-color-selector {
+        font-size: 15px;
+      }
+    }
+
+    .cjd-preview-colors-wrapper {
+      &.cjd-multiple,
+      &[data-square="true"],
+      &[data-pocket="true"] {
+        width: 100%;
+        max-width: 100% !important;
+      }
+
+      .cjd-color-box {
+        padding: 24px 18px 14px;
+
+        .cjd-select-wrapper.cjd-single {
+          grid-template-columns: repeat(8, 48px) !important;
+          grid-column-gap: 11px !important;
+          grid-row-gap: 13px !important;
+          justify-content: center;
+          justify-items: stretch;
+
+          .cjd-colors-box {
+            width: 48px !important;
+            height: 37px !important;
+            border: 1px solid rgba(20, 18, 16, 0.16);
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 42%, rgba(0, 0, 0, 0.08) 100%);
+            background-blend-mode: soft-light;
+            box-shadow:
+              inset 0 1px 0 rgba(255, 255, 255, 0.38),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+              0 1px 1px rgba(20, 18, 16, 0.08);
+          }
+        }
+      }
+    }
+  }
+}
+
+.panel-desktop {
+  height: 100%;
+  padding-bottom: 24px;
+  overflow-y: auto;
+}
+
+@include respond-to("medium") {
+  .panel-desktop {
+    display: none;
+  }
+
+  .panel-mbl {
+    display: block;
+    margin: 20px;
+
+    .cjd-select-wrapper {
+      grid-template-columns: repeat(5, 1fr);
+      grid-gap: 5px;
+    }
+
+    .cjd-select-wrapper.cjd-single {
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 10px;
+      justify-items: center;
+    }
+  }
+
+  .ho {
+    width: 100%;
+    justify-content: space-evenly;
+  }
+
+  .cjd-sidebar-wrapper .cjd-tab-content .cjd-select-wrapper {
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 5px;
+  }
+}
+
+@media (min-width: 681px) and (max-width: 1200px) {
+  .panel-mbl {
+    .control-panel-color {
+      .cjd-accordin-wrapper {
+        .cjd-select-wrapper.cjd-colors-select {
+          grid-template-columns: repeat(9, 47px) !important;
+          grid-column-gap: 8px !important;
+          grid-row-gap: 14px !important;
+          width: 100%;
+          justify-content: space-around;
+          justify-items: stretch;
+          padding-top: 20px;
+
+          .cjd-select-box.cjd-colors-box {
+            width: 47px !important;
+            height: 36px !important;
+            border: 1px solid rgba(20, 18, 16, 0.16);
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 42%, rgba(0, 0, 0, 0.09) 100%);
+            background-blend-mode: soft-light;
+            box-shadow:
+              inset 0 1px 0 rgba(255, 255, 255, 0.4),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.11),
+              0 1px 2px rgba(20, 18, 16, 0.1);
+          }
+        }
+      }
+    }
+  }
+}
+
+
+// Premium Loader styles moved to Header/styles.scss
+
+
+.react-toggle input[type="checkbox"],
+.react-toggle input[type="radio"] {
+  display: none;
+}
+
+@media screen and (max-width: 1200px) {
+  .cjd-modal-overlay {
+    top: 0;
+  }
+}
+
+@include respond-to("mobile") {
+  .cjd-content-wrapper {
+    .cjd-jacket-guides {
+      pointer-events: none;
+
+      svg {
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 0 !important;
+      }
+
+      .cjd-guides-pill {
+        pointer-events: none;
+        box-sizing: border-box;
+
+        .cjd-guides-toggle,
+        .cjd-canvas-bg-toggle {
+          pointer-events: auto;
+          touch-action: manipulation;
+        }
+
+        &.cjd-action-pill {
+          pointer-events: auto;
+          touch-action: manipulation;
+          box-sizing: border-box;
+        }
+      }
+    }
+  }
+
+  .panel-mbl {
+    .control-panel-color {
+      .cjd-accordin-wrapper {
+        .cjd-select-wrapper.cjd-colors-select {
+          .cjd-select-box.cjd-colors-box {
+            border: 1px solid rgba(20, 18, 16, 0.16);
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 42%, rgba(0, 0, 0, 0.09) 100%);
+            background-blend-mode: soft-light;
+            box-shadow:
+              inset 0 1px 0 rgba(255, 255, 255, 0.4),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.11),
+              0 1px 2px rgba(20, 18, 16, 0.1);
+          }
+        }
+      }
+    }
+  }
+
+  .cjd-modal-overlay {
+    top: 0;
+  }
+
+  .cjd-modal {
+    top: 50%;
+    left: 50%;
+    width: calc(100% - 24px);
+    max-width: none;
+    transform: translate(-50%, -50%);
+    max-height: calc(100vh - 24px);
+
+    &.cjd-modal-guide-mobile,
+    &.cjd-modal-notifs {
+      width: calc(100% - 24px);
+      max-width: none;
+    }
+
+    // Every design modal opens at one size on phones. A uniform preview was not enough on
+    // its own - the shell still grew with whatever sat under it, so a part with four tabs
+    // and a patch grid stood far taller than a plain name field. Fixing the height lets the
+    // tab panel (already overflow-y: auto) take up the difference by scrolling. Sized to
+    // roughly what the Front Center modal came to naturally, and still capped by the
+    // viewport on short screens.
+    &.cjd-modal-design {
+      max-width: none;
+      height: 76vh;
+      max-height: calc(100vh - 24px);
+    }
+
+    .cjd-modal-header {
+      padding: 8px 12px;
+      height: auto;
+
+      h4 {
+        font-size: 13px;
+      }
+    }
+
+    .cjd-modal-footer {
+      padding: 8px 12px;
+      height: auto;
+
+      .cjd-btn {
+        width: auto;
+        justify-content: center;
+        min-height: 40px;
+        padding: 10px 18px !important;
+        font-size: 15px;
+        font-weight: 600;
+        text-align: center;
+
+        +.cjd-btn {
+          width: auto;
+          margin-left: auto;
+        }
+      }
+    }
+
+    .cjd-modal-content {
+      padding: 10px;
+
+      .cjd-modal-tabs .cjd-tab-option {
+        font-size: 11px;
+        line-height: 36px;
+      }
+
+      .cjd-modal-form-wrapper {
+        padding: 10px 0;
+
+        .cjd-form-group {
+          label {
+            font-size: 15px;
+          }
+
+          .cjd-form-control {
+            padding: 9px 12px;
+            font-size: 15px;
+          }
+        }
+      }
+
+      // One preview size for every design area on phones. Left to themselves these boxes
+      // follow their artwork - a square chest panel becomes a full-width square while the
+      // chest and back name bands stay a thin strip - so some modals opened at twice the
+      // height of others. Pin the box and let the SVG letterbox inside it (a viewBox scales
+      // to fit its box by default), which keeps every modal the same size. The !importants
+      // are only here to answer the ones in the max-width: 1024px rules further up.
+      .cjd-mock-preview,
+      .cjd-mock-preview[data-square="true"],
+      .cjd-mock-preview[data-pocket="true"],
+      .cjd-mock-preview[data-wide="true"] {
+        width: 100%;
+        max-width: 100% !important;
+        height: 210px;
+        min-height: 210px;
+        max-height: 210px !important;
+        aspect-ratio: auto;
+        padding: 10px;
+      }
+
+      // Beats the .cjd-name-area rule that leaves the svg at height: auto, so the artwork
+      // scales down into the fixed box instead of setting the box height itself.
+      .cjd-mock-preview svg {
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+      }
+
+      .cjd-preview-colors-wrapper {
+        width: 100%;
+        max-width: 100% !important;
+
+        &[data-square="true"] {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        &[data-pocket="true"] {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        .cjd-color-selector {
+          flex: 1 1 0;
+          width: auto;
+          min-width: 0;
+          justify-content: center;
+          gap: 8px;
+          padding: 10px 12px;
+          font-size: 14px;
+          line-height: 1.2;
+
+          .cjd-color-pointer {
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
+            margin-right: 0;
+
+            &:before {
+              top: 2px;
+              left: 2px;
+              width: 14px;
+              height: 14px;
+            }
+          }
+        }
+
+        .cjd-color-box {
+          min-height: 120px;
+          padding: 22px 12px 10px;
+
+          .cjd-colors-list {
+            padding-top: 6px;
+          }
+
+          .cjd-select-wrapper {
+            padding-top: 0;
+            grid-template-columns: repeat(5, 44px) !important;
+            grid-column-gap: 12px !important;
+            grid-row-gap: 11px !important;
+            justify-content: center;
+            justify-items: stretch;
+
+            .cjd-colors-box {
+              width: 44px !important;
+              height: 34px !important;
+              border: 1px solid rgba(20, 18, 16, 0.16);
+              background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 42%, rgba(0, 0, 0, 0.08) 100%);
+              background-blend-mode: soft-light;
+              box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.38),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                0 1px 1px rgba(20, 18, 16, 0.08);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+.remove-guides {
+  display: none !important;
+}
+
+.control-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--ej-border);
+  padding-right: 10px;
+  color: var(--ej-fg);
+  line-height: 58px;
+  cursor: pointer;
+  background-color: var(--ej-card);
+  transition: all 0.2s ease;
+}
+
+.control-box:first-child {
+  border-radius: 10px 10px 0 0;
+}
+
+.control-box:last-child {
+  border-radius: 0 0 10px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.control-box-control {
+  background-color: var(--ej-bg-raised);
+  border-left: 1px solid var(--ej-border);
+  border-right: 1px solid var(--ej-border);
+  display: block;
+  padding: 15px 20px;
+}
+
+.control-box:hover {
+  background-color: var(--ej-terracotta-50);
+  color: var(--ej-terracotta);
+  transition: 0.3s ease-in-out;
+}
+
+.activeBox {
+  background-color: $secondry-inside;
+  border-color: $secondry-inside;
+  color: white;
+}
+
+.activeBox:hover {
+  background-color: darken($secondry-inside, 10%);
+  border-color: darken($secondry-inside, 10%);
+  color: white;
+  transition: 0.3s ease-in-out;
+}
+
+.step-title {
+  font-size: 16px;
+  font-family: var(--ej-font-sans);
+  text-transform: capitalize;
+  padding: 0 22px;
+  color: inherit;
+}
+
+.toggle-button {
+  color: #5a5a5a;
+  width: 50px;
+  text-align: center;
+  line-height: 58px;
+  margin-bottom: -2px;
+}
+
+.pull-right {
+  float: right;
+}
+
+.react-toggle--checked .react-toggle-track {
+  background-color: #1a1a1a !important;
+}
+
+.react-toggle--checked:hover:not(.react-toggle--disabled) .react-toggle-track {
+  background-color: #2d2d2d;
+}
+
+.react-toggle:hover:not(.react-toggle--disabled) .react-toggle-track {
+  background-color: #4a4a4a;
+}
+
+.react-toggle .react-toggle-track {
+  background-color: #6a6a6a;
+}
+
+.designLocations:hover {
+  background-color: var(--ej-terracotta);
+  color: white;
+  transition: 0.3s ease-in-out;
+}
+
+// Fix for iOS Safari zoom on input focus
+// iOS auto-zooms when input font-size is less than 16px
+@media screen and (max-width: 768px) {
+
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea,
+  .cjd-form-control {
+    font-size: 16px !important;
+  }
+}
+
+.cjd-panel-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 16px;
+  margin-top: 0;
+  border-top: none;
+  background: transparent;
+  // In the normal flow, directly under the last accordion — opening an
+  // accordion pushes the buttons down instead of the list sliding behind them.
+  position: relative;
+  box-shadow: none;
+
+  @include respond-to("medium") {
+    position: static !important;
+    margin: 20px 0 0 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-top: none !important;
+    box-shadow: none !important;
+  }
+
+  .cjd-btn-secondary,
+  .cjd-btn {
+    flex: 1;
+    max-width: 100%;
+    height: auto;
+    padding: 12px 32px;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: all 0.25s ease;
+
+    svg {
+      margin-right: 8px;
+      width: 18px;
+      height: 18px;
+      background: transparent;
+      padding: 0;
+      stroke: currentColor;
+    }
+  }
+
+  .cjd-btn-secondary {
+    background: rgba(196, 112, 58, 0.2) !important;
+    color: #c4703a !important;
+    border: 1px solid rgba(196, 112, 58, 0.5) !important;
+    border-radius: 30px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+
+    &:hover {
+      background: #c4703a !important;
+      color: #fff !important;
+      border-color: #c4703a !important;
+      opacity: 1 !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(196, 112, 58, 0.2);
+    }
+  }
+
+  .cjd-btn-cart {
+    padding-right: 15px !important;
+    background: var(--ej-terracotta);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(196, 112, 58, 0.24);
+
+    &:hover {
+      background: #ad5d30;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(196, 112, 58, 0.32);
+      opacity: 1;
+    }
+  }
+}
+
+// Dialog that replaces window.alert() — see components/alert.
+//
+// The overlay is always mounted for one animation past its close so the exit
+// can play; .is-open is what the component toggles. Exit duration here must
+// match EXIT_MS in the component.
+.cjd-alert-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(21, 18, 16, 0);
+  backdrop-filter: blur(0);
+  opacity: 0;
+  transition: opacity .22s ease, background .22s ease, backdrop-filter .22s ease;
+
+  &.is-open {
+    opacity: 1;
+    background: rgba(21, 18, 16, 0.58);
+    backdrop-filter: blur(7px);
+  }
+}
+
+.cjd-alert {
+  position: relative;
+  width: min(390px, 100%);
+  padding: 38px 30px 28px;
+  overflow: hidden;
+  text-align: center;
+  background: var(--ej-paper);
+  border: 1px solid rgba(196, 112, 58, 0.18);
+  border-radius: 24px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .5) inset,
+    0 30px 70px rgba(20, 18, 16, 0.26);
+  // Starts slightly small and low, settles with a gentle overshoot.
+  transform: translateY(14px) scale(.94);
+  opacity: 0;
+  transition:
+    transform .3s cubic-bezier(.2, .9, .3, 1.25),
+    opacity .2s ease;
+
+  .is-open & {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  // Tone accent across the top edge.
+  .cjd-alert-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--cjd-alert-tint, var(--ej-terracotta));
+  }
+
+  .cjd-alert-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 18px;
+    color: var(--cjd-alert-tint, var(--ej-terracotta));
+    background: var(--cjd-alert-wash, rgba(196, 112, 58, 0.12));
+    border-radius: 50%;
+    box-shadow: 0 0 0 8px var(--cjd-alert-halo, rgba(196, 112, 58, 0.07));
+  }
+
+  h3 {
+    margin: 0 0 10px;
+    color: var(--ej-fg);
+    font-family: var(--ej-font-serif);
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -.01em;
+  }
+
+  p {
+    margin: 0 auto;
+    max-width: 30ch;
+    color: var(--ej-fg-muted);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  button {
+    min-width: 128px;
+    margin-top: 26px;
+    padding: 12px 26px;
+    color: #fff;
+    background: var(--cjd-alert-tint, var(--ej-terracotta));
+    border: 0;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      filter: brightness(.94);
+      box-shadow: 0 8px 18px var(--cjd-alert-halo, rgba(196, 112, 58, 0.28));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cjd-alert-tint, var(--ej-terracotta));
+      outline-offset: 3px;
+    }
+  }
+
+  &.cjd-alert--success {
+    --cjd-alert-tint: #2f7d4f;
+    --cjd-alert-wash: rgba(47, 125, 79, 0.12);
+    --cjd-alert-halo: rgba(47, 125, 79, 0.09);
+  }
+
+  &.cjd-alert--error {
+    --cjd-alert-tint: #b3402f;
+    --cjd-alert-wash: rgba(179, 64, 47, 0.12);
+    --cjd-alert-halo: rgba(179, 64, 47, 0.09);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .cjd-alert-overlay,
+  .cjd-alert {
+    transition-duration: .01ms;
+  }
+
+  .cjd-alert {
+    transform: none;
+  }
+}
+
+.panel-desktop {
+  position: relative;
+
+  .cjd-select-wrapper.cjd-single {
+    grid-template-columns: repeat(6, 1fr);
+    grid-gap: 10px;
+    justify-items: center;
+  }
+
+  .control-panel-color {
+    .cjd-accordin-wrapper {
+      .cjd-select-wrapper.cjd-colors-select {
+        .cjd-select-box.cjd-colors-box {
+          border: 1px solid rgba(20, 18, 16, 0.16);
+          background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 42%, rgba(0, 0, 0, 0.09) 100%);
+          background-blend-mode: soft-light;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.11),
+            0 1px 2px rgba(20, 18, 16, 0.1);
+        }
+      }
+    }
+  }
+}
+
+@media (min-width: 1201px) {
+  // Tighten the white canvas card around the jacket. Desktop only: below 1201px the
+  // svg height is pinned to 414px and the artwork is already width-constrained, so
+  // narrowing it there would shrink the jacket instead of just trimming whitespace.
+  // Stays wide enough (>794px) that height remains the limiting dimension here.
+  .cjd-content-wrapper > svg {
+    width: 68%;
+  }
+
+  .cjd-modal {
+    .cjd-preview-colors-wrapper {
+      .cjd-color-box {
+        overflow-x: hidden !important;
+
+        .cjd-colors-list {
+          padding-top: 22px;
+        }
+
+        .cjd-select-wrapper.cjd-single {
+          grid-template-columns: repeat(6, 46px);
+          grid-column-gap: 10px;
+          grid-row-gap: 8px;
+          justify-content: start;
+          justify-items: stretch;
+          padding-top: 0;
+        }
+
+        .cjd-select-wrapper.cjd-single .cjd-select-box.cjd-colors-box {
+          width: 46px;
+          height: 34px;
+          border: 1px solid rgba(20, 18, 16, 0.16);
+          border-radius: 2px;
+          background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 42%, rgba(0, 0, 0, 0.08) 100%);
+          background-blend-mode: soft-light;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.38),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+            0 1px 1px rgba(20, 18, 16, 0.08);
+          overflow: visible;
+        }
+      }
+    }
+  }
+}
+
+// Modal enter / exit
+//
+// react-modal stamps --after-open on the next frame and --before-close for the duration of
+// closeTimeoutMS, so these two classes are all the animation needs. The timing has to stay
+// in step with MODAL_ANIM_MS in src/config/modalAnimation.js - if the CSS outlasts it the
+// dialog is ripped out of the DOM mid-fade.
+//
+// This block sits at the very end of the file on purpose: the breakpoint blocks above
+// re-declare `transform` on .cjd-modal to re-centre it, and would otherwise wipe out the
+// scale half of the animation on anything narrower than 1200px.
+$modal-anim: 220ms;
+
+.cjd-modal-overlay {
+  opacity: 0;
+  transition: opacity $modal-anim ease;
+}
+
+.cjd-modal-overlay.cjd-modal-overlay--after-open {
+  opacity: 1;
+}
+
+.cjd-modal-overlay.cjd-modal-overlay--before-close {
+  opacity: 0;
+}
+
+.cjd-modal {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.94);
+  transition: opacity $modal-anim ease,
+    transform $modal-anim cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  will-change: opacity, transform;
+}
+
+.cjd-modal.cjd-modal--after-open {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.cjd-modal.cjd-modal--before-close {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cjd-modal-overlay {
+    transition-duration: 0.01ms;
+  }
+
+  .cjd-modal,
+  .cjd-modal.cjd-modal--after-open,
+  .cjd-modal.cjd-modal--before-close {
+    transition-duration: 0.01ms;
+    transform: translate(-50%, -50%);
+  }
+}
+
+// Colour swatch tooltips on the edge columns
+//
+// The tooltip is a fixed 90px bubble centred on a ~45px swatch, so it hangs ~22px past the
+// swatch on either side. The scrolling colour list clips horizontally - overflow-y: auto
+// forces the x axis to compute to auto even where it is written as visible - which sheared
+// the label on the first and last column: "Dark Purple" rendered as "ark Purple". Anchor
+// those two columns to their own edge instead of centring them.
+//
+// The selector has to match the swatch itself rather than a wrapper around it: SelectBox
+// renders .cjd-select-box as the direct grid child, so the older
+// `> div:nth-child(6n + 1) .cjd-select-box` form matched nothing and never took effect.
+@mixin swatch-edge-tooltips($columns) {
+  .cjd-preview-colors-wrapper .cjd-color-box .cjd-select-wrapper.cjd-single {
+    >.cjd-select-box.cjd-colors-box:nth-child(#{$columns}n + 1):hover {
+      &:before {
+        left: 0;
+        transform: none;
+      }
+
+      &:after {
+        left: 18px;
+        transform: none;
+      }
+    }
+
+    >.cjd-select-box.cjd-colors-box:nth-child(#{$columns}n):hover {
+      &:before {
+        right: 0;
+        left: auto;
+        transform: none;
+      }
+
+      &:after {
+        right: 18px;
+        left: auto;
+        transform: none;
+      }
+    }
+  }
+}
+
+@media (min-width: 681px) {
+  @include swatch-edge-tooltips(6);
+}
+
+// The grid drops to five columns on phones, so the edge columns move.
+@include respond-to("mobile") {
+  @include swatch-edge-tooltips(5);
+}

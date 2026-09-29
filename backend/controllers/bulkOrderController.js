@@ -49,6 +49,12 @@ export const createBulkOrder = async (req, res) => {
         quantity: Number(getFirstField(fields, 'quantity', 10)),
         designLocations: JSON.parse(getFirstField(fields, 'designLocations', '{}')),
         images: additionalImageUrls,
+        // the 2026 quote form's extra answers (plain text, kept short)
+        organization: String(getFirstField(fields, 'organization')).trim().slice(0, 160),
+        orderType: String(getFirstField(fields, 'orderType')).trim().slice(0, 60),
+        quantityRange: String(getFirstField(fields, 'quantityRange')).trim().slice(0, 30),
+        neededBy: String(getFirstField(fields, 'neededBy')).trim().slice(0, 30),
+        budget: String(getFirstField(fields, 'budget')).trim().slice(0, 60),
       };
 
       if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
@@ -69,19 +75,19 @@ export const createBulkOrder = async (req, res) => {
 
       // Carry the saved record's identity into the notification so the admin copy shows
       // the same submission time and reference the dashboard does.
-      const emailData = { ...data, createdAt: saved.createdAt, referenceId: saved._id };
+      const emailData = { ...data, createdAt: saved.createdAt, referenceId: saved._id, siteUrl: (process.env.CLIENT_URL || '').replace(/\/+$/, '') };
 
       const adminRecipient = await getAdminEmail();
       const emailResults = await Promise.allSettled([
         sendEmail(
-          'New Bulk Order Request - ' + data.selectedProduct,
+          `New bulk quote: ${data.organization || data.name} · ${data.quantityRange || data.quantity} × ${data.selectedProduct}`,
           adminRecipient,
           emailData,
           '/views/bulkOrderAdmin.ejs',
           { replyTo: data.email }
         ),
         sendEmail(
-          'Your Easy Jackets Quote Request Received',
+          'Your Easy Jackets bulk quote request is in',
           data.email,
           emailData,
           '/views/bulkOrderCustomer.ejs'

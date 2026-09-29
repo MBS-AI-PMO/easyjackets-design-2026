@@ -159,7 +159,7 @@ const OrderBulkTable = () => {
                   />
                 </TableCell>
                 <TableCell sx={{ color: '#666', borderBottom: '1px solid #f0f0f0' }}>{order?.selectedLining}</TableCell>
-                <TableCell sx={{ color: '#333', fontWeight: 'bold', borderBottom: '1px solid #f0f0f0' }}>{order?.quantity}</TableCell>
+                <TableCell sx={{ color: '#333', fontWeight: 'bold', borderBottom: '1px solid #f0f0f0' }}>{order?.quantityRange || order?.quantity}</TableCell>
                 <TableCell sx={{ borderBottom: '1px solid #f0f0f0' }}>
                   <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                     <Button

@@ -95,11 +95,10 @@ export default function BulkOrders() {
         if (!v('name') || !v('email') || !v('org')) { setState({ error: 'Please add your name, organization and email.' }); return; }
         setState({ sending: true, error: '' });
         try {
-          const chosen = DESIGN_LOCATIONS.filter(([key]) => s.locations[key]).map(([, label]) => label);
           await submitBulkQuote({
             name: v('name'), org: v('org'), orgType: s.org, email: v('email'), phone: v('phone'), type: s.type, qty: s.qty, date: v('date'), budget: s.budget,
-            closure: capitalize(s.closure), lining: s.lining, zipout: s.zipout ? 'Yes' : 'No', flap: s.flap ? 'Yes' : 'No',
-            locations: chosen.length ? chosen.join(', ') : 'None',
+            closure: capitalize(s.closure), lining: s.lining, zipout: Boolean(s.zipout), flap: Boolean(s.flap),
+            designLocations: Object.fromEntries(DESIGN_LOCATIONS.map(([key]) => [key, Boolean(s.locations[key])])),
             details: v('details'),
           });
           setState({ sent: true, sentName: v('name').split(' ')[0], sending: false });
@@ -346,8 +345,8 @@ export default function BulkOrders() {
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '20px' }}>
           {segments.map((s, sIdx) => (
-            <div key={sIdx} style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', color: 'var(--cream)' }}>
-              <div style={{ position: 'absolute', inset: '0', opacity: '0.8' }}>
+            <div key={sIdx} className="bo-seg" style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', color: 'var(--cream)' }}>
+              <div className="bo-seg-img" style={{ position: 'absolute', inset: '0', opacity: '0.8' }}>
                 <ImageSlot slot={s.slot} shape="rect" src={s.src} placeholder={s.name} aria-label={s.alt} />
               </div>
               <div style={{ position: 'absolute', inset: 'auto 0 0 0', padding: '20px', background: 'linear-gradient(to top,rgba(20,17,15,0.92),transparent)' }}>
@@ -376,7 +375,7 @@ export default function BulkOrders() {
         </div>
         <div style={{ display: 'grid', gap: '0' }}>
           {tiers.map((t, tIdx) => (
-            <div key={tIdx} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto auto', gap: '16px 24px', alignItems: 'baseline', padding: '18px 0', borderTop: '1px solid var(--ink)' }}>
+            <div key={tIdx} className="bo-tier" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto auto', gap: '16px 24px', alignItems: 'baseline', padding: '18px 0', borderTop: '1px solid var(--ink)' }}>
               <div>
                 <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '28px', lineHeight: '1', textTransform: 'uppercase' }}>
                   {t.range}
@@ -401,8 +400,8 @@ export default function BulkOrders() {
           How a team order works
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '28px 24px' }}>
-          <div style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>01</div>
+          <div className="bo-step" style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
+            <div className="bo-step-n" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>01</div>
             <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase', marginTop: '10px' }}>
               Request a quote
             </div>
@@ -410,8 +409,8 @@ export default function BulkOrders() {
               Send colors, logo, quantity and date. A specialist replies within one business day.
             </p>
           </div>
-          <div style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>02</div>
+          <div className="bo-step" style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
+            <div className="bo-step-n" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>02</div>
             <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase', marginTop: '10px' }}>
               Approve the mockup
             </div>
@@ -419,8 +418,8 @@ export default function BulkOrders() {
               Free digital proof of the exact jacket. A physical sample is available for orders of 25+.
             </p>
           </div>
-          <div style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>03</div>
+          <div className="bo-step" style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
+            <div className="bo-step-n" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>03</div>
             <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase', marginTop: '10px' }}>
               Send the roster
             </div>
@@ -428,8 +427,8 @@ export default function BulkOrders() {
               Names, numbers and sizes in a simple sheet. We double-check the sizing run with you.
             </p>
           </div>
-          <div style={{ borderTop: '3px solid var(--gold)', paddingTop: '16px' }}>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>04</div>
+          <div className="bo-step" style={{ borderTop: '3px solid var(--gold)', paddingTop: '16px' }}>
+            <div className="bo-step-n" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '44px', lineHeight: '1', color: 'var(--gold-2)' }}>04</div>
             <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase', marginTop: '10px' }}>
               One delivery
             </div>

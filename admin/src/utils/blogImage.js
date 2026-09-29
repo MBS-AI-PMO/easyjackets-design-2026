@@ -1,10 +1,12 @@
+import { uploadUrl } from '../constant/url';
+
 const DEFAULT_BLOG_IMAGE = '/assets/images/Site-Logo.webp';
 const LEGACY_IMAGE_RE = /\.(png|jpe?g)(?=([?#]|$))/i;
 
 const toWebpVariant = (url) => url.replace(LEGACY_IMAGE_RE, '.webp');
 
 export const getBlogImageCandidates = (image, fallback = DEFAULT_BLOG_IMAGE) => {
-  const source = typeof image === 'string' ? image.trim() : '';
+  const source = typeof image === 'string' ? uploadUrl(image.trim()) : '';
   const candidates = [];
 
   if (source) {

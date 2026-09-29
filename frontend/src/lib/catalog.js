@@ -20,7 +20,7 @@ export function normalizeProduct(p) {
     return { size: String(s.size).toUpperCase(), original: base, price: discounted(base, discountPct) };
   });
   const images = [p.frontImage, ...(p.otherImages || [])].filter(Boolean).map(uploadUrl);
-  const category = p.category && typeof p.category === 'object' ? { id: p.category._id, name: p.category.name, slug: p.category.slug } : null;
+  const category = p.category && typeof p.category === 'object' ? { id: p.category._id, name: p.category.name, slug: p.category.slug, code: p.category.code || '' } : null;
   const color = p.color && typeof p.color === 'object' ? { id: p.color._id, name: String(p.color.name || '').trim(), code: p.color.code } : null;
   return {
     id: p._id,
@@ -117,14 +117,29 @@ export const fetchReviewSummary = async (id, signal) => (await api.get(`/reviews
 export const submitReview = (id, body) => api.post(`/reviews/product/${id}`, body, { auth: false });
 export const trackView = (id) => api.post(`/product/interaction/${id}/view`, undefined, { auth: false }).catch(() => {});
 
-/** The jacket builder on custom.easyjackets.com, opened on this product's own design. */
-export const CUSTOMIZER = (import.meta.env.VITE_CUSTOMIZER_URL || 'https://custom.easyjackets.com').replace(/\/$/, '');
-export const customizerUrl = (product) => {
+// The jacket builder: this repo's custom-jacket/ app, never the live one on custom.easyjackets.com.
+// On localhost the local builder (npm start in custom-jacket runs on :3001); elsewhere
+// VITE_CUSTOMIZER_URL, else the new deployment's builder (Coolify app, Base Directory /custom-jacket).
+const NEW_CUSTOMIZER_URL = 'https://custom.145.223.75.247.sslip.io';
+const onLocalhost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+export const CUSTOMIZER = (onLocalhost
+  ? import.meta.env.VITE_LOCAL_CUSTOMIZER_URL || 'http://localhost:3001'
+  : import.meta.env.VITE_CUSTOMIZER_URL || NEW_CUSTOMIZER_URL).replace(/\/$/, '');
+
+/**
+ * A builder link. `id` is the jacket category's code (the builder loads that jacket's options);
+ * `design` opens a saved design as a starting point (Add to cart saves a new one); `designedit`
+ * reopens the visitor's own cart design to change it in place (Update cart).
+ */
+export const builderUrl = ({ code, design, designedit } = {}) => {
   const url = new URL(CUSTOMIZER + '/');
-  if (product?.id) url.searchParams.set('id', product.id);
-  if (product?.designId) url.searchParams.set('design', product.designId);
+  if (code) url.searchParams.set('id', code);
+  if (design) url.searchParams.set('design', design);
+  if (designedit) url.searchParams.set('designedit', designedit);
   return url.toString();
 };
+/** The builder opened on this product's own design. */
+export const customizerUrl = (product) => builderUrl({ code: product?.category?.code, design: product?.designId });
 
 /** Materials and colours the catalogue's products are actually made in (within one category when given). */
 export const fetchFilterOptions = (category = '') => once(`filter-options:${category}`, async () => {

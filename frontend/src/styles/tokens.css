@@ -88,6 +88,9 @@ img, svg, video { max-width: 100%; }
 .ez-product-photo .ez-slot[data-cutout="true"] { --ez-zoom: 1.08; }
 .ez-card:hover .ez-product-photo .ez-slot { transform: scale(calc(var(--ez-zoom) * 1.06)); } /* the picture grows a little on hover */
 .ez-product-photo .ez-slot { object-fit: contain; }
+/* Jackets rendered in the design lab sit on the page colour, like the cut-outs (their white ground is
+   cleared by ImageSlot's `knockout`, lib/knockout.js). */
+.ez-product-photo.ez-design-photo, .ez-design-photo { background: transparent; padding: 0; }
 
 /* Customer-photo mosaic: a 2x2 lead photo beside a 2x2 block of singles; two columns on phones. */
 .ez-photo-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 240px; gap: 12px; }
@@ -99,9 +102,17 @@ img, svg, video { max-width: 100%; }
 .ez-slot-img { opacity: 0; transition: opacity .45s ease; }
 .ez-slot-img.is-loaded { opacity: 1; }
 
-/* thin scrollbars, in the page colours */
-html { scrollbar-width: thin; scrollbar-color: var(--cream-2) transparent; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
+/* thin scrollbars, in the page colours: the page AND every scrolling box (dropdown lists, rows, panels).
+   Chrome, Edge, Safari use the webkit rules below. The standard scrollbar-color is deliberately NOT set
+   for them: it is inherited, and once an element has it Chrome drops the webkit rules and draws its
+   default wide bar with arrow buttons in every inner box (dropdown menus looked like that). */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--cream-2); border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: var(--cream-2); border-radius: 6px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-button { display: none; }
+::-webkit-scrollbar-corner { background: transparent; }
+/* Firefox (no webkit scrollbars): its own thin bar, on every element */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--cream-2) transparent; }
+}

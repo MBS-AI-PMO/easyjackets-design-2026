@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 // The landing page: catalogue, categories, blog, FAQs, reviews and the top bar
 // come from the API; the photography is the client's own.
 import A from '../components/A';
@@ -10,7 +10,6 @@ import Faq from '../components/Faq';
 import { fetchCategories, fetchCategoryCounts, fetchColors, fetchLanding } from '../lib/catalog';
 import { fetchFabricSections, fetchFeaturedReviews, fetchGallery, fetchPageFaqs, fetchPatchPhotos, fetchRecentBlogs, fetchTopBar, patchTags } from '../lib/content';
 import { fetchTestimonials } from '../lib/site';
-import PATCH_PHOTOS from '../data/embroidery-photos.json';
 import { useAsync } from '../lib/useAsync';
 import { usePageProps } from '../lib/usePageProps';
 import { usePageTitle } from '../lib/usePageTitle';
@@ -48,8 +47,8 @@ const PICKS = [
 ];
 
 // Patches tiles: the design's four labels, each illustrated by a random photo
-// of that technique — the workshop patch photos (data/embroidery-photos.json)
-// plus Gallery photos tagged by caption — so every visit shows a different set.
+// of that technique from the admin's Embroidery & Patches screen (Gallery photos
+// only if that screen is empty), so every visit shows a different set.
 const PATCHES = [
   { name: 'Embroidery', tag: 'Embroidery' },
   { name: 'Embroidered patches', tag: 'Patches' },
@@ -71,17 +70,18 @@ const GalCap = ({ eyebrow, title }) => (
 );
 // "Made for real teams": five random photos per visit from the Gallery and the patch photos.
 const MOSAIC_SIZE = 5;
-const pickMosaic = (gallery, adminPhotos = []) => shuffle([
-  ...gallery.map((g) => ({ ...g, href: '/gallery' })),
-  ...adminPhotos.map((p) => ({ id: p.id, image: p.image, caption: p.caption, href: '/embroidery-and-patches' })),
-  ...PATCH_PHOTOS.filter((p) => p.url).map((p) => ({ id: p.slug, image: p.url, caption: p.cap, href: '/embroidery-and-patches' })),
-]).slice(0, MOSAIC_SIZE);
+const pickMosaic = (gallery, adminPhotos = []) => {
+  const inGallery = new Set(gallery.map((g) => g.image));
+  return shuffle([
+    ...gallery.map((g) => ({ ...g, href: '/gallery' })),
+    // a photo in both screens is shown once
+    ...adminPhotos.filter((p) => !inGallery.has(p.image)).map((p) => ({ id: p.id, image: p.image, caption: p.caption, href: '/embroidery-and-patches' })),
+  ]).slice(0, MOSAIC_SIZE);
+};
 const pickPatchPhotos = (gallery, adminPhotos = []) => {
-  const pool = shuffle([
-    ...adminPhotos.map((p) => ({ id: p.id, src: p.image, alt: p.caption, tags: p.tags })),
-    ...PATCH_PHOTOS.filter((p) => p.url).map((p) => ({ id: p.slug, src: p.url, alt: p.cap, tags: p.tags })),
-    ...gallery.map((g) => ({ id: g.id, src: g.image, alt: g.caption, tags: patchTags(g.caption) })),
-  ]);
+  const pool = shuffle(adminPhotos.length
+    ? adminPhotos.map((p) => ({ id: p.id, src: p.image, alt: p.caption, tags: p.tags }))
+    : gallery.map((g) => ({ id: g.id, src: g.image, alt: g.caption, tags: patchTags(g.caption) })));
   const used = new Set();
   return PATCHES.map((t) => {
     // a technique with fewer than three photos of its own borrows from the rest, so every tile still varies
@@ -131,7 +131,7 @@ export default function Home() {
   }, [liveTopBar, topBarLoading, topBarError]);
   // Picks + bestsellers (two rounds of one jacket per category) come from one
   // request; the API draws them at random on every visit.
-  const { data: landing } = useAsync((signal) => fetchLanding(signal), []);
+  const { data: landing } = useAsync((signal) => fetchLanding(signal), [], { live: false }); // random picks: new ones per visit, not per tab switch
   const bestsellers = landing ? { products: landing.bestsellers } : null;
   const picks = landing ? PICKS.map((pick) => ({ ...pick, product: landing.picks[pick.key] || null })) : null;
   const { data: categories } = useAsync(() => fetchCategories('jackets'), []);
@@ -141,11 +141,34 @@ export default function Home() {
   const { data: posts } = useAsync((signal) => fetchRecentBlogs(3, signal), []);
   // Testimonials the admin keeps with the site features; the section is dropped when there are none or the request fails.
   const { data: testimonials, loading: testimonialsLoading } = useAsync((signal) => fetchTestimonials(signal), []);
+  // testimonials row: previous / next buttons move it one card at a time; each greys out at its end
+  const quoteRowRef = useRef(null);
+  const [quoteEnds, setQuoteEnds] = useState({ start: true, end: true });
+  const measureQuotes = useCallback(() => {
+    const el = quoteRowRef.current;
+    if (!el) return;
+    setQuoteEnds({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
+  }, []);
+  useEffect(() => {
+    const el = quoteRowRef.current;
+    if (!el) return undefined;
+    measureQuotes();
+    el.addEventListener('scroll', measureQuotes, { passive: true });
+    window.addEventListener('resize', measureQuotes);
+    return () => { el.removeEventListener('scroll', measureQuotes); window.removeEventListener('resize', measureQuotes); };
+  }, [testimonials, measureQuotes]);
+  const moveQuotes = (dir) => {
+    const el = quoteRowRef.current;
+    const card = el?.firstElementChild;
+    if (!el || !card) return;
+    const step = card.getBoundingClientRect().width + (parseFloat(getComputedStyle(el).columnGap) || 20);
+    el.scrollBy({ left: dir * step, behavior: 'smooth' });
+  };
   const { data: faqs } = useAsync((signal) => fetchPageFaqs('/', signal), []);
   // Gallery photos, drawn once per visit: the patches tiles and the mosaic order change on every refresh.
   const { data: galleryData } = useAsync((signal) => Promise.all([fetchGallery(signal), fetchPatchPhotos(signal).catch(() => [])])
-    .then(([list, adminPhotos]) => ({ patches: pickPatchPhotos(list, adminPhotos), mosaic: pickMosaic(list, adminPhotos) })), []);
-  const { data: fabricSections } = useAsync((signal) => fetchFabricSections(signal).then((list) => list.map((x) => ({ ...x, swatches: shuffle(x.tileSwatches) }))), []);
+    .then(([list, adminPhotos]) => ({ patches: pickPatchPhotos(list, adminPhotos), mosaic: pickMosaic(list, adminPhotos) })), [], { live: false }); // shuffled per visit
+  const { data: fabricSections } = useAsync((signal) => fetchFabricSections(signal).then((list) => list.map((x) => ({ ...x, swatches: shuffle(x.tileSwatches) }))), [], { live: false }); // shuffled per visit
   const fabricCount = fabricSections?.length || 0;
   const colorCount = fabricSections ? fabricSections.reduce((n, x) => n + x.colorCount, 0) : 0;
   const materialTiles = fabricSections ? fabricSections.filter((x) => x.swatches.length).slice(0, 4).map((x) => ({ name: x.name, src: x.swatches[0].image, alt: x.swatches[0].alt, key: x.key })) : null;
@@ -243,7 +266,8 @@ export default function Home() {
         <div className="ez-grid-2-sm" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '20px' }}>
           {(picks || PICKS.map((p) => ({ ...p, product: null }))).map((p) => (
             <A key={p.key} href={p.product ? productPath(p.product.slug) : shopPath({ material: p.material })} className={`ez-card${p.product ? ' ez-reveal' : ''}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
-              <div className="ez-card-img ez-product-photo" style={{ aspectRatio: '1', overflow: 'hidden', borderRadius: '4px' }}>
+              {/* taller than square, so the jacket has room above and below it */}
+              <div className="ez-card-img ez-product-photo" style={{ aspectRatio: '4/5', overflow: 'hidden', borderRadius: '4px' }}>
                 {p.product ? <ImageSlot slot={`v2-pick-${p.key}`} shape="rect" src={p.product.image} width={480} placeholder={p.name} aria-label={p.product.imageAlt} /> : (picks ? null : <div className="ez-skeleton" style={{ height: '100%' }} />)}
               </div>
               <h3 style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '28px', lineHeight: '1', textTransform: 'uppercase', margin: '16px 0 0' }}>{p.name}</h3>
@@ -522,9 +546,23 @@ export default function Home() {
       {/* Testimonials */}
       {testimonialsLoading || testimonials?.length ? (
         <section id="testimonials" aria-labelledby="testimonials-title" style={section}>
-          <div style={eyebrow}>Testimonials</div>
-          <h2 id="testimonials-title" style={{ ...h2, margin: '10px 0 36px' }}>What people are saying</h2>
-          <div className="ez-quote-row">
+          <div className="ez-quote-head">
+            <div>
+              <div style={eyebrow}>Testimonials</div>
+              <h2 id="testimonials-title" style={{ ...h2, margin: '10px 0 0' }}>What people are saying</h2>
+            </div>
+            {quoteEnds.start && quoteEnds.end ? null : (
+              <div className="ez-quote-nav">
+                <button type="button" className="ez-quote-btn" onClick={() => moveQuotes(-1)} disabled={quoteEnds.start} aria-label="Previous testimonials" aria-controls="testimonials-row">
+                  <span aria-hidden="true">←</span>
+                </button>
+                <button type="button" className="ez-quote-btn" onClick={() => moveQuotes(1)} disabled={quoteEnds.end} aria-label="Next testimonials" aria-controls="testimonials-row">
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="ez-quote-row" id="testimonials-row" ref={quoteRowRef}>
             {testimonials?.length ? testimonials.map((t) => (
               <figure key={t.id} className="ez-reveal" style={{ margin: '0', padding: '28px', background: '#fbf8f2', border: '1px solid var(--cream-2)', borderTop: '3px solid var(--gold)', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div aria-hidden="true" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '64px', lineHeight: '1', height: '32px', color: 'var(--gold)' }}>“</div>

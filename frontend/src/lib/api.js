@@ -51,6 +51,7 @@ export const uploadUrl = (p) => {
   if (!p) return '';
   if (LEGACY_UPLOADS.test(p)) return `${BASE}/uploads/${p.replace(LEGACY_UPLOADS, '')}`;
   if (/^https?:\/\//.test(p)) return p;
+  if (p.startsWith('/images/')) return p; // the storefront's own public files (e.g. an admin row pointing at one)
   return `${BASE}${p.startsWith('/') ? '' : '/'}${p}`;
 };
 /** The same upload at a given width (the API snaps to 320/480/640/768/960/1280). */

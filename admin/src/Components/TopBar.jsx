@@ -14,6 +14,7 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import SaveIcon from '@mui/icons-material/Save';
 import { toast } from 'react-toastify';
 import instance from '../constant/instance';
+import './TopBar.css';
 
 const DEFAULT_TEXT = 'Flash Sale \u00b7 50% Off \u00b7 Free Expedited Shipping Across US & Canada';
 
@@ -116,54 +117,34 @@ const TopBar = () => {
                 />
 
                 <Typography variant="subtitle2" sx={{ mt: 4, mb: 1.5, fontWeight: 700 }}>
-                    Preview
+                    Preview <Box component="span" sx={{ fontWeight: 400, color: '#888' }}>· exactly as it shows on the site, above the menu (updates as you type)</Box>
                 </Typography>
-                <Box
-                    sx={{
-                        bgcolor: '#141210',
-                        color: '#F5EEE3',
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 1.75,
-                    }}
-                >
+                {text.trim() ? (
+                    // the storefront's bar (frontend/src/pages/Home.jsx): ink strip, cream capitals in the
+                    // site's display font, full width, no ornaments
                     <Box
-                        component="span"
+                        className="ej-site-topbar"
                         sx={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            bgcolor: '#C4703A',
-                            flexShrink: 0,
-                        }}
-                    />
-                    <Typography
-                        sx={{
-                            m: 0,
-                            fontSize: 12,
+                            bgcolor: '#14110f',
+                            color: '#f4efe6',
+                            fontFamily: "'Big Shoulders Display', 'Arial Narrow', Arial, sans-serif",
                             fontWeight: 700,
-                            letterSpacing: '.14em',
-                            textAlign: 'center',
+                            fontSize: 16,
+                            lineHeight: 'normal',
+                            letterSpacing: '0.12em',
                             textTransform: 'uppercase',
+                            textAlign: 'center',
+                            px: '20px',
+                            py: '10px',
                         }}
                     >
-                        {text || DEFAULT_TEXT}
-                    </Typography>
-                    <Box
-                        component="span"
-                        sx={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            bgcolor: '#C4703A',
-                            flexShrink: 0,
-                        }}
-                    />
-                </Box>
+                        {text.trim()}
+                    </Box>
+                ) : (
+                    <Box sx={{ border: '1px dashed #cfd8e3', borderRadius: 1, color: '#888', px: 2, py: 1.5, textAlign: 'center', fontSize: 13 }}>
+                        No text: the bar is hidden on the site.
+                    </Box>
+                )}
             </Paper>
         </Box>
     );

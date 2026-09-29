@@ -20,7 +20,18 @@ export default function BlogPost() {
   const { slug } = useParams();
   const { data: post, loading, error } = useAsync((signal) => fetchBlog(slug, signal), [slug]);
   const { data: all } = useAsync(fetchBlogs, []);
-  const { data: featured } = useAsync((signal) => fetchProducts({ limit: 1, sort: 'popular' }, signal).then((r) => r.products[0] || null), []);
+  // "Most popular jacket": one of the 12 most popular jackets (no hoodies), a new pick on every visit,
+  // every post and whenever the reader comes back to the tab (not on the minute-by-minute refresh)
+  const [pickRound, setPickRound] = useState(0);
+  useEffect(() => {
+    const back = () => { if (document.visibilityState === 'visible') setPickRound((n) => n + 1); };
+    document.addEventListener('visibilitychange', back);
+    return () => document.removeEventListener('visibilitychange', back);
+  }, []);
+  const { data: featured } = useAsync((signal) => fetchProducts({ limit: 12, sort: 'popular' }, signal).then((r) => {
+    const jackets = (r.products || []).filter((p) => p && p.category?.slug !== 'hoodies' && !/hood(ie|y)/i.test(p.name || ''));
+    return jackets.length ? jackets[Math.floor(Math.random() * jackets.length)] : null;
+  }), [slug, pickRound], { live: false });
   usePageTitle(post?.title, post?.excerpt?.slice(0, 160));
 
   const article = useMemo(() => (post ? prepareArticle(post.content) : { html: '', toc: [] }), [post]);

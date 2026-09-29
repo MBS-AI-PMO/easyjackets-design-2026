@@ -47,3 +47,60 @@
   .pg-bulk-orders .bo-brief-link { min-height:0; padding:14px 48px 14px 16px; }
   .pg-bulk-orders .bo-brief-link-arrow { left:auto; right:16px; bottom:auto; top:50%; margin-top:-12px; }
 }
+
+/* ---- quote form: order type, Yes / No switches, design locations (restored) ---- */
+/* order type: hover lifts a chip, the picked one is ink (as on the shop and product pages) */
+.pg-bulk-orders .ez-chip:hover { border-color:var(--ink); transform:translateY(-1px); }
+.pg-bulk-orders .ez-chip[aria-pressed="true"], .pg-bulk-orders .ez-chip[aria-pressed="true"]:hover { background:var(--ink); color:var(--cream); border-color:var(--ink); transform:none; }
+.pg-bulk-orders .ez-chip:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+
+/* closure / lining / zipout / flap: two per row */
+.pg-bulk-orders .bo-two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start; }
+
+/* Yes / No: one pill with two halves, the chosen half in ink */
+.pg-bulk-orders .bo-yesno { display:inline-grid; grid-template-columns:repeat(2,minmax(62px,auto)); justify-self:start; padding:3px; border:1.5px solid var(--cream-2); border-radius:2px; background:#fbf8f2; }
+.pg-bulk-orders .bo-yesno button { height:40px; padding:0 16px; border:0; border-radius:1px; background:transparent; color:var(--muted); font:inherit; font-size:14px; font-weight:600; letter-spacing:0; text-transform:none; cursor:pointer; transition:background .15s, color .15s; }
+.pg-bulk-orders .bo-yesno button:hover { color:var(--ink); background:var(--cream-2); }
+.pg-bulk-orders .bo-yesno button[aria-checked="true"], .pg-bulk-orders .bo-yesno button[aria-checked="true"]:hover { background:var(--ink); color:var(--cream); }
+.pg-bulk-orders .bo-yesno button:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+
+/* personalization: each spot is a row with its switch on the right; a "Yes" spot is outlined in ink */
+.pg-bulk-orders .bo-hint { display:block; font-size:13px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--muted); line-height:1.5; }
+.pg-bulk-orders .bo-locations { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; margin-top:4px; }
+.pg-bulk-orders .bo-location { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; padding:6px 6px 6px 12px; border:1.5px solid var(--cream-2); border-radius:2px; background:#fbf8f2; color:var(--ink); font-size:14px; font-weight:600; letter-spacing:0; text-transform:none; transition:border-color .15s; }
+/* the whole name, always: a long one wraps to a second line instead of being cut */
+.pg-bulk-orders .bo-location > span { min-width:0; line-height:1.2; overflow-wrap:anywhere; }
+.pg-bulk-orders .bo-location:hover { border-color:#cbbfa9; }
+.pg-bulk-orders .bo-location:has(button[aria-checked="true"]:first-child) { border-color:var(--ink); }
+/* a compact switch in these rows, so the name keeps most of the width */
+.pg-bulk-orders .bo-location .bo-yesno { flex:none; grid-template-columns:repeat(2,44px); padding:2px; }
+.pg-bulk-orders .bo-location .bo-yesno button { height:32px; padding:0; font-size:13px; }
+
+@media (max-width:640px) {
+  .pg-bulk-orders .bo-two, .pg-bulk-orders .bo-type-row, .pg-bulk-orders .bo-locations { grid-template-columns:minmax(0,1fr) !important; }
+  /* header photo: room on the right for its offset shadow, so the page never scrolls sideways */
+  .pg-bulk-orders .bo-hero-frame { margin-right:14px; }
+}
+
+/* ---- hover: who-we-make-for cards, price tiers, process steps ---- */
+.pg-bulk-orders .bo-seg { transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s; }
+.pg-bulk-orders .bo-seg-img { transition: transform .6s cubic-bezier(.2,.7,.2,1), opacity .3s; }
+.pg-bulk-orders .bo-seg::after { content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 4px; background: var(--gold); transition: right .35s cubic-bezier(.2,.7,.2,1); }
+.pg-bulk-orders .bo-seg:hover { transform: translateY(-4px); box-shadow: 0 18px 32px -18px rgba(20,17,15,.55); }
+.pg-bulk-orders .bo-seg:hover .bo-seg-img { transform: scale(1.06); opacity: .95 !important; }
+.pg-bulk-orders .bo-seg:hover::after { right: 0; }
+
+.pg-bulk-orders .bo-tier { position: relative; transition: background .2s, box-shadow .2s; }
+.pg-bulk-orders .bo-tier > div { transition: transform .25s cubic-bezier(.2,.7,.2,1); }
+.pg-bulk-orders .bo-tier:hover { background: #fbf8f2; box-shadow: inset 4px 0 0 var(--gold); }
+.pg-bulk-orders .bo-tier:hover > div:first-child { transform: translateX(16px); }
+.pg-bulk-orders .bo-tier:hover > div:last-child { transform: translateX(-10px); }
+
+.pg-bulk-orders .bo-step { transition: transform .25s cubic-bezier(.2,.7,.2,1), border-color .2s; }
+.pg-bulk-orders .bo-step-n { display: inline-block; transform-origin: left bottom; transition: transform .25s cubic-bezier(.2,.7,.2,1), color .2s; }
+.pg-bulk-orders .bo-step:hover { transform: translateY(-4px); border-top-color: var(--gold) !important; }
+.pg-bulk-orders .bo-step:hover .bo-step-n { transform: scale(1.12); color: var(--gold) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-bulk-orders .bo-seg, .pg-bulk-orders .bo-seg-img, .pg-bulk-orders .bo-tier > div, .pg-bulk-orders .bo-step, .pg-bulk-orders .bo-step-n { transition: none; }
+}

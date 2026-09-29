@@ -18,21 +18,8 @@ import {
 import instance from '../constant/instance';
 import { toast } from 'react-toastify';
 
-const applyFavicon = (favicon, version) => {
-  if (!favicon) return;
-
-  const href = `${favicon}${favicon.includes('?') ? '&' : '?'}v=${encodeURIComponent(version || Date.now())}`;
-  document.querySelectorAll("link[rel*='icon']").forEach((link) => link.remove());
-
-  ['icon', 'shortcut icon'].forEach((rel) => {
-    const link = document.createElement('link');
-    link.rel = rel;
-    link.type = 'image/webp';
-    link.href = href;
-    document.head.appendChild(link);
-  });
-};
-
+import { uploadUrl } from '../constant/url';
+import { applyFavicons } from '../utils/favicon';
 const MetadataManager = () => {
   const [metadataList, setMetadataList] = useState([]);
   const [formData, setFormData] = useState({
@@ -48,6 +35,7 @@ const MetadataManager = () => {
   });
   const [globalSettings, setGlobalSettings] = useState({
     favicon: '',
+    faviconDark: '',
     navbarLogo: '',
     footerLogo: '',
     navbarLogoHeight: 75,
@@ -137,6 +125,7 @@ const MetadataManager = () => {
       if (response.data.metadata) {
         setGlobalSettings({
           favicon: response.data.metadata.favicon || '',
+          faviconDark: response.data.metadata.faviconDark || '',
           navbarLogo: response.data.metadata.navbarLogo || '',
           footerLogo: response.data.metadata.footerLogo || '',
           navbarLogoHeight: response.data.metadata.navbarLogoHeight || 75,
@@ -322,7 +311,7 @@ const MetadataManager = () => {
         });
         savedMetadata = response.data?.metadata;
       }
-      applyFavicon(savedMetadata?.favicon || globalSettings.favicon, savedMetadata?.updatedAt || savedMetadata?._id);
+      applyFavicons(savedMetadata || globalSettings, savedMetadata?.updatedAt || savedMetadata?._id);
       toast.success('Site Logos updated successfully');
     } catch (error) {
       console.error('Error saving global settings:', error);
@@ -477,12 +466,12 @@ const MetadataManager = () => {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {/* Favicon */}
+            {/* Favicon: Favicon · light browser */}
             <Box sx={{ flex: 1, minWidth: '200px', p: 2, bgcolor: '#f8f9fa', borderRadius: 2, textAlign: 'center' }}>
-              <Typography variant="subtitle2" fontWeight="bold" mb={2}>Favicon</Typography>
+              <Typography variant="subtitle2" fontWeight="bold" mb={2}>Favicon · light browser</Typography>
               <Box sx={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                 {globalSettings.favicon ?
-                  <img src={globalSettings.favicon} alt="Favicon" style={{ width: '32px', height: '32px', objectFit: 'contain' }} /> :
+                  <img src={uploadUrl(globalSettings.favicon)} alt="Favicon · light browser" style={{ width: '32px', height: '32px', objectFit: 'contain' }} /> :
                   <ImageIcon sx={{ color: '#ddd', fontSize: 40 }} />
                 }
               </Box>
@@ -497,7 +486,30 @@ const MetadataManager = () => {
                   </Button>
                 )}
               </div>
-              <Typography variant="caption" display="block" color="text.secondary" mt={1}>Stored as optimized WebP</Typography>
+              <Typography variant="caption" display="block" color="text.secondary" mt={1}>Tab icon on light browsers (e.g. the black J). Admin and storefront.</Typography>
+            </Box>
+
+            {/* Favicon: Favicon · dark browser */}
+            <Box sx={{ flex: 1, minWidth: '200px', p: 2, bgcolor: '#333', borderRadius: 2, textAlign: 'center' }}>
+              <Typography variant="subtitle2" fontWeight="bold" mb={2} color="white">Favicon · dark browser</Typography>
+              <Box sx={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+                {globalSettings.faviconDark ?
+                  <img src={uploadUrl(globalSettings.faviconDark)} alt="Favicon · dark browser" style={{ width: '32px', height: '32px', objectFit: 'contain' }} /> :
+                  <ImageIcon sx={{ color: '#555', fontSize: 40 }} />
+                }
+              </Box>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                <Button component="label" size="small" variant="contained" sx={{ bgcolor: 'white', color: '#333', '&:hover': { bgcolor: '#eee' } }} startIcon={<CloudUpload />}>
+                  Upload
+                  <input type="file" hidden accept="image/*" onChange={(e) => handleLogoUpload(e, 'faviconDark')} />
+                </Button>
+                {globalSettings.faviconDark && (
+                  <Button color="error" size="small" onClick={() => handleRemoveLogo('faviconDark')}>
+                    <Delete fontSize="small" />
+                  </Button>
+                )}
+              </div>
+              <Typography variant="caption" display="block" color="#aaa" mt={1}>Tab icon on dark browsers (e.g. the white J). Empty = the light one.</Typography>
             </Box>
 
             {/* Navbar Logo */}
@@ -505,7 +517,7 @@ const MetadataManager = () => {
               <Typography variant="subtitle2" fontWeight="bold" mb={2}>Navbar Logo</Typography>
               <Box sx={{ height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                 {globalSettings.navbarLogo ?
-                  <img src={globalSettings.navbarLogo} alt="Navbar" style={{ height: `${globalSettings.navbarLogoHeight}px`, maxHeight: '86px', maxWidth: '100%', objectFit: 'contain' }} /> :
+                  <img src={uploadUrl(globalSettings.navbarLogo)} alt="Navbar" style={{ height: `${globalSettings.navbarLogoHeight}px`, maxHeight: '86px', maxWidth: '100%', objectFit: 'contain' }} /> :
                   <ImageIcon sx={{ color: '#ddd', fontSize: 40 }} />
                 }
               </Box>
@@ -540,7 +552,7 @@ const MetadataManager = () => {
               <Typography variant="subtitle2" fontWeight="bold" mb={2} color="white">Footer Logo</Typography>
               <Box sx={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                 {globalSettings.footerLogo ?
-                  <img src={globalSettings.footerLogo} alt="Footer" style={{ height: `${globalSettings.footerLogoHeight}px`, maxHeight: '96px', maxWidth: '100%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} /> :
+                  <img src={uploadUrl(globalSettings.footerLogo)} alt="Footer" style={{ height: `${globalSettings.footerLogoHeight}px`, maxHeight: '96px', maxWidth: '100%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} /> :
                   <ImageIcon sx={{ color: '#555', fontSize: 40 }} />
                 }
               </Box>

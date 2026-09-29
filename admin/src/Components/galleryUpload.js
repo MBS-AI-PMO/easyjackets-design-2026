@@ -25,6 +25,7 @@ import fileInstance from "../constant/filesInstance";
 import instance from "../constant/instance";
 import { toast } from 'react-toastify';
 
+import { uploadUrl } from '../constant/url';
 /**
  * A photo collection screen. With no props it is the Photo Gallery; the
  * Embroidery & Patches screen reuses it with its own endpoint, wording and a
@@ -63,13 +64,27 @@ function GalleryUpload({
         tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
     }));
 
+    // the tag choices: the defaults, every tag already used (from the server), and new ones typed here
+    const [extraTags, setExtraTags] = useState([]);
+    const [newTag, setNewTag] = useState('');
+    const allTags = tagOptions ? [...new Set([...tagOptions, ...extraTags])] : [];
+    const addTag = (selected, onToggle) => {
+        const typed = newTag.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 32);
+        if (!typed) return;
+        const existing = allTags.find((t) => t.toLowerCase() === typed.toLowerCase());
+        const tag = existing || typed;
+        if (!existing) setExtraTags((list) => [...list, tag]);
+        if (!selected.includes(tag)) onToggle(tag);
+        setNewTag('');
+    };
+
     const renderTagPicker = (selected, onToggle) => tagOptions && (
         <Grid item xs={12}>
             <Typography variant="subtitle2" sx={{ color: '#555', mb: 1, fontWeight: 700 }}>
                 What the photo shows (the site's filter chips)
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {tagOptions.map((tag) => {
+                {allTags.map((tag) => {
                     const on = selected.includes(tag);
                     return (
                         <Chip
@@ -85,6 +100,24 @@ function GalleryUpload({
                     );
                 })}
             </Box>
+            <Box sx={{ display: 'flex', gap: 1, mt: 1.5, alignItems: 'center', maxWidth: 420 }}>
+                <TextField
+                    size="small"
+                    fullWidth
+                    label="Add a new tag"
+                    placeholder="e.g. Sequins"
+                    value={newTag}
+                    inputProps={{ maxLength: 32 }}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(selected, onToggle); } }}
+                />
+                <Button variant="outlined" onClick={() => addTag(selected, onToggle)} disabled={!newTag.trim()} sx={{ whiteSpace: 'nowrap' }}>
+                    Add tag
+                </Button>
+            </Box>
+            <Typography variant="caption" sx={{ color: '#888', display: 'block', mt: 0.5 }}>
+                A new tag becomes a filter chip on the site once a visible photo carries it.
+            </Typography>
         </Grid>
     );
     const [editPreviewImages, setEditPreviewImages] = useState([]);
@@ -257,14 +290,17 @@ function GalleryUpload({
         }
     };
 
+    // Delete removes the item for good (the plain DELETE only marked it Inactive, so it stayed in
+    // this list). To hide an item from the site without deleting it, edit it and set it Inactive.
+    // The image files stay in storage: another item (e.g. an Embroidery & Patches photo) may use them.
     const handleDeleteImage = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this image?")) {
+        if (!window.confirm("Delete this photo permanently?\n\nTo only hide it from the site, edit it and switch it to Inactive instead.")) {
             return;
         }
 
         try {
-            await instance.delete(`${endpoint}/${id}`);
-            toast.success("Image deleted successfully");
+            await instance.delete(`${endpoint}/permanent/${id}`);
+            toast.success("Photo deleted");
             fetchGalleryImages();
         } catch (error) {
             console.error("Error deleting image:", error);
@@ -277,6 +313,7 @@ function GalleryUpload({
         try {
             const { data } = await instance.get(`${endpoint}/all`);
             setImages(data.data || []);
+            if (tagOptions && Array.isArray(data.tags)) setExtraTags((list) => [...new Set([...data.tags.filter((t) => !tagOptions.includes(t)), ...list])]);
         } catch (error) {
             console.error("Error fetching gallery images:", error);
             toast.error("Error fetching images");
@@ -404,7 +441,7 @@ function GalleryUpload({
                                         <CardMedia
                                             key={`${image._id}-${url}-${imageIndex}`}
                                             component="img"
-                                            image={url}
+                                            image={uploadUrl(url)}
                                             alt={image.description || `Gallery image ${imageIndex + 1}`}
                                             sx={{ width: '100%', height: '100%', objectFit: 'cover', minWidth: 0 }}
                                         />
@@ -539,7 +576,7 @@ function GalleryUpload({
                                     {previewImages.map((previewImage, index) => (
                                         <img
                                             key={`${previewImage}-${index}`}
-                                            src={previewImage}
+                                            src={uploadUrl(previewImage)}
                                             alt={`Preview ${index + 1}`}
                                             style={{
                                                 width: '100%',
@@ -669,7 +706,7 @@ function GalleryUpload({
                                             }}
                                         >
                                             <img
-                                                src={previewImage}
+                                                src={uploadUrl(previewImage)}
                                                 alt={`Edit preview ${index + 1}`}
                                                 style={{
                                                 width: '100%',

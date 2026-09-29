@@ -30,3 +30,7 @@ yarn-error.log*
 scripts/.category-image-backup-*.json
 # product photo address backups (scripts/storeCutoutProductPhotos.mjs)
 scripts/.product-photo-backup-*.json
+# patch photo seed ids (scripts/seedPatchPhotos.mjs)
+scripts/.patch-seed-*.json
+# live-server address backups (scripts/moveOffLiveServer.mjs)
+scripts/.live-address-backup-*.json

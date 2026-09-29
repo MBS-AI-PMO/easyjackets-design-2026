@@ -14,6 +14,7 @@
 // cid: reference backed by an inline attachment for the email.
 
 import sharp from 'sharp';
+import { readOwnUpload } from './invoiceImages.js';
 
 // Every view is letterboxed onto the same square canvas. The front and back
 // renders are wide, the side renders are roughly twice as tall — left to their
@@ -36,16 +37,24 @@ const parseDataUri = (value) => {
   return { mime: match[1], buffer: Buffer.from(match[2], 'base64') };
 };
 
+// A view arrives as a data URI from the customiser, or as the address of a saved design's render
+// (shared again from the storefront's design page): that one is a file of this backend, read from disk.
+const loadView = async (value) => {
+  const parsed = parseDataUri(value);
+  if (parsed) return parsed.buffer;
+  return typeof value === 'string' && value.trim() ? readOwnUpload(value.trim()) : null;
+};
+
 /**
  * Decode one view to PNG. Returns null rather than throwing: a single bad
  * preview should cost that one image, not the whole email.
  */
 const toPng = async (value, label) => {
-  const parsed = parseDataUri(value);
-  if (!parsed) return null;
+  const source = await loadView(value);
+  if (!source) return null;
 
   try {
-    return await sharp(parsed.buffer)
+    return await sharp(source)
       .resize({ width: BOX, height: BOX, fit: 'contain', background: '#ffffff' })
       .flatten({ background: '#ffffff' })
       .png({ compressionLevel: 9 })

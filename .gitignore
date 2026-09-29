@@ -10,3 +10,6 @@ backend/reports/
 *.log
 __pycache__/
 *.pyc
+# the jacket builder: CRA output, and its non-secret dev port file is committed
+custom-jacket/build/
+!custom-jacket/.env.development

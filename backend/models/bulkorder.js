@@ -44,6 +44,12 @@ const BulkOrderSchema = new mongoose.Schema({
     backBottom: { type: Boolean, default: false },
     nickName: { type: Boolean, default: false },
   },
+  // the 2026 quote form (storefront /bulk-order); `quantity` keeps the range's lower bound
+  organization: { type: String, default: '' },
+  orderType: { type: String, default: '' },     // School, Sports team, Business, Club, Event, Other
+  quantityRange: { type: String, default: '' }, // e.g. "25–49"
+  neededBy: { type: String, default: '' },      // yyyy-mm-dd, as entered
+  budget: { type: String, default: '' },        // per jacket, e.g. "Under $100"
   name : { type : String },
   email : { type : String },
   phone : { type : String },

@@ -1,0 +1,46 @@
+var map = {
+	"./australia.svg": 289,
+	"./canada.svg": 6027,
+	"./colombia.svg": 4712,
+	"./denmark.svg": 2414,
+	"./france.svg": 7089,
+	"./germany.svg": 6370,
+	"./india.svg": 2951,
+	"./ireland.svg": 2190,
+	"./italy.svg": 4289,
+	"./japan.svg": 6338,
+	"./korea.svg": 3943,
+	"./netherlands.svg": 5811,
+	"./newzeland.svg": 6932,
+	"./norway.svg": 3191,
+	"./pakistan.svg": 5369,
+	"./russia.svg": 6688,
+	"./saudia.svg": 4406,
+	"./singapore.svg": 549,
+	"./sweden.svg": 9311,
+	"./turkey.svg": 1556,
+	"./uae.svg": 1689,
+	"./uk.svg": 6026,
+	"./usa.svg": 1677,
+	"./venezuela.svg": 1278
+};
+
+
+function webpackContext(req) {
+	var id = webpackContextResolve(req);
+	return __webpack_require__(id);
+}
+function webpackContextResolve(req) {
+	if(!__webpack_require__.o(map, req)) {
+		var e = new Error("Cannot find module '" + req + "'");
+		e.code = 'MODULE_NOT_FOUND';
+		throw e;
+	}
+	return map[req];
+}
+webpackContext.keys = function webpackContextKeys() {
+	return Object.keys(map);
+};
+webpackContext.resolve = webpackContextResolve;
+module.exports = webpackContext;
+webpackContext.id = 6558;

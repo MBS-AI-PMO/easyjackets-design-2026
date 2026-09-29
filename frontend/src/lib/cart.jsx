@@ -26,12 +26,14 @@ export function CartProvider({ children }) {
   const setQuantity = useCallback((key, quantity) => setItems((prev) => prev.map((l) => (lineKey(l) === key ? { ...l, quantity } : l)).filter((l) => l.quantity > 0)), []);
   const remove = useCallback((key) => setItems((prev) => prev.filter((l) => lineKey(l) !== key)), []);
   const clear = useCallback(() => setItems([]), []);
+  // a builder design changed after it was added (edited in the builder): new price, size or image
+  const updateDesign = useCallback((designId, fields) => setItems((prev) => prev.map((l) => (l.designId === designId && !l.id ? { ...l, ...fields } : l))), []);
 
   const value = useMemo(() => {
     const count = items.reduce((n, l) => n + l.quantity, 0);
     const subtotal = items.reduce((n, l) => n + l.quantity * (Number(l.price) || 0), 0);
-    return { items: items.map((l) => ({ ...l, key: lineKey(l) })), count, subtotal, add, setQuantity, remove, clear };
-  }, [items, add, setQuantity, remove, clear]);
+    return { items: items.map((l) => ({ ...l, key: lineKey(l) })), count, subtotal, add, setQuantity, remove, clear, updateDesign };
+  }, [items, add, setQuantity, remove, clear, updateDesign]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

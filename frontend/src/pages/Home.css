@@ -17,6 +17,14 @@
 .pg-home .ez-quote-row::-webkit-scrollbar { display: none; }
 .pg-home .ez-quote-row > * { flex: 0 0 min(400px, 84%); box-sizing: border-box; scroll-snap-align: start; }
 @media (max-width: 640px) { .pg-home .ez-quote-row { gap: 12px; } }
+/* testimonials: heading with previous / next buttons on its right */
+.pg-home .ez-quote-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin: 0 0 36px; }
+.pg-home .ez-quote-nav { display: flex; gap: 10px; }
+.pg-home .ez-quote-btn { width: 50px; height: 50px; display: grid; place-items: center; padding: 0; border: 2px solid var(--ink); border-radius: 2px; background: transparent; color: var(--ink); font-family: var(--display); font-weight: 900; font-size: 22px; line-height: 1; cursor: pointer; transition: background .2s, color .2s, opacity .2s, transform .2s; }
+.pg-home .ez-quote-btn:hover:not(:disabled) { background: var(--ink); color: var(--cream); transform: translateY(-2px); }
+.pg-home .ez-quote-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.pg-home .ez-quote-btn:disabled { opacity: .3; cursor: default; }
+@media (max-width: 640px) { .pg-home .ez-quote-head { margin-bottom: 24px; } .pg-home .ez-quote-btn { width: 44px; height: 44px; font-size: 20px; } }
 
 /* jacket-type tiles: one horizontal scrolling row on phones (native scroll, snap points, no controls) */
 @media (max-width: 640px) {

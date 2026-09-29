@@ -141,6 +141,7 @@ const navGroups = [
     items: [
       { name: 'Customer', link: '/users' },
       { name: 'Admin', link: '/admin' },
+      { name: 'Subscribers', link: '/subscribers' },
     ],
   },
   {
@@ -167,6 +168,7 @@ const navGroups = [
     icon: <SettingsIcon />,
     items: [
       { name: 'Email Configuration', link: '/email-configuration' },
+      { name: 'Payment Configuration', link: '/payment-configuration' },
       { name: 'Change Password', link: '/change-password' },
     ],
   },

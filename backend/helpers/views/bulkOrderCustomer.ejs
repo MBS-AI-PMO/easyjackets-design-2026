@@ -1,102 +1,129 @@
+<%
+  // Bulk quote confirmation to the customer (POST /order/bulk). Table layout + inline-friendly styles
+  // so it holds together in Gmail, Outlook and phone mail apps. Colours are the storefront's.
+  var first = String(data.name || '').trim().split(/\s+/)[0] || 'there';
+  var cap = function (s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+  var label = function (key) { return String(key).replace(/([A-Z])/g, ' $1').replace(/^./, function (c) { return c.toUpperCase(); }); };
+  var spots = Object.keys(data.designLocations || {}).filter(function (k) { return data.designLocations[k]; }).map(label);
+  var needed = '';
+  if (data.neededBy) { var d = new Date(data.neededBy + 'T00:00:00'); needed = isNaN(d) ? data.neededBy : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+  var when = data.createdAt ? new Date(data.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  var ref = data.referenceId ? String(data.referenceId).slice(-6).toUpperCase() : '';
+  var qty = data.quantityRange ? data.quantityRange + ' jackets' : (data.quantity ? data.quantity + ' jackets' : '');
+  var site = data.siteUrl || 'https://easyjackets.com';
+  var rows = [
+    ['Organisation', data.organization ? data.organization + (data.orderType ? ' · ' + data.orderType : '') : ''],
+    ['Jacket', data.selectedProduct],
+    ['Quantity', qty],
+    ['Front closure', cap(data.selectedClosure)],
+    ['Lining', data.selectedLining],
+    ['½ Zipout lining', data.zipoutLining ? 'Yes' : 'No'],
+    ['Flap closure', data.flapClosure ? 'Yes' : 'No'],
+    ['Needed by', needed],
+    ['Budget per jacket', data.budget],
+  ].filter(function (r) { return r[1]; });
+  var steps = [
+    ['01', 'Request a quote', 'Done. A specialist replies within one business day.', true],
+    ['02', 'Approve the mockup', 'A free digital proof of the exact jacket, before anything is made.', false],
+    ['03', 'Send the roster', 'Names, numbers and sizes in a simple sheet.', false],
+    ['04', 'One delivery', 'Made to order, labelled by name, shipped together.', false],
+  ];
+%>
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quote Request Received - Easy Jackets</title>
-    <style>
-        body { margin: 0; padding: 0; background: #ffffff; color: #211d18; font-family: Arial, Helvetica, sans-serif; }
-        table { border-collapse: collapse; }
-        .wrapper { width: 100%; background: #ffffff; padding: 28px 12px; }
-        .card { width: 100%; max-width: 680px; margin: 0 auto; background: #fffaf2; border: 1px solid #e4d6c3; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 50px rgba(33,29,24,.10); }
-        .hero { background: #11100e; padding: 38px 34px 34px; color: #f5eee3; }
-        .eyebrow { margin: 0 0 12px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
-        h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 38px; line-height: 1.02; font-weight: 400; letter-spacing: -.03em; }
-        .hero-copy { margin: 16px 0 0; color: rgba(245,238,227,.72); font-size: 15px; line-height: 1.7; max-width: 500px; }
-        .content { padding: 34px; }
-        p { margin: 0 0 18px; color: #5f574c; font-size: 15px; line-height: 1.75; }
-        .panel { background: #f1e6d7; border: 1px solid #e2d2bd; border-radius: 14px; padding: 20px; margin: 22px 0; }
-        .title { margin: 0 0 14px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-        .row { border-top: 1px solid rgba(33,29,24,.09); }
-        .row:first-of-type { border-top: 0; }
-        .label { padding: 10px 0; color: #8a7c6d; font-size: 13px; width: 45%; vertical-align: top; }
-        .value { padding: 10px 0; color: #211d18; font-size: 13px; font-weight: 700; text-align: right; vertical-align: top; word-break: break-word; }
-        .steps { background: #ffffff; border: 1px solid #eadfce; border-radius: 14px; padding: 20px; margin: 22px 0; }
-        .step { color: #433b32; font-size: 14px; line-height: 1.65; padding: 9px 0; border-top: 1px solid rgba(33,29,24,.08); }
-        .step:first-of-type { border-top: 0; }
-        .footer { background: #11100e; color: rgba(245,238,227,.56); padding: 24px 34px; font-size: 12px; line-height: 1.7; }
-        .footer a { color: #c4703a; text-decoration: none; }
-        .footer strong { color: #f5eee3; }
-        @media only screen and (max-width: 560px) { .wrapper { padding: 18px 10px !important; } .hero, .content, .footer { padding-left: 22px !important; padding-right: 22px !important; } h1 { font-size: 31px !important; } .label, .value { display: block !important; width: 100% !important; text-align: left !important; padding-bottom: 2px !important; } .value { padding-top: 0 !important; } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <title>Your bulk quote request is in</title>
+  <style>
+    body { margin: 0; padding: 0; background: #f4efe6; -webkit-text-size-adjust: 100%; }
+    table { border-collapse: collapse; }
+    a { color: #a8861c; }
+    @media only screen and (max-width: 560px) {
+      .px { padding-left: 22px !important; padding-right: 22px !important; }
+      .h1 { font-size: 34px !important; }
+      .row td { display: block !important; width: auto !important; padding: 2px 0 !important; }
+      .row td.k { padding-top: 12px !important; }
+      .step td.n { width: 44px !important; }
+    }
+  </style>
 </head>
-
-<body>
-    <table class="wrapper" role="presentation" width="100%">
-        <tr>
-            <td>
-                <table class="card" role="presentation" width="100%">
-                    <tr>
-                        <td class="hero">
-                            <p class="eyebrow">Bulk Order Quote</p>
-                            <h1>We received your request.</h1>
-                            <p class="hero-copy">Thanks for considering Easy Jackets for your team, school, club, or company order.</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="content">
-                            <p>Hi<% if (data.name) { %> <%= data.name %><% } %>,</p>
-                            <p>Your bulk quote request is in. Our team will review the details and prepare a response within 24-48 business hours.</p>
-
-                            <div class="panel">
-                                <p class="title">Request Summary</p>
-                                <table role="presentation" width="100%">
-                                    <tr class="row"><td class="label">Product</td><td class="value"><%= data.selectedProduct %></td></tr>
-                                    <tr class="row"><td class="label">Quantity</td><td class="value"><%= data.quantity %> pieces</td></tr>
-                                    <tr class="row"><td class="label">Front Closure</td><td class="value"><%= data.selectedClosure %></td></tr>
-                                    <tr class="row"><td class="label">Lining</td><td class="value"><%= data.selectedLining %></td></tr>
-                                    <tr class="row"><td class="label">Zipout Lining</td><td class="value"><%= data.zipoutLining ? 'Yes' : 'No' %></td></tr>
-                                    <tr class="row"><td class="label">Flap Closure</td><td class="value"><%= data.flapClosure ? 'Yes' : 'No' %></td></tr>
-                                </table>
-                            </div>
-
-                            <% if (data.designLocations) { %>
-                            <div class="panel">
-                                <p class="title">Design Locations</p>
-                                <table role="presentation" width="100%">
-                                    <% Object.entries(data.designLocations).forEach(function(entry) { %>
-                                        <tr class="row">
-                                            <td class="label"><%= entry[0].replace(/([A-Z])/g, ' $1').replace(/^./, function(s) { return s.toUpperCase(); }) %></td>
-                                            <td class="value"><%= entry[1] ? 'Yes' : 'No' %></td>
-                                        </tr>
-                                    <% }); %>
-                                </table>
-                            </div>
-                            <% } %>
-
-                            <div class="steps">
-                                <p class="title">What happens next</p>
-                                <div class="step"><strong>Review:</strong> We review your jacket type, quantity, artwork, and sizing needs.</div>
-                                <div class="step"><strong>Quote:</strong> We prepare pricing and production details based on your request.</div>
-                                <div class="step"><strong>Contact:</strong> A team member reaches out with next steps.</div>
-                                <div class="step"><strong>Samples:</strong> We can discuss samples if your order needs them.</div>
-                            </div>
-
-                            <p>Questions before then? Reply to this email and we will help.</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="footer">
-                            <strong>Easy Jackets</strong><br>
-                            5900 Balcones, Austin TX 78731<br>
-                            <a href="https://easyjackets.com">easyjackets.com</a>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<body style="margin:0;padding:0;background:#f4efe6;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">We have your bulk quote for <%= data.organization || 'your group' %>. A specialist replies within one business day.</div>
+  <table role="presentation" width="100%" style="background:#f4efe6;">
+    <tr><td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="100%" style="max-width:620px;background:#fbf8f2;border:1px solid #e9e1d2;border-radius:6px;overflow:hidden;">
+        <!-- gold stripe, like the site's section rule -->
+        <tr><td style="height:6px;background:#c9a227;line-height:6px;font-size:0;">&nbsp;</td></tr>
+        <!-- header -->
+        <tr><td class="px" style="background:#14110f;padding:30px 36px 34px;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:900;letter-spacing:.22em;color:#f4efe6;">EASY JACKETS</div>
+          <div style="height:26px;line-height:26px;font-size:0;">&nbsp;</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c9a227;text-transform:uppercase;">Bulk order quote<% if (ref) { %> · Ref <%= ref %><% } %></div>
+          <div class="h1" style="margin-top:10px;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-size:42px;line-height:.98;font-weight:800;letter-spacing:-.01em;color:#f4efe6;text-transform:uppercase;">Your quote request is in.</div>
+          <% if (when) { %><div style="margin-top:14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(244,239,230,.62);">Received <%= when %></div><% } %>
+        </td></tr>
+        <!-- intro -->
+        <tr><td class="px" style="padding:30px 36px 6px;font-family:Arial,Helvetica,sans-serif;">
+          <p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#14110f;">Hi <%= first %>,</p>
+          <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#2a2521;">Thanks for asking us to quote<% if (data.organization) { %> for <strong><%= data.organization %></strong><% } %>. A bulk specialist is going through your request now and will reply <strong>within one business day</strong> with your pricing and a free digital proof.</p>
+        </td></tr>
+        <!-- summary -->
+        <tr><td class="px" style="padding:14px 36px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#a8861c;text-transform:uppercase;padding-bottom:10px;border-bottom:2px solid #14110f;">Your request</div>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            <% rows.forEach(function (r) { %>
+            <tr class="row">
+              <td class="k" width="42%" style="padding:11px 12px 11px 0;border-bottom:1px solid #e9e1d2;font-size:13px;color:#6b635a;vertical-align:top;"><%= r[0] %></td>
+              <td style="padding:11px 0;border-bottom:1px solid #e9e1d2;font-size:14px;font-weight:700;color:#14110f;vertical-align:top;"><%= r[1] %></td>
+            </tr>
+            <% }); %>
+          </table>
+        </td></tr>
+        <!-- design locations -->
+        <tr><td class="px" style="padding:20px 36px 0;font-family:Arial,Helvetica,sans-serif;">
+          <div style="font-size:13px;color:#6b635a;margin-bottom:10px;">Design locations</div>
+          <% if (spots.length) { %>
+            <% spots.forEach(function (s) { %><span style="display:inline-block;margin:0 6px 8px 0;padding:6px 12px;border:1.5px solid #14110f;border-radius:2px;background:#14110f;color:#f4efe6;font-size:12px;font-weight:700;letter-spacing:.02em;"><%= s %></span><% }); %>
+          <% } else { %>
+            <span style="font-size:14px;color:#2a2521;">None chosen yet. Tell us where you want your logo and we'll suggest placements.</span>
+          <% } %>
+        </td></tr>
+        <% if (data.message) { %>
+        <tr><td class="px" style="padding:18px 36px 0;font-family:Arial,Helvetica,sans-serif;">
+          <div style="font-size:13px;color:#6b635a;margin-bottom:8px;">Your notes</div>
+          <div style="padding:14px 16px;border-left:3px solid #c9a227;background:#f4efe6;font-size:14px;line-height:1.65;color:#2a2521;white-space:pre-line;"><%= data.message %></div>
+        </td></tr>
+        <% } %>
+        <!-- next steps -->
+        <tr><td class="px" style="padding:30px 36px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#a8861c;text-transform:uppercase;padding-bottom:6px;">What happens next</div>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            <% steps.forEach(function (s) { %>
+            <tr class="step">
+              <td class="n" width="54" style="padding:12px 0;border-top:1px solid #e9e1d2;vertical-align:top;font-family:'Arial Narrow',Arial,sans-serif;font-size:26px;line-height:1;font-weight:800;color:<%= s[3] ? '#c9a227' : '#a8861c' %>;"><%= s[0] %></td>
+              <td style="padding:12px 0;border-top:1px solid #e9e1d2;vertical-align:top;">
+                <div style="font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#14110f;"><%= s[1] %><% if (s[3]) { %> <span style="color:#a8861c;">✓</span><% } %></div>
+                <div style="margin-top:3px;font-size:13px;line-height:1.55;color:#6b635a;"><%= s[2] %></div>
+              </td>
+            </tr>
+            <% }); %>
+          </table>
+        </td></tr>
+        <!-- actions -->
+        <tr><td class="px" style="padding:26px 36px 32px;font-family:Arial,Helvetica,sans-serif;">
+          <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#2a2521;">Have a logo, crest or roster ready? <strong>Reply to this email</strong> and attach it; it goes straight to your specialist.</p>
+          <a href="<%= site %>/bulk-order" style="display:inline-block;padding:14px 22px;background:#14110f;color:#f4efe6;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;">See bulk pricing</a>
+        </td></tr>
+        <!-- footer -->
+        <tr><td class="px" style="background:#14110f;padding:22px 36px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:rgba(244,239,230,.6);">
+          <strong style="color:#f4efe6;letter-spacing:.14em;">EASY JACKETS</strong><br>
+          Custom varsity and letterman jackets for schools, teams, businesses and clubs.<br>
+          <a href="<%= site %>" style="color:#c9a227;text-decoration:none;"><%= site.replace(/^https?:\/\//, '') %></a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
 </body>
-
 </html>

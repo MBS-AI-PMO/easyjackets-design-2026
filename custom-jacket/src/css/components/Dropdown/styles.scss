@@ -1,0 +1,64 @@
+@import '../../assets/scss/variables';
+
+.Dropdown-root {
+  position: relative;
+  font-size: 12px;
+  background-color: $white;
+  border: $bc;
+
+  .Dropdown-control {
+    .Dropdown-arrow {
+      display: none;
+    }
+
+    .Dropdown-arrow-wrapper {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      width: 14px;
+      height: 14px;
+      margin-top: -7px;
+      background: url('../../../assets/images/icon-arrow.svg') center center no-repeat;
+      background-size: contain;
+      transform: rotate(90deg);
+      filter: brightness(0) opacity(0.4); // Make the white SVG dark grey
+    }
+  }
+
+  &.is-open .Dropdown-control {
+    border-bottom: $bc;
+
+    .Dropdown-arrow-wrapper {
+      transform: rotate(-90deg);
+    }
+  }
+
+  .Dropdown-control,
+  .Dropdown-option {
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+
+  .Dropdown-menu {
+    position: absolute;
+    right: -1px;
+    left: -1px;
+    margin-top: -1px;
+    height: 200px;
+    background-color: $white;
+    border: $bc;
+    overflow: auto;
+  }
+
+  .Dropdown-option {
+    &:hover {
+      background-color: $light-grey;
+      transition: 0.3s ease-in-out;
+    }
+
+    &.is-selected {
+      font-weight: 500;
+      background-color: $grey;
+    }
+  }
+}

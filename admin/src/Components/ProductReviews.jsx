@@ -40,6 +40,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import instance from '../constant/instance';
 
+import { uploadUrl } from '../constant/url';
 const statusConfig = {
   pending: { label: 'Pending', color: 'warning' },
   approved: { label: 'Approved', color: 'success' },
@@ -293,7 +294,7 @@ const ProductReviews = () => {
                     <TableCell sx={{ minWidth: 260 }}>
                       <Stack direction="row" spacing={1.5} alignItems="center">
                         <Avatar
-                          src={product.frontImage}
+                          src={uploadUrl(product.frontImage)}
                           variant="rounded"
                           sx={{ width: 46, height: 46, bgcolor: '#e8f4ff' }}
                         >

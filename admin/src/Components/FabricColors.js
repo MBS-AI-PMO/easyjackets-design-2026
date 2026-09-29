@@ -21,7 +21,7 @@ import { Clear, CloudUpload, Delete, Edit, Palette, Save } from "@mui/icons-mate
 import { toast } from "react-toastify";
 import instance from "../constant/instance";
 import fileInstance from "../constant/filesInstance";
-import { FRONTEND_URL } from "../constant/url";
+import { FRONTEND_URL, uploadUrl } from "../constant/url";
 
 const DEFAULT_SECTIONS = [
   {
@@ -79,7 +79,7 @@ const textFieldStyle = {
 
 const resolveImageSrc = (url) => {
   if (!url) return "";
-  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  if (/^(https?:|data:|blob:)/i.test(url)) return uploadUrl(url);
   return `${FRONTEND_URL}${url.startsWith("/") ? url : `/${url}`}`;
 };
 
@@ -660,7 +660,7 @@ function FabricColors() {
               </Button>
               {selectedPreview && (
                 <Box sx={{ mt: 2, borderRadius: 2, overflow: "hidden", border: "1px solid #eee", bgcolor: "#f8f9fa", aspectRatio: "4 / 2.6" }}>
-                  <img src={selectedPreview} alt={form.altText || form.name || "Fabric preview"} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  <img src={uploadUrl(selectedPreview)} alt={form.altText || form.name || "Fabric preview"} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </Box>
               )}
               <TextField

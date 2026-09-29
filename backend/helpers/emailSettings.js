@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import EmailConfig from '../models/emailConfigModel.js';
+import { decryptSecret } from './secretBox.js';
 
 /**
  * Single source of truth for outgoing mail settings.
@@ -75,7 +76,7 @@ export const getEmailSettings = async ({ fresh = false } = {}) => {
         smtpHost: pick(doc?.smtpHost, defaults.smtpHost),
         smtpPort: Number(pick(doc?.smtpPort, defaults.smtpPort)),
         smtpUser: pick(doc?.smtpUser, defaults.smtpUser),
-        smtpPass: pick(doc?.smtpPass, defaults.smtpPass),
+        smtpPass: pick(decryptSecret(doc?.smtpPass, 'emailconfigs.smtpPass'), defaults.smtpPass), // stored encrypted (helpers/secretBox.js)
         fromName: pick(doc?.fromName, defaults.fromName),
         replyToEmail: pick(doc?.replyToEmail, defaults.replyToEmail),
         enabled: doc?.enabled === undefined ? defaults.enabled : doc.enabled,
@@ -109,7 +110,13 @@ export const formatFrom = (settings) => (
         : settings.fromEmail
 );
 
+// One pooled connection: messages queue on it instead of opening a login each. An order sends the
+// customer's and the team's email at the same moment, and the mail server (Hostinger) refused the
+// second simultaneous login, so the team's copy never went out.
 export const buildTransporter = (settings) => nodemailer.createTransport({
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 50,
     host: settings.smtpHost,
     port: settings.smtpPort,
     secure: settings.smtpSecure,

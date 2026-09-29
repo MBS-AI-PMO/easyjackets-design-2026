@@ -2,7 +2,7 @@ import Order from '../models/orderModel.js';
 import User from '../models/userModel.js';
 import design from '../models/design.js';
 import productModel from '../models/productModel.js';
-import { sendEmail } from '../helpers/email.js';
+import { sendEmail, sendEmailInBackground } from '../helpers/email.js';
 import { getAdminEmail } from '../helpers/emailSettings.js';
 import randomstring from 'randomstring';
 import { stripe } from '../config/stripe.js';
@@ -106,7 +106,7 @@ export const createCODOrder = async (req, res) => {
         // 5. Send OTP Email
         const buyerEmail = shipping_details.email || (req.user ? req.user.email : null);
         if (buyerEmail) {
-            sendEmail(
+            sendEmailInBackground(
                 `Verify Your Order #${orderId}`,
                 buyerEmail,
                 { otp, orderId },
@@ -157,10 +157,10 @@ export const verifyCODOTP = async (req, res) => {
             const customerEmail = order.shipping_details[0]?.email;
             if (customerEmail) {
                 // To Customer
-                sendEmail(`Order Confirmed - #${order.orderId}`, customerEmail, { ...order.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Customer confirmation email failure:', err));
+                sendEmailInBackground(`Order Confirmed - #${order.orderId}`, customerEmail, { ...order.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Customer confirmation email failure:', err));
             }
             // To Admin
-            sendEmail(`New COD Order - #${order.orderId}`, await getAdminEmail(), { ...order.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Admin COD notification failure:', err));
+            sendEmailInBackground(`New COD Order - #${order.orderId}`, await getAdminEmail(), { ...order.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Admin COD notification failure:', err));
         } catch (emailErr) {
             console.error('⚠️ Failed to send confirmation emails:', emailErr.message);
         }
@@ -249,9 +249,9 @@ export const confirmCardPayment = async (req, res) => {
         try {
             const customerEmail = shipping_details.email;
             if (customerEmail) {
-                sendEmail(`Order Confirmation - #${orderId}`, customerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Customer card order email failure:', err));
+                sendEmailInBackground(`Order Confirmation - #${orderId}`, customerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Customer card order email failure:', err));
             }
-            sendEmail(`New Card Order - #${orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Admin card order notification failure:', err));
+            sendEmailInBackground(`New Card Order - #${orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Admin card order notification failure:', err));
         } catch (emailErr) {
             console.error('⚠️ Emails failed:', emailErr.message);
         }
@@ -332,9 +332,9 @@ export const chargeSavedCard = async (req, res) => {
             try {
                 const customerEmail = shipping_details.email || user.email;
                 if (customerEmail) {
-                    sendEmail(`Order Confirmation - #${orderId}`, customerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Customer saved card email failure:', err));
+                    sendEmailInBackground(`Order Confirmation - #${orderId}`, customerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Customer saved card email failure:', err));
                 }
-                sendEmail(`New Saved Card Order - #${orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Admin saved card notification failure:', err));
+                sendEmailInBackground(`New Saved Card Order - #${orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs').catch(err => console.error('Admin saved card notification failure:', err));
             } catch (emailErr) {
                 console.error('⚠️ Emails failed:', emailErr.message);
             }

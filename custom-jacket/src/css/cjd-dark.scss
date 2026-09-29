@@ -1,0 +1,327 @@
+/* Dark mode overrides for cjd-* components.
+   Tokens are already handled by editorial-tokens.css [data-theme="dark"].
+   This file handles components that use hardcoded colours instead of vars. */
+
+[data-theme="dark"] {
+  .cjd-content-wrapper {
+    .cjd-jacket-guides {
+      .cjd-guides-pill {
+        background: rgba(20, 18, 16, .78);
+        border-color: rgba(245, 238, 227, .12);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, .28);
+
+        &:hover {
+          border-color: rgba(196, 112, 58, .34);
+          box-shadow: 0 18px 40px rgba(0, 0, 0, .34);
+        }
+
+        .cjd-guides-label {
+          color: rgba(245, 238, 227, .72);
+        }
+
+        .cjd-guides-toggle,
+        .cjd-canvas-bg-toggle {
+          background: rgba(245, 238, 227, .08);
+          color: rgba(245, 238, 227, .72);
+        }
+
+        .cjd-guides-toggle {
+          &.on {
+            background: linear-gradient(135deg, #c4703a 0%, #ad5d30 100%);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(196, 112, 58, .24);  
+          }
+
+          &:not(.on):hover {
+            background: rgba(196, 112, 58, .18);
+            color: #fff;
+          }
+        }
+
+        .cjd-canvas-bg-toggle {
+          &.on {
+            background: rgba(245, 238, 227, .14);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, .2);
+          }
+
+          &:not(.on):hover {
+            background: rgba(196, 112, 58, .18);
+            color: #fff;
+          }
+        }
+      }
+    }
+  }
+
+  /* Main layout */
+  .cjd-main {
+    background: var(--ej-bg);
+  }
+
+  .panel-desktop,
+  .panel-mbl {
+    background: var(--ej-bg-raised);
+    border-color: var(--ej-border);
+  }
+
+  .cjd-content-wrapper {
+    background: var(--ej-bg-elev);
+  }
+
+  /* Accordion — App.js uses .control-box / .control-box-control / .activeBox */
+  .control-box {
+    background-color: var(--ej-card) !important;
+    border-color: var(--ej-border) !important;
+    color: var(--ej-fg) !important;
+
+    &:hover {
+      background-color: var(--ej-card-hover) !important;
+      color: var(--ej-terracotta) !important;
+    }
+  }
+
+  .control-box-control {
+    background-color: var(--ej-bg-raised) !important;
+    border-color: var(--ej-border) !important;
+  }
+
+  /* Yes/No control buttons */
+  .control-panel-btn {
+    background: var(--ej-card) !important;
+    border-color: var(--ej-border-strong) !important;
+    color: var(--ej-fg) !important;
+
+    &.active {
+      background: var(--ej-terracotta) !important;
+      border-color: var(--ej-terracotta) !important;
+      color: #fff !important;
+    }
+  }
+
+  /* Color accordion blocks */
+  .control-panel-color {
+    background: var(--ej-card) !important;
+    border-color: var(--ej-border) !important;
+    transition: border-color .25s ease, box-shadow .25s ease, background-color .25s ease !important;
+
+    .cjd-accordin-wrapper {
+      background: var(--ej-card) !important;
+    }
+
+    &:hover {
+      border-color: var(--ej-terracotta) !important;
+      box-shadow: 0 10px 24px rgba(196, 112, 58, .16) !important;
+      background: rgba(196, 112, 58, .04) !important;
+    }
+
+    &:has(.control-box-color.open) {
+      border-color: var(--ej-terracotta) !important;
+      box-shadow: 0 12px 28px rgba(196, 112, 58, .2) !important;
+    }
+
+    &:hover .control-box-color,
+    &:has(.control-box-color.open) .control-box-color {
+      background: rgba(196, 112, 58, .06) !important;
+    }
+
+    &:hover .step-title strong,
+    &:has(.control-box-color.open) .step-title strong {
+      color: var(--ej-terracotta) !important;
+    }
+
+    &:hover .step-title::after,
+    &:has(.control-box-color.open) .step-title::after {
+      color: rgba(245, 238, 227, .78) !important;
+    }
+
+    &:hover svg,
+    &:has(.control-box-color.open) svg {
+      color: var(--ej-terracotta) !important;
+    }
+  }
+
+  .control-box-color {
+    background: var(--ej-card) !important;
+    transition: background-color .25s ease, color .25s ease !important;
+
+    .step-title strong {
+      color: var(--ej-fg) !important;
+    }
+
+    .step-title::after {
+      color: var(--ej-fg-muted) !important;
+    }
+  }
+
+  /* Select labels */
+  .select-label {
+    color: var(--ej-fg-muted) !important;
+  }
+
+  /* Native select dropdowns */
+  select {
+    background: var(--ej-card);
+    color: var(--ej-fg);
+    border-color: var(--ej-border);
+  }
+
+  /* Select boxes */
+  .cjd-select-box,
+  .cjd-mat-select-box {
+    background: var(--ej-card);
+    border-color: var(--ej-border);
+    color: var(--ej-fg);
+
+    &:hover {
+      border-color: var(--ej-border-strong);
+      background: var(--ej-card-hover);
+    }
+
+    &.active,
+    &.selected {
+      border-color: var(--ej-terracotta);
+    }
+
+    .cjd-select-label {
+      color: var(--ej-fg-muted);
+    }
+  }
+
+  /* Dropdown */
+  .cjd-dropdown {
+    background: var(--ej-bg-raised);
+    border-color: var(--ej-border);
+    color: var(--ej-fg);
+
+    option {
+      background: var(--ej-bg-raised);
+      color: var(--ej-fg);
+    }
+  }
+
+  /* Modals */
+  .cjd-modal-wrapper,
+  .cjd-popup {
+    background: var(--ej-bg-raised);
+    color: var(--ej-fg);
+    border-color: var(--ej-border);
+  }
+
+  .cjd-modal .cjd-btn-secondary {
+    background: rgba(196, 112, 58, 0.2) !important;
+    color: #e8a882 !important;
+    border: 1px solid rgba(196, 112, 58, 0.5) !important;
+
+    &:hover {
+      background: #c4703a !important;
+      color: #fff !important;
+      border-color: #c4703a !important;
+    }
+  }
+
+  .cjd-modal .cjd-btn:hover,
+  .cjd-modal .cjd-btn:focus {
+    background-color: rgba(196, 112, 58, 0.2) !important;
+    color: #e8a882 !important;
+    opacity: 1 !important;
+  }
+
+  .cjd-modal .cjd-btn.cjd-btn-primary:hover,
+  .cjd-modal .cjd-btn.cjd-btn-primary:focus {
+    background-color: var(--ej-terracotta) !important;
+    color: #fff !important;
+    opacity: 0.9 !important;
+  }
+
+  /* Design locations list */
+  .cjd-cd-wrapper {
+    border-color: var(--ej-border) !important;
+  }
+
+  .cjd-cd-box {
+    background-color: var(--ej-bg-raised) !important;
+    color: var(--ej-fg) !important;
+    border-top-color: var(--ej-border) !important;
+    transition: background-color .25s ease, color .25s ease, transform .25s ease, box-shadow .25s ease !important;
+
+    &:hover {
+      background: linear-gradient(90deg, rgba(196, 112, 58, .16), rgba(196, 112, 58, .05)) !important;
+      color: #fff !important;
+      transform: translateX(4px);
+      box-shadow: inset 3px 0 0 var(--ej-terracotta) !important;
+    }
+  }
+
+  /* Form inputs */
+  .cjd-form-control {
+    background-color: var(--ej-card) !important;
+    color: var(--ej-fg) !important;
+    border-color: var(--ej-border) !important;
+    -webkit-text-fill-color: var(--ej-fg) !important;
+    -webkit-box-shadow: 0 0 0 40px var(--ej-card) inset !important;
+    box-shadow: 0 0 0 40px var(--ej-card) inset !important;
+  }
+
+  /* General text */
+  .cjd-label,
+  label {
+    color: var(--ej-fg-muted);
+  }
+
+  /* White button variant */
+  .cjd-btn-white {
+    background: var(--ej-card) !important;
+    color: var(--ej-fg) !important;
+    border-color: var(--ej-border-strong) !important;
+
+    &:hover {
+      background: var(--ej-card-hover) !important;
+    }
+  }
+
+  /* Jacket nav (view selector) */
+  .cjd-jacket-nav {
+    background: var(--ej-bg-raised);
+    border-top-color: var(--ej-border);
+  }
+
+  .cjd-jacket-nav button {
+    color: var(--ej-fg-muted);
+    background: transparent;
+
+    &.active,
+    &:hover {
+      color: var(--ej-terracotta);
+      background: rgba(196, 112, 58, .08);
+    }
+  }
+}
+
+/* Editorial scrollbar — applied globally to sidebar + panel */
+.panel-desktop,
+.panel-mbl,
+.cjd-sidebar,
+.cjd-sidebar-wrapper,
+.cjd-sidebar-wrapper-open {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ej-border-strong) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--ej-border-strong);
+    border-radius: 2px;
+    transition: background .2s;
+
+    &:hover {
+      background: var(--ej-terracotta);
+    }
+  }
+}

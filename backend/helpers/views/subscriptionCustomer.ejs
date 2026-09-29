@@ -1,216 +1,79 @@
+<%
+  // Newsletter welcome to the subscriber (POST /features/subscribe). Same design as the bulk quote
+  // emails: table layout for mail clients, storefront colours, text wordmark.
+  var site = data.siteUrl || 'https://easyjackets.com';
+  var perks = [
+    ['New styles first', 'Fresh colourways, satin and leather builds the day they land.'],
+    ['Team & bulk deals', 'Price breaks for schools, teams, clubs and businesses.'],
+    ['Design ideas', 'Lettering, patches and colour combos from real orders.'],
+  ];
+%>
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
-            color: #211d18;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        table {
-            border-collapse: collapse;
-        }
-
-        .wrapper {
-            width: 100%;
-            background: #ffffff;
-            padding: 28px 12px;
-        }
-
-        .email-card {
-            width: 100%;
-            max-width: 640px;
-            margin: 0 auto;
-            background: #fffaf2;
-            border: 1px solid #e4d6c3;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 18px 50px rgba(33, 29, 24, 0.10);
-        }
-
-        .hero {
-            background: #11100e;
-            padding: 38px 34px 34px;
-            color: #f5eee3;
-        }
-
-        .eyebrow {
-            color: #c4703a;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            margin: 0 0 14px;
-        }
-
-        h1 {
-            margin: 0;
-            font-family: Georgia, 'Times New Roman', serif;
-            font-size: 38px;
-            line-height: 1.02;
-            font-weight: 400;
-            letter-spacing: -0.03em;
-        }
-
-        .hero-copy {
-            margin: 16px 0 0;
-            color: rgba(245, 238, 227, 0.72);
-            font-size: 15px;
-            line-height: 1.7;
-            max-width: 480px;
-        }
-
-        .content {
-            padding: 34px;
-        }
-
-        .content p {
-            margin: 0 0 18px;
-            color: #5f574c;
-            font-size: 15px;
-            line-height: 1.75;
-        }
-
-        .panel {
-            background: #f1e6d7;
-            border: 1px solid #e2d2bd;
-            border-radius: 14px;
-            padding: 22px;
-            margin: 26px 0;
-        }
-
-        .panel-title {
-            margin: 0 0 14px;
-            color: #211d18;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .benefit {
-            padding: 10px 0;
-            border-top: 1px solid rgba(33, 29, 24, 0.10);
-            color: #433b32;
-            font-size: 14px;
-            line-height: 1.55;
-        }
-
-        .benefit:first-of-type {
-            border-top: 0;
-        }
-
-        .cta {
-            display: inline-block;
-            background: #c4703a;
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 15px 24px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-        }
-
-        .note {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid #eadfce;
-            color: #8a7c6d;
-            font-size: 12px;
-            line-height: 1.6;
-        }
-
-        .footer {
-            background: #11100e;
-            color: rgba(245, 238, 227, 0.56);
-            padding: 24px 34px;
-            font-size: 12px;
-            line-height: 1.7;
-        }
-
-        .footer a {
-            color: #c4703a;
-            text-decoration: none;
-        }
-
-        @media only screen and (max-width: 520px) {
-            .hero,
-            .content,
-            .footer {
-                padding-left: 22px;
-                padding-right: 22px;
-            }
-
-            h1 {
-                font-size: 31px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <title>You're on the list</title>
+  <style>
+    body { margin: 0; padding: 0; background: #f4efe6; -webkit-text-size-adjust: 100%; }
+    table { border-collapse: collapse; }
+    @media only screen and (max-width: 560px) {
+      .px { padding-left: 22px !important; padding-right: 22px !important; }
+      .h1 { font-size: 36px !important; }
+      .btn td { display: block !important; padding: 0 0 10px 0 !important; }
+    }
+  </style>
 </head>
-
-<body>
-    <table class="wrapper" role="presentation" width="100%">
-        <tr>
-            <td>
-                <table class="email-card" role="presentation">
-                    <tr>
-                        <td class="hero">
-                            <p class="eyebrow">Easy Jackets Newsletter</p>
-                            <h1>You are on the list.</h1>
-                            <p class="hero-copy">
-                                Thanks for subscribing. We will send the good stuff: new drops, custom jacket ideas,
-                                limited offers, and notes from the design studio.
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="content">
-                            <p>
-                                Welcome to Easy Jackets. Your inbox now gets first look at varsity jackets, hoodies,
-                                patches, embroidery ideas, and seasonal deals before they hit the regular crowd.
-                            </p>
-
-                            <div class="panel">
-                                <div class="panel-title">What to expect</div>
-                                <div class="benefit">Early access to jacket releases and limited collections.</div>
-                                <div class="benefit">Subscriber-only discounts, flash sale alerts, and bulk-order offers.</div>
-                                <div class="benefit">Styling, customization, patch, and embroidery inspiration.</div>
-                                <div class="benefit">Behind-the-scenes updates from the Easy Jackets team.</div>
-                            </div>
-
-                            <p>
-                                Ready to start browsing? Explore ready-made jackets or jump into the design studio when
-                                you want something made just for you.
-                            </p>
-
-                            <p style="margin: 26px 0 0;">
-                                <a href="https://easyjackets.com/shop" class="cta">Explore Jackets</a>
-                            </p>
-
-                            <div class="note">
-                                This confirmation was sent to <strong><%= data.email %></strong>. If you did not
-                                subscribe, you can safely ignore this email.
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="footer">
-                            <strong style="color:#f5eee3;">Easy Jackets</strong><br>
-                            Custom varsity jackets, patches, embroidery, and team orders.<br>
-                            <a href="https://easyjackets.com">easyjackets.com</a>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<body style="margin:0;padding:0;background:#f4efe6;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Welcome to Easy Jackets. New styles, team deals and design ideas, straight to your inbox.</div>
+  <table role="presentation" width="100%" style="background:#f4efe6;">
+    <tr><td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="100%" style="max-width:620px;background:#fbf8f2;border:1px solid #e9e1d2;border-radius:6px;overflow:hidden;">
+        <tr><td style="height:6px;background:#c9a227;line-height:6px;font-size:0;">&nbsp;</td></tr>
+        <!-- header -->
+        <tr><td class="px" style="background:#14110f;padding:30px 36px 34px;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:900;letter-spacing:.22em;color:#f4efe6;">EASY JACKETS</div>
+          <div style="height:26px;line-height:26px;font-size:0;">&nbsp;</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c9a227;text-transform:uppercase;">Newsletter</div>
+          <div class="h1" style="margin-top:10px;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-size:44px;line-height:.98;font-weight:800;color:#f4efe6;text-transform:uppercase;">You're on the list.</div>
+        </td></tr>
+        <!-- intro -->
+        <tr><td class="px" style="padding:30px 36px 8px;font-family:Arial,Helvetica,sans-serif;">
+          <p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#14110f;">Welcome to Easy Jackets.</p>
+          <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#2a2521;">Thanks for subscribing with <strong><%= data.email %></strong>. You'll be the first to hear about new jackets, team-order deals and offers. A few emails a month, never spam.</p>
+        </td></tr>
+        <!-- what you get -->
+        <tr><td class="px" style="padding:12px 36px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#a8861c;text-transform:uppercase;padding-bottom:6px;">What you'll get</div>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            <% perks.forEach(function (p, i) { %>
+            <tr>
+              <td width="54" style="padding:12px 0;border-top:1px solid #e9e1d2;vertical-align:top;font-family:'Arial Narrow',Arial,sans-serif;font-size:26px;line-height:1;font-weight:800;color:#a8861c;">0<%= i + 1 %></td>
+              <td style="padding:12px 0;border-top:1px solid #e9e1d2;vertical-align:top;">
+                <div style="font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#14110f;"><%= p[0] %></div>
+                <div style="margin-top:3px;font-size:13px;line-height:1.55;color:#6b635a;"><%= p[1] %></div>
+              </td>
+            </tr>
+            <% }); %>
+          </table>
+        </td></tr>
+        <!-- actions -->
+        <tr><td class="px" style="padding:26px 36px 30px;">
+          <table role="presentation" class="btn"><tr>
+            <td style="padding-right:10px;"><a href="<%= site %>/design-custom-jacket" style="display:inline-block;padding:14px 22px;background:#14110f;color:#f4efe6;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;">Design your jacket</a></td>
+            <td><a href="<%= site %>/shop" style="display:inline-block;padding:12px 20px;border:2px solid #14110f;color:#14110f;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;">Shop jackets</a></td>
+          </tr></table>
+          <p style="margin:22px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#6b635a;">Didn't sign up, or changed your mind? Reply to this email and we'll take you off the list.</p>
+        </td></tr>
+        <!-- footer -->
+        <tr><td class="px" style="background:#14110f;padding:22px 36px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:rgba(244,239,230,.6);">
+          <strong style="color:#f4efe6;letter-spacing:.14em;">EASY JACKETS</strong><br>
+          Custom varsity and letterman jackets for schools, teams, businesses and clubs.<br>
+          <a href="<%= site %>" style="color:#c9a227;text-decoration:none;"><%= site.replace(/^https?:\/\//, '') %></a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
 </body>
-
 </html>

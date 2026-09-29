@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './lib/auth';
 import { CartProvider } from './lib/cart';
+import './lib/siteIdentity'; // logos + favicons from the admin: starts loading before the first render
 import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/ui.css';

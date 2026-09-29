@@ -1,0 +1,69 @@
+// ============================================
+// DARK BLACK THEME - For UI Elements (Buttons, Accordions, Cards)
+// ============================================
+
+// Core Colors
+$white: white;
+$black: black;
+$red: #e53935;
+$green: #4caf50;
+$blue: #2196f3;
+
+// Black Shade Palette (For UI Elements)
+$black-900: #0a0a0a; // Deepest black - buttons, headers
+$black-800: #121212; // Primary dark elements
+$black-700: #1a1a1a; // Card/accordion backgrounds
+$black-600: #252525; // Elevated surfaces
+$black-500: #2d2d2d; // Borders on dark elements
+$black-400: #3a3a3a; // Hover states  
+$black-300: #4a4a4a; // Active elements
+$black-200: #5a5a5a; // Muted text on dark
+$black-100: #6a6a6a; // Subtle elements
+
+// Grey shades (Original preserved)
+$grey: #e6e6e6;
+$light-grey: #fafafa;
+
+// Accent Colors - Editorial terracotta
+$primary-stroke: #C4703A; // Terracotta — replaces blue for active states
+$primary-inside: #FAF7F2; // Warm paper background
+$secondry-stroke: #F5DFC8; // Terracotta-100 tint for hover/secondary
+$secondry-inside: #C4703A; // Terracotta — accordion accents
+$gray-inside: #7b818d;
+$gray-stroke: #C4703A;
+
+// Theme Variables
+$bg: #FAF7F2; // Warm paper background
+$header: #141210; // Ink — dark header
+$header-height: 60px;
+// Total chrome above cjd-main: topnav(38) + header(60) + stats(52)
+$chrome-height: 150px;
+$bc: 1px solid $grey;
+
+// Responsive Breakpoints
+$breakpoints: (
+  'mobile': (max-width: 680px),
+  'small': (max-width: 933px),
+  'medium': (max-width: 1200px),
+  'large': (max-width: 1200px)) !default;
+
+/// Mixin to manage responsive breakpoints
+/// @author Hugo Giraudel
+/// @param {String} $breakpoint - Breakpoint name
+/// @require $breakpoints
+@mixin respond-to($breakpoint) {
+
+  // If the key exists in the map
+  @if map-has-key($breakpoints, $breakpoint) {
+
+    // Prints a media query based on the value
+    @media #{inspect(map-get($breakpoints, $breakpoint))} {
+      @content;
+    }
+  }
+
+  // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "+"Available breakpoints are: #{map-keys($breakpoints)}.";
+  }
+}

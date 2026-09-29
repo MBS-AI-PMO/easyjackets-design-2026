@@ -27,14 +27,31 @@ const parseJsonArrayField = (value) => {
     }
 };
 
-// Tags arrive as a JSON array, an array, or a comma-separated string; only the
-// known techniques are kept, in their canonical spelling.
-const parseTags = (value) => {
+// Tags are the site's filter chips. The six defaults (PATCH_TAGS) come first; admins can add
+// their own. Every tag in use, in the order the site shows them: defaults, then the rest A-Z.
+const MAX_TAGS = 12;
+const MAX_TAG_LENGTH = 32;
+const tagsInUse = async (filter = {}) => {
+    const used = (await patchPhotoModel.distinct('tags', filter)).filter(Boolean);
+    const extra = used.filter((t) => !PATCH_TAGS.some((d) => d.toLowerCase() === String(t).toLowerCase()))
+        .sort((a, b) => a.localeCompare(b));
+    return { defaults: PATCH_TAGS.filter((d) => used.some((t) => String(t).toLowerCase() === d.toLowerCase())), extra };
+};
+
+// Tags arrive as a JSON array, an array, or a comma-separated string. Each is tidied (spaces,
+// length, no markup) and takes the spelling of an existing tag that differs only in capitals,
+// so "patches" joins "Patches" instead of becoming a second chip.
+const parseTags = async (value) => {
     if (value === undefined) return undefined;
     let list = parseJsonArrayField(value);
     if (!list || (!list.length && typeof first(value) === 'string')) list = String(first(value) || '').split(',');
-    const canon = new Map(PATCH_TAGS.map((t) => [t.toLowerCase(), t]));
-    return [...new Set(list.map((t) => canon.get(String(t).trim().toLowerCase())).filter(Boolean))];
+    const known = [...PATCH_TAGS, ...(await patchPhotoModel.distinct('tags')).filter(Boolean)];
+    const canon = new Map(known.map((t) => [String(t).toLowerCase(), t]));
+    const clean = list
+        .map((t) => String(t).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, MAX_TAG_LENGTH))
+        .filter(Boolean)
+        .map((t) => canon.get(t.toLowerCase()) || t);
+    return [...new Set(clean)].slice(0, MAX_TAGS);
 };
 
 const uploadPatchFiles = async (files) => {
@@ -74,7 +91,7 @@ export const uploadPatchPhoto = async (req, res) => {
                 imageUrl: imageUrls[0],
                 imageUrls,
                 description: description.trim(),
-                tags: parseTags(fields.tags) || [],
+                tags: (await parseTags(fields.tags)) || [],
                 isActive: true,
             });
             return res.status(201).send({ success: true, message: 'Patch photo uploaded successfully', data: photo });
@@ -99,7 +116,8 @@ export const getPatchPhotos = async (req, res) => {
         return res.status(200).send({
             success: true,
             data: photos,
-            tags: PATCH_TAGS,
+            // the chips the site shows: tags on visible photos
+            tags: await tagsInUse({ isActive: true }).then(({ defaults, extra }) => [...defaults, ...extra]),
             pagination: { currentPage: pageNum, totalPages, totalImages: total, hasMore: pageNum < totalPages, limit: limitNum },
         });
     } catch (error) {
@@ -112,7 +130,9 @@ export const getPatchPhotos = async (req, res) => {
 export const getAllPatchPhotos = async (req, res) => {
     try {
         const photos = await patchPhotoModel.find({}).sort({ createdAt: -1 });
-        return res.status(200).send({ success: true, data: photos, total: photos.length, tags: PATCH_TAGS });
+        // the admin's choices: the six defaults (always) plus every tag any photo uses
+        const { extra } = await tagsInUse();
+        return res.status(200).send({ success: true, data: photos, total: photos.length, tags: [...PATCH_TAGS, ...extra] });
     } catch (error) {
         console.error('Error fetching all patch photos:', error);
         return res.status(500).send({ success: false, message: 'Error fetching patch photos', error: error.message });
@@ -132,7 +152,7 @@ export const updatePatchPhoto = async (req, res) => {
             updateData.description = description.trim();
         }
         if (payload.isActive !== undefined) updateData.isActive = normalizeBoolean(payload.isActive);
-        const tags = parseTags(payload.tags);
+        const tags = await parseTags(payload.tags);
         if (tags !== undefined) updateData.tags = tags;
 
         const imageUrls = await uploadPatchFiles(files);

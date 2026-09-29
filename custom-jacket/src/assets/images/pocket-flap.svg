@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 60.55 80.56">
+  <g id="Pocket_Flap" data-name="Pocket Flap">
+    <g id="pocket_flap_right" data-name="pocket flap right">
+      <polygon points="0.35 71.75 13.45 80.25 46.25 50.74 60.25 8.85 47.15 0.34 0.35 71.75" fill="#fff" stroke="#404041" stroke-miterlimit="10" stroke-width="0.5"/>
+      <path d="M44.34,55.59A4.75,4.75,0,1,1,48,50,4.76,4.76,0,0,1,44.34,55.59Z" transform="translate(-4.99 -5.45)" fill="#fff" stroke="#404041" stroke-miterlimit="10"/>
+    </g>
+  </g>
+</svg>

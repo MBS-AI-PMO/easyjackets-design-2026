@@ -7,10 +7,21 @@ its backend are separate and untouched by this repo.
 |---|---|---|
 | `frontend/` | Vite + React storefront (converted from the Claude Design export) | `cd frontend && npm install && npm run dev` → http://localhost:5173 |
 | `backend/` | Express + Mongoose API ("Node Backend 2026", a copy of the current backend pointed at its own database) | `cd backend && npm install && npm run dev` → http://localhost:8080 |
+| `admin/` | Admin panel (CRA) on the new backend and storefront | `cd admin && npm install && npm start` → http://localhost:3000 |
+| `custom-jacket/` | The jacket builder / design lab (CRA), copied from the live `custom-jacket` and wired to this backend and storefront | `cd custom-jacket && npm install && npm start` → http://localhost:3001 |
 
-Each folder has its own README, Dockerfile and `.env.example`. Coolify deploys
-them as two apps from this repo: Base Directory `/frontend` (port 80) and
-`/backend` (port 8080).
+Each folder has its own Dockerfile and `.env.example`. Coolify deploys each as
+an app from this repo: Base Directory `/frontend` (port 80), `/backend` (port
+8080), `/admin` (port 80) and `/custom-jacket` (port 80, domain
+`custom.145.223.75.247.sslip.io`, the builder address the storefront, admin and
+backend use by default).
+
+The builder hands off to the storefront: **Add to cart** sends the saved cart
+ids to `/cart?index=…` (the cart adds each design once), **Review** opens
+`/design/<id>` (every view and the full spec), and a cart line's **Edit design**
+reopens the builder with `?designedit=<id>`. Its API and storefront addresses
+are in `custom-jacket/src/config/url.js` (localhost → the local apps; never the
+live site).
 
 ## Backend additions in this repo (not in the current live backend)
 

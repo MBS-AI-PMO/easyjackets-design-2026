@@ -1,4 +1,5 @@
 import EmailConfig from '../models/emailConfigModel.js';
+import { encryptSecret } from '../helpers/secretBox.js';
 import {
     getEmailSettings,
     invalidateEmailSettings,
@@ -52,7 +53,7 @@ export const saveEmailConfig = async (req, res) => {
         // Blank password means "keep the existing one" so the admin can edit other
         // fields without retyping the credential.
         if (typeof body.smtpPass === 'string' && body.smtpPass !== '') {
-            update.smtpPass = body.smtpPass;
+            update.smtpPass = encryptSecret(body.smtpPass, 'emailconfigs.smtpPass'); // never stored in plain text
         }
 
         const emailish = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

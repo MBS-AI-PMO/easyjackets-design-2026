@@ -1,8 +1,25 @@
 import mongoose from 'mongoose';
 import Order from '../models/orderModel.js';
-import { stripe } from '../config/stripe.js';
+import { getStripeWebhookSecret, stripe } from '../config/stripe.js';
+import { storefrontUrl } from '../helpers/customJacketUrl.js';
+
+// One order per payment. The confirmation page can ask twice at once (React runs effects twice in
+// development, or a reload while the first request is running) and Stripe's webhook can arrive at the
+// same moment; each saw "no order yet" and created one. Work on one checkout session runs one at a time.
+const confirmingSessions = new Map(); // session id -> promise of the work running for it
+const oneAtATime = async (sessionId, work) => {
+  while (confirmingSessions.has(sessionId)) await confirmingSessions.get(sessionId);
+  let finished;
+  confirmingSessions.set(sessionId, new Promise((resolve) => { finished = resolve; }));
+  try {
+    return await work();
+  } finally {
+    confirmingSessions.delete(sessionId);
+    finished();
+  }
+};
 import User from '../models/userModel.js';
-import { sendEmail } from '../helpers/email.js';
+import { sendEmail, sendEmailInBackground } from '../helpers/email.js';
 import { getAdminEmail } from '../helpers/emailSettings.js';
 import { extractCardLast4 } from '../helpers/stripeHelper.js';
 import design from '../models/design.js';
@@ -125,11 +142,8 @@ const createStripeSession = async (products, customerId, userId = null, extraMet
     };
   });
 
-  // Determine if we are in Live Mode by checking the environment variable
-  const isLive = !!process.env.STRIPE_SECRET_KEY_LIVE;
-
   // Use CLIENT_URL from environment
-  let clientUrl = process.env.CLIENT_URL || 'https://easyjackets.com';
+  let clientUrl = storefrontUrl(); // the new storefront (CLIENT_URL), never the live site
 
   // Store cart data in session metadata (Stripe has 500 char limit per metadata value)
   // We'll store a minimal version with short names to fit the limit
@@ -333,9 +347,8 @@ export const triggerWebhook = async (req, res) => {
   let event;
 
   try {
-    const webhookSecret = process.env.NODE_ENV === 'development'
-      ? process.env.STRIPE_WEBHOOK_SECRET
-      : process.env.STRIPE_WEBHOOK_LIVE_SECRET;
+    // the signing secret of the mode chosen in Settings -> Payment Configuration
+    const webhookSecret = await getStripeWebhookSecret();
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error('⚠️ Webhook signature verification failed:', err.message);
@@ -441,7 +454,12 @@ export const triggerWebhook = async (req, res) => {
         buyer: session.metadata?.userId || null
       };
 
-      const orders = await Order.create(order);
+      // one order per payment: the confirmation page may be recording this session at the same moment
+      const orders = await oneAtATime(session.id, async () => (await Order.findOne({ transactionId: session.id }) ? null : Order.create(order)));
+      if (!orders) {
+        console.log('✅ Webhook: the order for this session is already recorded');
+        return res.json({ received: true });
+      }
       console.log('✅ Order created:', orders.orderId);
 
       // 📧 SEND EMAILS
@@ -449,11 +467,11 @@ export const triggerWebhook = async (req, res) => {
         const buyerEmail = session.customer_details?.email;
         if (buyerEmail) {
           // 1. Send to Buyer
-          sendEmail(`Order Confirmation - #${orders.orderId}`, buyerEmail, { ...orders.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
+          sendEmailInBackground(`Order Confirmation - #${orders.orderId}`, buyerEmail, { ...orders.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
         }
 
         // 2. Send to Admin (Owner)
-        sendEmail(`New Order Received - #${orders.orderId}`, await getAdminEmail(), { ...orders.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
+        sendEmailInBackground(`New Order Received - #${orders.orderId}`, await getAdminEmail(), { ...orders.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
 
         console.log('📬 Order notification emails triggered');
       } catch (emailErr) {
@@ -468,8 +486,15 @@ export const triggerWebhook = async (req, res) => {
   res.json({ received: true });
 }
 
+// A second request for the same session waits for the first, then finds and returns its order.
+export const verify_session_and_create_order = (req, res) => {
+  const sessionId = req.body?.session_id;
+  if (!sessionId) return confirmSessionAndCreateOrder(req, res);
+  return oneAtATime(sessionId, () => confirmSessionAndCreateOrder(req, res));
+};
+
 // ✅ Manual Verification Endpoint for Localhost/Fallback
-export const verify_session_and_create_order = async (req, res) => {
+const confirmSessionAndCreateOrder = async (req, res) => {
   const { session_id } = req.body;
 
   console.log('=== VERIFY SESSION START ===');
@@ -598,11 +623,11 @@ export const verify_session_and_create_order = async (req, res) => {
       const buyerEmail = session.customer_details?.email;
       if (buyerEmail) {
         // 1. Send to Buyer
-        sendEmail(`Order Confirmation - #${newOrder.orderId}`, buyerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
+        sendEmailInBackground(`Order Confirmation - #${newOrder.orderId}`, buyerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
       }
 
       // 2. Send to Admin (Owner)
-      sendEmail(`New Order Received (Manual) - #${newOrder.orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
+      sendEmailInBackground(`New Order Received (Manual) - #${newOrder.orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
 
       console.log('📬 Order notification emails triggered');
     } catch (emailErr) {
@@ -727,9 +752,9 @@ export const create_cod_order = async (req, res) => {
     try {
       const buyerEmail = formDetails.email;
       if (buyerEmail) {
-        sendEmail(`Order Confirmation - #${newOrder.orderId}`, buyerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
+        sendEmailInBackground(`Order Confirmation - #${newOrder.orderId}`, buyerEmail, { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
       }
-      sendEmail(`New COD Order Received - #${newOrder.orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
+      sendEmailInBackground(`New COD Order Received - #${newOrder.orderId}`, await getAdminEmail(), { ...newOrder.toObject(), clientUrl: process.env.CLIENT_URL || 'http://localhost:3000' }, '/views/orderInvoice.ejs');
     } catch (emailErr) {
       console.error('⚠️ Failed to trigger COD emails:', emailErr.message);
     }

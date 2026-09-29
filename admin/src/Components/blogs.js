@@ -51,13 +51,15 @@ import {
 } from '@mui/icons-material';
 import fileInstance from '../constant/filesInstance';
 import instance from '../constant/instance';
+import { FRONTEND_URL } from '../constant/url';
 import BlogRichTextEditor from './BlogRichTextEditor';
 import { toast } from 'react-toastify';
 import { ChromePicker } from 'react-color';
 import CommentModeration from './Comments';
 import { getBlogImageSrc, handleBlogImageError } from '../utils/blogImage';
 
-const LIVE_BLOG_BASE_URL = 'https://easyjackets.com/new-blog';
+// "View" opens the post on the new storefront
+const BLOG_BASE_URL = `${FRONTEND_URL}/new-blog`;
 
 const formatDateTime = (value) => {
   if (!value) return 'Not set';
@@ -241,7 +243,7 @@ const BlogManager = () => {
       return;
     }
 
-    window.open(`${LIVE_BLOG_BASE_URL}/${encodeURIComponent(blog.slug)}`, '_blank', 'noopener,noreferrer');
+    window.open(`${BLOG_BASE_URL}/${encodeURIComponent(blog.slug)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleColorPickerClick = (event) => {

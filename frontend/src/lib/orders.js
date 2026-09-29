@@ -1,4 +1,5 @@
 // Orders, checkout and the account: the current site's endpoints, wrapped.
+import { useEffect, useMemo, useState } from 'react';
 import { api, uploadUrl } from './api';
 import { stripHtml } from './html';
 
@@ -16,7 +17,60 @@ export const COUNTRIES = [
 ];
 export const countryName = (code) => (COUNTRIES.find(([c]) => c === code) || [])[1] || code;
 
-/** Shipping for a cart: the admin's rate tiers, by quantity and destination. */
+// Shipping is worked out here from the admin's rate table (GET /shipping-rates/public) with the
+// backend's own rules (backend/helpers/shippingRates.js). The table is remembered in the browser
+// and refreshed quietly on each visit, so the price shows at once and follows the country and the
+// quantity without a round trip each time.
+const RATES_KEY = 'ej-shipping-rates';
+let ratesRequest = null;
+const storedRates = () => { try { return JSON.parse(localStorage.getItem(RATES_KEY) || 'null'); } catch { return null; } };
+export const fetchShippingRates = ({ fresh = false } = {}) => {
+  if (!ratesRequest || fresh) {
+    ratesRequest = api.get('/shipping-rates/public', { auth: false })
+      .then((r) => {
+        const rates = r?.rates || null;
+        try { if (rates) localStorage.setItem(RATES_KEY, JSON.stringify(rates)); } catch { /* private mode */ }
+        return rates;
+      })
+      .catch((e) => { ratesRequest = null; throw e; });
+  }
+  return ratesRequest;
+};
+
+const DOMESTIC = new Set(['us', 'usa', 'u.s.', 'u.s.a.', 'united states', 'united states of america', 'america']);
+const rateForQuantity = (tiers, quantity, fallbackRate = 0) => {
+  const qty = Math.max(0, Math.trunc(Number(quantity) || 0));
+  if (!qty) return 0;
+  const sorted = [...(tiers || [])]
+    .filter((t) => Number.isFinite(Number(t?.minQty)) && Number.isFinite(Number(t?.rate)))
+    .sort((a, b) => Number(a.minQty) - Number(b.minQty));
+  for (const t of sorted) {
+    const max = t.maxQty === null || t.maxQty === undefined || t.maxQty === '' ? Infinity : Number(t.maxQty);
+    if (qty >= Number(t.minQty) && qty <= max) return t.perItem ? Number(t.rate) * qty : Number(t.rate);
+  }
+  return Number(fallbackRate) || 0;
+};
+/** The shipping charge for `quantity` jackets to `country`, as the backend works it out. */
+export const shippingFor = (rates, quantity, country, subtotal = 0) => {
+  if (!rates || rates.enabled === false) return 0;
+  if (rates.freeShippingOver > 0 && Number(subtotal) >= rates.freeShippingOver) return 0;
+  return DOMESTIC.has(String(country || '').trim().toLowerCase())
+    ? rateForQuantity(rates.usaTiers, quantity, rates.usaFallbackRate)
+    : rateForQuantity(rates.worldwideTiers, quantity, rates.worldwideFallbackRate);
+};
+
+/** Shipping for the cart, at once: { cost, label }, or null only on the very first visit while the table loads. */
+export function useShipping(quantity, country = 'US', subtotal = 0) {
+  const [rates, setRates] = useState(storedRates);
+  useEffect(() => {
+    let alive = true;
+    fetchShippingRates({ fresh: true }).then((r) => { if (alive && r) setRates(r); }).catch(() => { /* keep the remembered table */ });
+    return () => { alive = false; };
+  }, []);
+  return useMemo(() => (rates ? { cost: quantity ? shippingFor(rates, quantity, country, subtotal) : 0, label: '' } : null), [rates, quantity, country, subtotal]);
+}
+
+/** Shipping for a cart: the admin's rate tiers, by quantity and destination (server round trip; the admin preview). */
 export const previewShipping = async (quantity, country = 'US', subtotal = 0, signal) => {
   const r = await api.get('/shipping-rates/preview', { params: { quantity, country, subtotal }, auth: false, signal });
   const pick = (v) => (typeof v === 'number' ? v : Number(v?.rate ?? v?.amount ?? v?.total ?? v?.cost ?? 0));
@@ -82,6 +136,7 @@ export function normalizeOrder(o) {
   const ship = Array.isArray(o.shipping_details) ? o.shipping_details[0] : o.shipTo || null;
   const items = (o.cartData || o.items || []).map((i, n) => ({
     key: `${i.id || i.designId || i.name}-${n}`,
+    custom: !i.id && Boolean(i.designId), // designed in the builder (its render carries a white ground)
     name: i.name,
     quantity: i.quantity || 1,
     price: Number(i.price) || 0,
@@ -143,32 +198,32 @@ export const fetchPaymentMethods = async (signal) => {
 };
 export const deletePaymentMethod = (id) => api.delete(`/payment-methods/${id}`);
 
-/** Bulk quote: sent through the contact endpoint as one message the team can act on. */
-export const submitBulkQuote = (f) => api.post('/features/contact', {
-  name: f.name,
-  firstName: String(f.name || '').trim().split(/\s+/)[0] || '',
-  lastName: String(f.name || '').trim().split(/\s+/).slice(1).join(' '),
-  email: f.email,
-  phone: f.phone || '',
-  subject: `Bulk quote request — ${f.org || f.name}`,
-  // one line per answer (each line cleaned on its own, so the line breaks survive)
-  message: [
-    `BULK QUOTE REQUEST — ${f.org || f.name}`,
-    `Phone: ${f.phone || '-'}`,
-    `Organisation: ${f.org || '-'} (${f.orgType || '-'})`,
-    `Jacket type: ${f.type || '-'}`,
-    `Quantity: ${f.qty || '-'}`,
-    `Front closure: ${f.closure || '-'}`,
-    `Lining: ${f.lining || '-'}`,
-    `½ Zipout lining: ${f.zipout || '-'}`,
-    `Flap closure: ${f.flap || '-'}`,
-    `Design locations: ${f.locations || '-'}`,
-    `Needed by: ${f.date || '-'}`,
-    `Budget per jacket: ${f.budget || '-'}`,
-    '',
-    f.details || '',
-  ].map((line) => stripHtml(line)).join('\n'),
-}, { auth: false });
+/**
+ * Bulk quote: saved as a bulk order (POST /order/bulk), so it shows in the admin's Orders -> Bulk Order
+ * list, and the backend emails the team and the customer. `quantity` is the range's lower bound
+ * (the admin's Qty column); the range itself goes in `quantityRange`.
+ */
+export const submitBulkQuote = (f) => {
+  const fd = new FormData();
+  const text = (v) => stripHtml(String(v ?? '')).trim();
+  fd.append('name', text(f.name));
+  fd.append('email', text(f.email));
+  fd.append('phone', text(f.phone));
+  fd.append('organization', text(f.org));
+  fd.append('orderType', text(f.orgType));
+  fd.append('selectedProduct', text(f.type));
+  fd.append('quantityRange', text(f.qty));
+  fd.append('quantity', String(parseInt(String(f.qty || ''), 10) || 10));
+  fd.append('selectedClosure', text(f.closure));
+  fd.append('selectedLining', text(f.lining));
+  fd.append('zipoutLining', String(Boolean(f.zipout)));
+  fd.append('flapClosure', String(Boolean(f.flap)));
+  fd.append('designLocations', JSON.stringify(f.designLocations || {}));
+  fd.append('neededBy', text(f.date));
+  fd.append('budget', text(f.budget));
+  fd.append('message', text(f.details));
+  return api.post('/order/bulk', fd, { auth: false });
+};
 
 /** Front-closure options the admin keeps (GET /property/closures), e.g. buttons, zipper, pullover, flap. */
 export const fetchClosures = async () => {

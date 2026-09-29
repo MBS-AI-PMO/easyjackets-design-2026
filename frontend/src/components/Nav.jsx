@@ -4,6 +4,7 @@ import { useCart } from '../lib/cart';
 import { useAuth } from '../lib/auth';
 import { fetchCategories, fetchMaterials } from '../lib/catalog';
 import { useAsync } from '../lib/useAsync';
+import { FALLBACK_NAV_LOGO, useSiteIdentity } from '../lib/siteIdentity';
 import './nav.css';
 import { shopPath } from '../lib/urls';
 
@@ -57,6 +58,10 @@ export default function Nav({ active, cta = 'cart' }) {
   }, [open]);
 
   const { user } = useAuth();
+  // navbar logo + size from the admin (Site Identity & Logos); the last one seen is inline, so it paints at once
+  const identity = useSiteIdentity();
+  const navLogo = identity.navSrc || FALLBACK_NAV_LOGO;
+  const logoHeight = identity.navbarLogoHeight || 72;
   const button = cta === 'cart' ? { href: '/cart', label: `Cart · ${cartCount}` }
     : cta === 'shop' ? { href: '/shop', label: 'Shop jackets' }
     : cta;
@@ -67,8 +72,8 @@ export default function Nav({ active, cta = 'cart' }) {
     <>
       <nav className="ez-nav">
         <div className="ez-nav-bar">
-          <A href="/" className="ez-nav-logo" aria-label="Easy Jacket home">
-            <img src="/easy-jacket-logo.png" alt="Easy Jacket" width="87" height="72" decoding="async" />
+          <A href="/" className="ez-nav-logo" aria-label="Easy Jackets home" style={{ '--ez-logo-h': `${logoHeight}px` }}>
+            <img src={navLogo} alt="Easy Jackets" height={logoHeight} decoding="sync" fetchPriority="high" onError={(e) => { if (!e.currentTarget.src.endsWith(FALLBACK_NAV_LOGO)) e.currentTarget.src = FALLBACK_NAV_LOGO; }} />
           </A>
 
           <div className="ez-dd">
@@ -111,7 +116,7 @@ export default function Nav({ active, cta = 'cart' }) {
       <div className={`ez-drawer-backdrop${open ? ' is-open' : ''}`} onClick={close} aria-hidden="true" />
       <aside id="ez-drawer" className={`ez-drawer${open ? ' is-open' : ''}`} aria-hidden={!open} aria-label="Menu">
         <div className="ez-drawer-head">
-          <img src="/easy-jacket-logo.png" alt="Easy Jacket" width="58" height="48" decoding="async" />
+          <img src={navLogo} alt="Easy Jackets" height="48" decoding="async" />
           <button type="button" className="ez-drawer-close" aria-label="Close menu" onClick={close}>×</button>
         </div>
         <div className="ez-drawer-links" onClick={(e) => { if (e.target.closest('a')) close(); }}>

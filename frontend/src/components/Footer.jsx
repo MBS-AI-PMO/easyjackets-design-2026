@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import A from './A';
 import PageFaqs from './PageFaqs';
-import { isEmail, subscribeNewsletter } from '../lib/site';
+import { fetchWebsiteDetails, isEmail, subscribeNewsletter, telHref } from '../lib/site';
+import { useAsync } from '../lib/useAsync';
+import { imageUrl } from '../lib/api';
+import { FALLBACK_FOOTER_LOGO, useSiteIdentity } from '../lib/siteIdentity';
 import './footer.css';
 
 const COLUMNS = [
@@ -10,7 +13,6 @@ const COLUMNS = [
   { title: 'Custom', links: [['Design Your Own', '/design-custom-jacket'], ['Materials & Colors', '/material-colors'], ['Patches & Embroidery', '/embroidery-and-patches'], ['Bulk & Team Orders', '/bulk-order'], ['Size Guide', '/sizechart']] },
   { title: 'Help', links: [['FAQ', '/faq'], ['Track Order', '/track-order'], ['Shipping & Returns', '/shipping'], ['Contact Us', '/contact-us'], ['Blog', '/new-blog']] },
 ];
-const SOCIAL = [['IG', 'Instagram'], ['FB', 'Facebook'], ['TT', 'TikTok'], ['PT', 'Pinterest']];
 
 const link = { textDecoration: 'none', color: 'rgba(244,239,230,0.8)' };
 
@@ -54,6 +56,10 @@ const OWN_FAQ_PREFIXES = ['/product/'];
  * choice (product and catalog templates), or false for none.
  */
 export default function Footer({ faq }) {
+  // footer logo + size from the admin (Site Identity & Logos), shown white like the admin's preview
+  const { footerLogo, footerLogoHeight } = useSiteIdentity();
+  // contact details + social links from the admin (Website Details), shared with the Contact page
+  const { data: site } = useAsync(fetchWebsiteDetails, []);
   const { pathname } = useLocation();
   const route = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
   let block = null;
@@ -75,15 +81,18 @@ export default function Footer({ faq }) {
         </div>
 
         <div>
-          <img src="/easy-jacket-logo.png" alt="Easy Jacket" width="77" height="64" loading="lazy" decoding="async" style={{ height: '64px', width: 'auto', filter: 'invert(1) brightness(1.1)' }} />
+          <img className="ez-footer-logo" src={footerLogo ? imageUrl(footerLogo, 480) : FALLBACK_FOOTER_LOGO} alt="Easy Jackets" height={footerLogoHeight || 64} loading="lazy" decoding="async" style={{ '--ez-footer-logo-h': `${footerLogoHeight || 64}px` }} onError={(e) => { if (!e.currentTarget.src.endsWith(FALLBACK_FOOTER_LOGO)) e.currentTarget.src = FALLBACK_FOOTER_LOGO; }} />
           <p style={{ margin: '16px 0 0', color: 'rgba(244,239,230,0.7)', lineHeight: '1.6', maxWidth: '34ch' }}>
             Custom varsity and letterman jackets in melton wool and genuine leather. Made to order, no minimums, shipped worldwide.
           </p>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-            {SOCIAL.map(([abbr, name]) => (
-              <A key={name} href="#" aria-label={name} className="ez-footer-social">{abbr}</A>
-            ))}
-          </div>
+          {/* the admin's social profiles that are switched on (Website Details -> Social Media Profiles) */}
+          {site?.socials?.length ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px' }}>
+              {site.socials.map((s) => (
+                <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`Easy Jackets on ${s.name}`} title={s.name} className="ez-footer-social">{s.abbr}</a>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {COLUMNS.map((col) => (
@@ -92,15 +101,24 @@ export default function Footer({ faq }) {
             <div style={{ display: 'grid', gap: '10px' }}>
               {col.links.map(([label, href]) => <A key={label} href={href} style={link}>{label}</A>)}
             </div>
-            {col.title === 'Help' ? (
-              <div style={{ marginTop: '20px', fontSize: '13px', color: 'rgba(244,239,230,0.6)', lineHeight: '1.6' }}>
-                Mon–Fri, 9am–6pm ET
-                <br />
-                <A href="mailto:hello@easyjackets.com" style={{ color: 'var(--cream)', textDecoration: 'none' }}>hello@easyjackets.com</A>
-              </div>
-            ) : null}
           </div>
         ))}
+
+        {/* Contact: the admin's phone, email and addresses (Website Details -> Contact Information) */}
+        <div>
+          <div className="ez-footer-title">Contact</div>
+          <div className="ez-footer-contact">
+            {site?.phone ? <a href={telHref(site.phone)} style={link}>{site.phone}</a> : null}
+            {site?.email ? <a href={`mailto:${site.email}`} style={link}>{site.email}</a> : null}
+            <div className="ez-footer-hours">Mon–Fri, 9am–6pm ET</div>
+            {(site?.addresses || []).map((a, i) => (
+              <div key={i} className="ez-footer-addr">
+                {a.label ? <div className="ez-footer-addr-label">{a.label}</div> : null}
+                {a.lines.map((l, j) => <div key={j}>{l}</div>)}
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="ez-footer-legal">
           <span>© 2020–2026 Easy Jackets. All rights reserved.</span>

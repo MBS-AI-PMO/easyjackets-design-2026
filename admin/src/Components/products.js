@@ -47,7 +47,7 @@ import {
 import fileInstance from "../constant/filesInstance";
 import instance from "../constant/instance";
 import Editor from "react-simple-wysiwyg"
-import { CUSTOM_URL } from "../constant/url";
+import { CUSTOM_URL, uploadUrl } from "../constant/url";
 import { toast } from "react-toastify";
 
 const cleanSeoText = (value = "") => {
@@ -691,7 +691,7 @@ function Products({ section = "jackets" }) {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
                       <Avatar
                         variant="rounded"
-                        src={product.frontImage}
+                        src={uploadUrl(product.frontImage)}
                         sx={{
                           width: 52, height: 52, flexShrink: 0,
                           bgcolor: '#f2f5f9',
@@ -1086,7 +1086,7 @@ function Products({ section = "jackets" }) {
                 </Button>
                 {previewImage && (
                   <Box sx={{ position: 'relative', mb: 2 }}>
-                    <img src={previewImage} alt="front" style={{ width: '100%', height: 120, objectFit: 'contain', borderRadius: 8, border: '1px solid #ddd', bgcolor: '#fff' }} />
+                    <img src={uploadUrl(previewImage)} alt="front" style={{ width: '100%', height: 120, objectFit: 'contain', borderRadius: 8, border: '1px solid #ddd', bgcolor: '#fff' }} />
                   </Box>
                 )}
 
@@ -1099,7 +1099,7 @@ function Products({ section = "jackets" }) {
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
                   {otherImagesPreview.map((img, idx) => (
                     <Box key={idx} sx={{ position: 'relative' }}>
-                      <img src={img} alt="variant" style={{ width: 45, height: 45, borderRadius: 4, objectFit: 'cover', border: '1px solid #eee' }} />
+                      <img src={uploadUrl(img)} alt="variant" style={{ width: 45, height: 45, borderRadius: 4, objectFit: 'cover', border: '1px solid #eee' }} />
                       <IconButton size="small" onClick={() => handleRemoveOtherImage(idx)} sx={{ position: 'absolute', top: -5, right: -5, p: 0.2, bgcolor: 'rgba(255,255,255,0.8)', color: '#ff5252', '&:hover': { bgcolor: '#fff' } }}>
                         <Delete sx={{ fontSize: 12 }} />
                       </IconButton>

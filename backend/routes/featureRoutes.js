@@ -42,6 +42,7 @@ import {
     startDeploymentStatusController,
 } from '../controllers/deploymentStatusController.js';
 import { requireSignin, isAdmin } from '../middlewares/authMiddleware.js';
+import { deleteSubscriber, listSubscribers, updateSubscriber } from '../controllers/newsletterSubscriberController.js';
 
 
 const router = express.Router();
@@ -96,6 +97,10 @@ router.post('/deployment-status/finish', finishDeploymentStatusController);
 router.post('/', requireSignin, isAdmin, createOrUpdateFeatureController);
 router.post('/contact', SubmitContact);
 router.post('/subscribe', subscribeNewsletter);
+// People -> Subscribers (admin only)
+router.get('/subscribers', requireSignin, isAdmin, listSubscribers);
+router.put('/subscribers/:id', requireSignin, isAdmin, updateSubscriber);
+router.delete('/subscribers/:id', requireSignin, isAdmin, deleteSubscriber);
 router.get('/', getFeaturesController);
 router.get('/:name', getFeatureByNameController);
 

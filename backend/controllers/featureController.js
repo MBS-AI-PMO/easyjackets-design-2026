@@ -1,4 +1,5 @@
 import Feature from '../models/features.js';
+import NewsletterSubscriber from '../models/newsletterSubscriberModel.js';
 import formidable from 'formidable'; // For file uploads
 import uploadToS3 from '../helpers/fileUpload.js'; // Assuming you have a utility function to upload to S3
 import website from '../models/websiteModal.js';
@@ -556,31 +557,52 @@ export const subscribeNewsletter = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
         }
 
+        // Saved to the admin's People -> Subscribers list. Someone already on the list is told so
+        // and gets no second pair of emails; a former subscriber is switched back on.
+        const address = email.trim().toLowerCase();
+        const existing = await NewsletterSubscriber.findOne({ email: address });
+        if (existing && existing.status === 'subscribed') {
+            return res.status(200).json({ success: true, alreadySubscribed: true, message: "You're already on the list. Thanks!" });
+        }
+        try {
+            if (existing) {
+                await NewsletterSubscriber.updateOne({ _id: existing._id }, { $set: { status: 'subscribed', subscribedAt: new Date(), unsubscribedAt: null } });
+            } else {
+                await NewsletterSubscriber.create({ email: address, source: 'Website footer' });
+            }
+        } catch (error) {
+            if (error?.code === 11000) return res.status(200).json({ success: true, alreadySubscribed: true, message: "You're already on the list. Thanks!" });
+            throw error;
+        }
+
         const subscriptionData = {
             email: email.trim(),
             date: new Date().toLocaleString('en-US', {
                 dateStyle: 'full',
                 timeStyle: 'short'
-            })
+            }),
+            siteUrl: (process.env.CLIENT_URL || '').replace(/\/+$/, ''),
         };
 
-        // Send notification to admin (non-blocking)
-        sendEmail(
-            'New Newsletter Subscription',
-            await getAdminEmail(),
-            subscriptionData,
-            '/views/subscriptionAdmin.ejs'
-        ).catch(err => console.error('Admin subscription email failure:', err));
+        // Both emails are awaited (they used to be fired and forgotten, so a failure was
+        // invisible): the team is told, the subscriber gets the welcome email.
+        const adminRecipient = await getAdminEmail();
+        const [adminEmail, customerEmail] = await Promise.allSettled([
+            adminRecipient
+                ? sendEmail(`New newsletter subscriber: ${subscriptionData.email}`, adminRecipient, subscriptionData, '/views/subscriptionAdmin.ejs', { replyTo: subscriptionData.email })
+                : Promise.reject(new Error('no admin email is set (Settings -> Email Configuration -> Notifications go to)')),
+            sendEmail('Welcome to Easy Jackets: you\'re on the list', subscriptionData.email, subscriptionData, '/views/subscriptionCustomer.ejs'),
+        ]);
+        const outcome = (r) => (r.status === 'fulfilled' ? (r.value?.skipped ? 'skipped (sending is off)' : 'sent') : 'failed');
+        if (adminEmail.status === 'rejected') console.error('Newsletter admin email failed:', adminEmail.reason?.message || adminEmail.reason);
+        if (customerEmail.status === 'rejected') console.error('Newsletter welcome email failed:', customerEmail.reason?.message || customerEmail.reason);
+        console.log(`✉️  Newsletter signup ${subscriptionData.email}: team email ${outcome(adminEmail)}, welcome email ${outcome(customerEmail)}`);
 
-        // Send welcome email to subscriber (non-blocking)
-        sendEmail(
-            'Welcome to Easy Jackets Newsletter!',
-            email.trim(),
-            subscriptionData,
-            '/views/subscriptionCustomer.ejs'
-        ).catch(err => console.error('Customer welcome email failure:', err));
-
-        res.status(200).json({ success: true, message: 'Successfully subscribed to newsletter!' });
+        res.status(200).json({
+            success: true,
+            message: 'Successfully subscribed to newsletter!',
+            emailStatus: { admin: outcome(adminEmail), subscriber: outcome(customerEmail) },
+        });
     } catch (error) {
         console.error('Error in newsletter subscription:', error);
         res.status(500).json({ success: false, message: 'Failed to subscribe. Please try again.' });

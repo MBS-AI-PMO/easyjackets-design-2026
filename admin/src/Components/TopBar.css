@@ -1,0 +1,9 @@
+/* The storefront's display font, so the top bar preview looks exactly like the site's bar
+   (file copied from frontend/public/fonts into src/assets/fonts). */
+@font-face {
+  font-family: 'Big Shoulders Display';
+  src: url('../assets/fonts/big-shoulders-display-700-latin.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
