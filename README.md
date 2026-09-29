@@ -10,8 +10,10 @@ its backend are separate and untouched by this repo.
 | `admin/` | Admin panel (CRA) on the new backend and storefront | `cd admin && npm install && npm start` → http://localhost:3000 |
 | `custom-jacket/` | The jacket builder / design lab (CRA), copied from the live `custom-jacket` and wired to this backend and storefront | `cd custom-jacket && npm install && npm start` → http://localhost:3001 |
 
-Each folder has its own Dockerfile and `.env.example`. Coolify deploys each as
-an app from this repo: Base Directory `/frontend` (port 80), `/backend` (port
+Each folder has its own Dockerfile (its build arguments and defaults are listed
+there). No env file of any kind is kept in the repo: settings and secrets are
+entered in Coolify, and each developer keeps their own local `.env`. Coolify
+deploys each folder as an app from this repo: Base Directory `/frontend` (port 80), `/backend` (port
 8080), `/admin` (port 80) and `/custom-jacket` (port 80, domain
 `custom.145.223.75.247.sslip.io`, the builder address the storefront, admin and
 backend use by default).

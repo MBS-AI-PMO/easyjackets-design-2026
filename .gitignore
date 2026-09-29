@@ -1,15 +1,14 @@
 # repo-level; each app also has its own .gitignore
 node_modules/
 dist/
+# no env file of any kind goes to the repo (secrets and templates alike): settings live in Coolify
 .env
 .env.*
-!.env.example
 backend/uploads/
 backend/reports/
 .DS_Store
 *.log
 __pycache__/
 *.pyc
-# the jacket builder: CRA output, and its non-secret dev port file is committed
+# the jacket builder's CRA output
 custom-jacket/build/
-!custom-jacket/.env.development
