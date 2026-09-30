@@ -21,7 +21,17 @@ const useLocalBackend =
 const localBackendUrl = process.env.REACT_APP_LOCAL_API_URL || 'http://localhost:8080/api/v1';
 const deployedBackendUrl = process.env.REACT_APP_API_URL || NEW_API_URL;
 
-const BASE_URL = trimTrailingSlash(useLocalBackend ? localBackendUrl : deployedBackendUrl);
+// The API lives under /api/v1. A setting given as the backend's address alone, or ending in /api,
+// still works (a build with REACT_APP_API_URL=https://host/api sent every request to /api/... and
+// got 404s for all of them).
+const apiBase = (value) => {
+  const v = trimTrailingSlash(value);
+  if (/\/api\/v\d+$/i.test(v)) return v;
+  if (/\/api$/i.test(v)) return `${v}/v1`;
+  return `${v}/api/v1`;
+};
+
+const BASE_URL = apiBase(useLocalBackend ? localBackendUrl : deployedBackendUrl);
 export default BASE_URL;
 
 /** The backend's own address (BASE_URL without /api/v1): its /uploads serve every image. */
