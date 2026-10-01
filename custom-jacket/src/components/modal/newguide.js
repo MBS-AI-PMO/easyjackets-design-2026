@@ -3,10 +3,11 @@ import Modal from 'react-modal';
 
 import { MODAL_ANIM_MS } from '../../config/modalAnimation';
 
-import identical from '../../assets/images/identical.webp';
+import TeamArt from './teamArt';
 
+// "+" in the navbar: explains team (identical) jackets before adding one. Styled in
+// css/builder-dialogs.scss (the storefront look).
 const NewGuide = ({ modal, closeGuideModal, proceedAfterGuide }) => {
-  const [cookie, setCookie] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -40,39 +41,34 @@ const NewGuide = ({ modal, closeGuideModal, proceedAfterGuide }) => {
       ariaHideApp={false}
     >
       <header className="cjd-modal-header">
-        <h4>
-          Create Team (<span style={{ color: 'Tomato' }}>Identical</span>)
-          Jackets
-        </h4>
-        <div className="cjd-modal-close" onClick={closeGuideModal}>
-          {' '}
-          ×{' '}
+        <div>
+          <div className="cjd-dialog-eyebrow">Team order</div>
+          <h4>
+            Create team <span>identical</span> jackets
+          </h4>
         </div>
+        <button type="button" className="cjd-modal-close" aria-label="Close" onClick={closeGuideModal}>
+          ×
+        </button>
       </header>
 
-      <div className={`cjd-modal-content guides ${isMobile ? 'cjd-modal-content mobile':''}`}>   
-        <img src={identical} alt="identical" width={`${isMobile ? '300':'400'}`} />
-        <label htmlFor="dontshow" className="once-cookie">
-          <input
-            type="checkbox"
-            name="dontshow"
-            id="dontshow"
-            onChange={(e) => setCookie(e.target.checked)}
-          />
-          Don't show this again
-        </label>
+      <div className={`cjd-modal-content guides ${isMobile ? 'cjd-modal-content mobile' : ''}`}>
+        <p className="cjd-dialog-text">
+          The new jacket starts as a copy of this one. Change the name and number on each, so every
+          teammate gets the same design with their own details.
+        </p>
+        <div className="cjd-dialog-figure">
+          <TeamArt />
+        </div>
       </div>
 
       <div className="cjd-modal-footer">
-        <div className={`cjd-btn cjd-btn-secondary ${isMobile ? 'cjd-btn-modal':''}`} onClick={closeGuideModal}>
+        <button type="button" className="cjd-dialog-btn cjd-dialog-btn--line" onClick={closeGuideModal}>
           Cancel
-        </div>
-        <div
-          className= {`cjd-btn cjd-btn-primary cjd-btn-textcenter ${isMobile ? 'cjd-btn-modal':''}`}
-          onClick={() => proceedAfterGuide(cookie)}
-        >
+        </button>
+        <button type="button" className="cjd-dialog-btn cjd-dialog-btn--ink" onClick={proceedAfterGuide}>
           Proceed
-        </div>
+        </button>
       </div>
     </Modal>
   );

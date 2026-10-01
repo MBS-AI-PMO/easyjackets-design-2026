@@ -12,7 +12,7 @@ import randomString from 'randomstring'
 import formidable from "formidable";
 import uploadToS3 from "../helpers/fileUpload.js";
 import addWatermark from "../helpers/watermark.js";
-import { queueProductCutout } from "../helpers/backgroundRemoval.js";
+import { backgroundRemovalStatus, queueProductCutout } from "../helpers/backgroundRemoval.js";
 import gateway from "../config/braintree.js";
 
 const escapeRegex = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -160,6 +160,15 @@ const buildProductMetaDescription = (product) => {
   );
 };
 
+// state of the background remover, for the admin's product form
+export const backgroundRemovalStatusController = async (req, res) => {
+  try {
+    res.send({ success: true, ...(await backgroundRemovalStatus()) });
+  } catch (error) {
+    res.status(500).send({ success: false, message: error.message });
+  }
+};
+
 export const createDraftProduct = async (req, res) => {
   try {
     const createProduct = await productModel.create({
@@ -196,13 +205,14 @@ export const createProductController = async (req, res) => {
     try {
       // Handle front image
       let data;
+      const cutOut = fields.removeBackground?.[0] !== 'false'; // admin's "Remove background" switch
       if (files.frontImage || files.otherImages) {
         let frontImageUrl = ''
         if (files.frontImage) {
           const buffer = await addWatermark(files.frontImage[0])
           const frontImageFile = files.frontImage[0];
           const url = await uploadToS3(frontImageFile, null, buffer)
-          queueProductCutout(url) // background removed afterwards; the file keeps its URL
+          if (cutOut) queueProductCutout(url) // background removed afterwards; the file keeps its URL
           frontImageUrl = `${process.env.AWS_FILE_PATH}${url}`;
         }
         // Handle additional images
@@ -214,7 +224,7 @@ export const createProductController = async (req, res) => {
           for (const file of additionalImageFiles) {
             const buffer = await addWatermark(file)
             const url = await uploadToS3(file, null, buffer)
-            queueProductCutout(url)
+            if (cutOut) queueProductCutout(url)
             additionalImageUrls.push(process.env.AWS_FILE_PATH + url);
           }
         }
@@ -542,13 +552,14 @@ export const updateProductController = async (req, res) => {
     let data = {}
     try {
       // Handle front image
+      const cutOut = fields.removeBackground?.[0] !== 'false'; // admin's "Remove background" switch
       if (files.frontImage || files.otherImages) {
         let frontImageUrl = ''
         if (files.frontImage) {
           const frontImageFile = files.frontImage[0];
           const buffer = await addWatermark(files.frontImage[0])
           const url = await uploadToS3(frontImageFile, null, buffer)
-          queueProductCutout(url) // background removed afterwards; the file keeps its URL
+          if (cutOut) queueProductCutout(url) // background removed afterwards; the file keeps its URL
           frontImageUrl = `${process.env.AWS_FILE_PATH}${url}`;
         }
         // Handle additional images
@@ -559,7 +570,7 @@ export const updateProductController = async (req, res) => {
           for (const file of additionalImageFiles) {
             const buffer = await addWatermark(file)
             const url = await uploadToS3(file, null, buffer)
-            queueProductCutout(url)
+            if (cutOut) queueProductCutout(url)
 
             additionalImageUrls.push(process.env.AWS_FILE_PATH + url);
           }

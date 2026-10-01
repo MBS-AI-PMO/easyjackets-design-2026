@@ -1,0 +1,25 @@
+/* The stats strip under the navbar, in the storefront's look: Big Shoulders figures with a gold
+   suffix, small uppercase labels, cream with hairline dividers. */
+.cjd-stats-section { width: 100%; background: var(--cream); border-bottom: 1px solid var(--cream-2); color: var(--ink); }
+.cjd-stats-container { max-width: 1280px; margin: 0 auto; padding: 12px clamp(16px, 3vw, 40px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); box-sizing: border-box; }
+.cjd-stat-item { display: flex; align-items: center; justify-content: center; gap: 14px; min-width: 0; padding: 2px 16px; }
+.cjd-stat-item + .cjd-stat-item { border-left: 1px solid var(--cream-2); }
+.cjd-stat-number { flex: none; font-family: var(--display); font-weight: 900; font-size: 40px; line-height: 1; letter-spacing: 0.01em; }
+.cjd-stat-accent { color: var(--gold); }
+.cjd-stat-text { min-width: 0; }
+.cjd-stat-label { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.3; }
+.cjd-stat-subtitle { margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--muted); }
+
+/* tablets: figure above the words */
+@media (max-width: 900px) {
+  .cjd-stat-item { flex-direction: column; gap: 4px; text-align: center; padding: 0 10px; }
+  .cjd-stat-number { font-size: 32px; }
+}
+/* phones: figure and label only */
+@media (max-width: 680px) {
+  .cjd-stats-container { padding: 10px 8px; }
+  .cjd-stat-item { padding: 0 6px; }
+  .cjd-stat-number { font-size: 28px; }
+  .cjd-stat-label { font-size: 10px; letter-spacing: 0.1em; }
+  .cjd-stat-subtitle { display: none; }
+}

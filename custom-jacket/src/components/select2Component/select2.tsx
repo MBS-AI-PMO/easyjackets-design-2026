@@ -1,7 +1,6 @@
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import * as common from "select2-component";
 export * from "select2-component";
 
@@ -41,6 +40,14 @@ export class Select2 extends React.PureComponent<
 
   private searchInputElement!: HTMLElement;
   private resultsElement!: HTMLElement;
+  // the root element (was found with ReactDOM.findDOMNode, deprecated)
+  private rootRef = React.createRef<HTMLDivElement>();
+
+  constructor(props: any) {
+    super(props);
+    // the first option and hover from the starting value (was UNSAFE_componentWillMount)
+    this.computeOptionAndHoveringValue();
+  }
 
   private get searchText() {
     return this.innerSearchText;
@@ -74,18 +81,16 @@ export class Select2 extends React.PureComponent<
     return common.getSearchStyle(this.isSearchboxHidden);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps: {
-    value?: common.Select2UpdateValue;
-  }) {
-    if (nextProps.value !== this.value) {
-      this.value = nextProps.value;
-      this.setState({ value: nextProps.value }, () => {
-        this.updateOptionAndHoveringValue();
-      });
+  // a new value from the parent (was UNSAFE_componentWillReceiveProps)
+  componentDidUpdate() {
+    if (this.props.value !== this.value) {
+      this.value = this.props.value;
+      this.updateOptionAndHoveringValue();
     }
   }
 
-  private updateOptionAndHoveringValue() {
+  // sets the selected option and the hovered value from this.value, without re-rendering
+  private computeOptionAndHoveringValue() {
     const option = common.getOptionsByValue(
       this.props.data,
       this.value,
@@ -93,20 +98,19 @@ export class Select2 extends React.PureComponent<
     );
     if (option !== null) {
       this.option = option;
-      this.setState({ option: this.option });
     }
     if (!Array.isArray(option)) {
       this.hoveringValue = this.value as string | undefined;
     }
-    this.setState({ hoveringValue: this.hoveringValue });
   }
 
-  UNSAFE_componentWillMount() {
-    this.updateOptionAndHoveringValue();
+  private updateOptionAndHoveringValue() {
+    this.computeOptionAndHoveringValue();
+    this.setState({ option: this.option, hoveringValue: this.hoveringValue });
   }
 
   componentDidMount() {
-    const theElement = ReactDOM.findDOMNode(this as any) as HTMLElement;
+    const theElement = this.rootRef.current as HTMLElement;
     this.searchInputElement = theElement.childNodes[1].childNodes[0]
       .childNodes[0].childNodes[0] as HTMLElement;
     this.resultsElement = theElement.childNodes[1].childNodes[0].childNodes[1]
@@ -124,7 +128,7 @@ export class Select2 extends React.PureComponent<
     const results = this.renderResult();
     const selection = this.renderSelection();
     return (
-      <div className={this.containerStyle}>
+      <div className={this.containerStyle} ref={this.rootRef}>
         <div className="selection" onClick={() => this.toggleOpenAndClose()}>
           <div className={this.selectionStyle} role="combobox">
             {selection}
@@ -155,19 +159,19 @@ export class Select2 extends React.PureComponent<
               )}
             </div>
 
+            {/* the list stays rendered while closed so it can fade out; the closed dropdown is
+                hidden by css/builder-panel.scss */}
             <div className="select2-results">
-              {this.isOpen && (
-                <ul
-                  className="select2-results__options"
-                  role="tree"
-                  tabIndex={-1}
-                  onKeyDown={(e) => this.keyDown(e)}
-                  onFocus={() => this.cancelFocusoutTimer()}
-                  onBlur={() => this.focusout()}
-                >
-                  {results}
-                </ul>
-              )}
+              <ul
+                className="select2-results__options"
+                role="tree"
+                tabIndex={-1}
+                onKeyDown={(e) => this.keyDown(e)}
+                onFocus={() => this.cancelFocusoutTimer()}
+                onBlur={() => this.focusout()}
+              >
+                {results}
+              </ul>
             </div>
           </div>
         </div>

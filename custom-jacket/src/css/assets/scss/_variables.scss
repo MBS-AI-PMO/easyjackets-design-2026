@@ -36,8 +36,9 @@ $gray-stroke: #C4703A;
 $bg: #FAF7F2; // Warm paper background
 $header: #141210; // Ink — dark header
 $header-height: 60px;
-// Total chrome above cjd-main: topnav(38) + header(60) + stats(52)
-$chrome-height: 150px;
+// Total chrome above cjd-main: the storefront navbar + header + stats, measured in App.js (the
+// navbar's height follows the logo size set in the admin); the fallback is a desktop's
+$chrome-height: var(--cjd-chrome-h, 231px);
 $bc: 1px solid $grey;
 
 // Responsive Breakpoints

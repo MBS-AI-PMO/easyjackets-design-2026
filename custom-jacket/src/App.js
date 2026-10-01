@@ -1,6 +1,5 @@
 import React from "react";
 import { connect, useStore } from "react-redux";
-import WebFont from "webfontloader";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { svgAsPngUri } from 'save-svg-as-png';
@@ -25,11 +24,12 @@ import {
 } from "./store/actions";
 
 import Header from "./components/Header";
-import TopNavigation from "./components/TopNavigation";
 import StatsSection from "./components/StatsSection";
 import CustomJacketFaqs from "./components/CustomJacketFaqs";
 import CustomFooter from "./components/CustomFooter";
 import MaintenanceGate from "./components/MaintenanceGate";
+import Collapse from "./components/collapse";
+import Presence from "./components/presence";
 
 import Loader from "./components/loader";
 import CjdAlert from "./components/alert";
@@ -66,25 +66,12 @@ import HamburgerIcon from "./components/icons/hamburgerIcon";
 import JacketIcon from "./components/icons/jacketIcon";
 
 import "./css/App.scss";
-import { faCoffee, faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
-
-WebFont.load({
-  google: {
-    families: [
-      "Source+Sans+Pro",
-      "Courgette",
-      "Cutive",
-      "Graduate",
-      "Lobster+Two",
-      "Merienda+One",
-      "Montserrat",
-      "Open+Sans",
-      "Oswald",
-      "Pinyon+Script",
-      "Satisfy",
-    ],
-  },
-});
+import "./css/site.css";
+import "./css/builder-panel.scss"; // the left panel in the storefront look: after App.scss on purpose
+import "./css/builder-toolbar.scss"; // the toolbar over the jacket, likewise
+import "./css/builder-dialogs.scss"; // the dialogs, likewise
+import "./css/builder-design-modal.scss"; // the add-design dialog, likewise
+import { faCoffee, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 const App = ({
   globals,
@@ -154,6 +141,24 @@ const App = ({
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  // The workspace (.cjd-main) fills the rest of the screen: its height is the screen minus what sits
+  // above it (site navbar, jacket bar, stats), measured here because the navbar's height follows the
+  // logo size set in the admin (css/assets/scss/_variables.scss $chrome-height reads this).
+  React.useEffect(() => {
+    if (globals.loading) return undefined;
+    const main = document.querySelector(".cjd-main");
+    if (!main) return undefined;
+    const publish = () => {
+      const top = main.getBoundingClientRect().top + window.scrollY;
+      document.documentElement.style.setProperty("--cjd-chrome-h", `${Math.round(top)}px`);
+    };
+    publish();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(publish);
+    for (let el = main.previousElementSibling; el; el = el.previousElementSibling) observer.observe(el);
+    return () => observer.disconnect();
+  }, [globals.loading]);
 
   if (globals.loading) {
     return (
@@ -431,105 +436,108 @@ const App = ({
   return (
     <MaintenanceGate>
     <>
-      <TopNavigation />
       <Header />
       <StatsSection />
       <div className="cjd-main">
         <div
-          className="panel-desktop"
+          className="ez-site panel-desktop"
           style={{ width: "40%" }}
         >
-          <div
-            className={
-              currentTab === 1 ? "control-box activeBox" : "control-box"
-            }
-            onClick={() => onClickTab(1)}
-          >
-            <span className="step-title">
-              <strong>Materials</strong> Style
-            </span>
-            <FontAwesomeIcon icon={currentTab === 1 ? faMinus : faPlus} />
-          </div>
-          {isActive && currentTab === 1 && (
-            <div className="control-box-control">
-              <Materials />
+          {/* the sections scroll; Save and Share stay below, outside the scroll */}
+          <div className="cjd-panel-scroll">
+            <div
+              className={
+                currentTab === 1 ? "control-box activeBox" : "control-box"
+              }
+              onClick={() => onClickTab(1)}
+            >
+              <span className="step-title">
+                <strong>Materials</strong> Style
+              </span>
+              <FontAwesomeIcon icon={faPlus} />
             </div>
-          )}
-
-          {globals.catName === "Hoodies" ||
-            globals.catName === "Coach Jackets" ||
-            globals.productId === "5995" ||
-            globals.productId === "6046" ? (
-            <></>
-          ) : (
-            <>
-              <div
-                className={
-                  currentTab === 2 ? "control-box activeBox" : "control-box"
-                }
-                onClick={() => onClickTab(2)}
-              >
-                <span className="step-title">
-                  <strong>Advance</strong> Options
-                </span>
-                <FontAwesomeIcon icon={currentTab === 2 ? faMinus : faPlus} />
+            <Collapse open={isActive && currentTab === 1}>
+              <div className="control-box-control">
+                <Materials />
               </div>
-              {isActive && currentTab === 2 && (
-                <div className="control-box-control">
-                  <Advance />
-                </div>
-              )}
-            </>
-          )}
+            </Collapse>
 
-          <div
-            className={
-              currentTab === 3 ? "control-box activeBox" : "control-box"
-            }
-            onClick={() => onClickTab(3)}
-          >
-            <span className="step-title">
-              <strong>Add</strong> Colors
-            </span>
-            <FontAwesomeIcon icon={currentTab === 3 ? faMinus : faPlus} />
-          </div>
-          {isActive && currentTab === 3 && (
-            <div className="control-box-control">
-              <Colors />
+            {globals.catName === "Hoodies" ||
+              globals.catName === "Coach Jackets" ||
+              globals.productId === "5995" ||
+              globals.productId === "6046" ? (
+              <></>
+            ) : (
+              <>
+                <div
+                  className={
+                    currentTab === 2 ? "control-box activeBox" : "control-box"
+                  }
+                  onClick={() => onClickTab(2)}
+                >
+                  <span className="step-title">
+                    <strong>Advance</strong> Options
+                  </span>
+                  <FontAwesomeIcon icon={faPlus} />
+                </div>
+                <Collapse open={isActive && currentTab === 2}>
+                  <div className="control-box-control">
+                    <Advance />
+                  </div>
+                </Collapse>
+              </>
+            )}
+
+            <div
+              className={
+                currentTab === 3 ? "control-box activeBox" : "control-box"
+              }
+              onClick={() => onClickTab(3)}
+            >
+              <span className="step-title">
+                <strong>Add</strong> Colors
+              </span>
+              <FontAwesomeIcon icon={faPlus} />
             </div>
-          )}
-          <div
-            className={
-              currentTab === 4 ? "control-box activeBox" : "control-box"
-            }
-            onClick={() => onClickTab(4)}
-          >
-            <span className="step-title">
-              <strong>Add</strong> Design
-            </span>
-            <FontAwesomeIcon icon={currentTab === 4 ? faMinus : faPlus} />
-          </div>
-          {isActive && currentTab === 4 && (
-            <div className="control-box-control">
-              <Designs />
+            <Collapse open={isActive && currentTab === 3}>
+              <div className="control-box-control">
+                <Colors />
+              </div>
+            </Collapse>
+            <div
+              className={
+                currentTab === 4 ? "control-box activeBox" : "control-box"
+              }
+              onClick={() => onClickTab(4)}
+            >
+              <span className="step-title">
+                <strong>Add</strong> Design
+              </span>
+              <FontAwesomeIcon icon={faPlus} />
             </div>
-          )}
-          <div
-            className={
-              currentTab === 5 ? "control-box activeBox" : "control-box"
-            }
-            onClick={() => onClickTab(5)}
-          >
-            <span className="step-title">
-              <strong>Select</strong> Size
-            </span>
-            <FontAwesomeIcon icon={currentTab === 5 ? faMinus : faPlus} />
-          </div>
-          {isActive && currentTab === 5 && (
-            <div className="control-box-control">
-              <Sizes />
+            <Collapse open={isActive && currentTab === 4}>
+              <div className="control-box-control">
+                <Designs />
+              </div>
+            </Collapse>
+            <div
+              className={
+                currentTab === 5 ? "control-box activeBox" : "control-box"
+              }
+              onClick={() => onClickTab(5)}
+            >
+              <span className="step-title">
+                <strong>Select</strong> Size
+              </span>
+              <FontAwesomeIcon icon={faPlus} />
             </div>
-          )}
+            <Collapse open={isActive && currentTab === 5}>
+              <div className="control-box-control">
+                <Sizes />
+              </div>
+            </Collapse>
+          </div>
+
           <div className="cjd-panel-actions">
             <button className="cjd-btn cjd-btn-cart" onClick={handleSaveAction}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
@@ -543,18 +551,26 @@ const App = ({
         </div>
 
         <div className={`cjd-content-wrapper${canvasDark ? ' canvas-dark' : ''}`}>
-          <div className="cjd-jacket-guides">
+          <div className="ez-site cjd-jacket-guides">
             <div className="cjd-guides-pill">
               <span className="cjd-guides-label">Guides</span>
               <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(globals.guides)}
+                aria-label="Guides"
                 className={`cjd-guides-toggle${globals.guides ? ' on' : ''}`}
                 onClick={() => updateGlobals("guides", !globals.guides)}
               >
-                {globals.guides ? "ON" : "OFF"}
+                <span className="cjd-switch-knob" aria-hidden="true" />
+                <span className="cjd-switch-text">{globals.guides ? "On" : "Off"}</span>
               </button>
             </div>
             <div className="cjd-guides-pill" style={{ padding: "3px" }}>
               <button
+                type="button"
+                aria-pressed={canvasDark}
+                aria-label="Dark canvas"
                 className={`cjd-canvas-bg-toggle${canvasDark ? ' on' : ''}`}
                 onClick={() => setCanvasDark(d => !d)}
                 title={canvasDark ? "Light canvas" : "Dark canvas"}
@@ -574,9 +590,19 @@ const App = ({
               </button>
             </div>
 
-            {/* Mobile-only Action Buttons */}
+            {/* Phones: Save and Share live here (the buttons under the panel are hidden there, css/builder-panel.scss) */}
             {isMobile && (
               <>
+                <div
+                  className="cjd-guides-pill cjd-action-pill cjd-action-pill--primary"
+                  role="button"
+                  tabIndex={0}
+                  onClick={handleSaveAction}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSaveAction(); } }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+                  <span className="cjd-guides-label">Save</span>
+                </div>
                 <div className="cjd-guides-pill cjd-action-pill" onClick={() => setShowShareModal(true)}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
                   <span className="cjd-guides-label">Share</span>
@@ -602,42 +628,47 @@ const App = ({
           )}
         </div>
 
-        <div className="cjd-jacket-nav outer">
-          <div
-            className={`cjd-nav-item ${globals.pose === "front" && "cjd-active-nav"
-              }`}
+        {/* the four views of the jacket (css/builder-toolbar.scss) */}
+        <div className="ez-site cjd-jacket-nav outer" role="group" aria-label="Jacket view">
+          <button
+            type="button"
+            className={`cjd-nav-item${globals.pose === "front" ? " cjd-active-nav" : ""}`}
+            aria-pressed={globals.pose === "front"}
             onClick={() => changePose("front")}
           >
-            <img src={ViewFront} alt="Front View" />
-          </div>
-          <div
-            className={`cjd-nav-item ${globals.pose === "back" && "cjd-active-nav"
-              }`}
+            <img src={ViewFront} alt="" />
+            <span className="cjd-nav-label">Front</span>
+          </button>
+          <button
+            type="button"
+            className={`cjd-nav-item${globals.pose === "back" ? " cjd-active-nav" : ""}`}
+            aria-pressed={globals.pose === "back"}
             onClick={() => changePose("back")}
           >
-            <img src={ViewBack} alt="Front Back" />
-          </div>
-          <div
-            className={`cjd-nav-item ${globals.pose === "left" && "cjd-active-nav"
-              }`}
+            <img src={ViewBack} alt="" />
+            <span className="cjd-nav-label">Back</span>
+          </button>
+          <button
+            type="button"
+            className={`cjd-nav-item${globals.pose === "left" ? " cjd-active-nav" : ""}`}
+            aria-pressed={globals.pose === "left"}
             onClick={() => changePose("left")}
           >
-            <img src={ViewSide} alt="Left Side" />
-          </div>
-          <div
-            className={`cjd-nav-item ${globals.pose === "right" && "cjd-active-nav"
-              }`}
+            <img src={ViewSide} alt="" />
+            <span className="cjd-nav-label">Left</span>
+          </button>
+          <button
+            type="button"
+            className={`cjd-nav-item is-mirrored${globals.pose === "right" ? " cjd-active-nav" : ""}`}
+            aria-pressed={globals.pose === "right"}
             onClick={() => changePose("right")}
           >
-            <img
-              src={ViewSide}
-              alt="Right Side"
-              style={{ transform: "scaleX(-1)" }}
-            />
-          </div>
+            <img src={ViewSide} alt="" />
+            <span className="cjd-nav-label">Right</span>
+          </button>
         </div>
 
-        <div className="panel-mbl">
+        <div className="ez-site panel-mbl">
           <div
             className={
               currentTab === 1 ? "control-box activeBox" : "control-box"
@@ -647,13 +678,13 @@ const App = ({
             <span className="step-title">
               <strong>Materials</strong> Style
             </span>
-            <FontAwesomeIcon icon={currentTab === 1 ? faMinus : faPlus} />
+            <FontAwesomeIcon icon={faPlus} />
           </div>
-          {isActive && currentTab === 1 && (
+          <Collapse open={isActive && currentTab === 1}>
             <div className="control-box-control">
               <Materials />
             </div>
-          )}
+          </Collapse>
 
           {globals.catName === "Hoodies" ||
             globals.catName === "Coach Jackets" ||
@@ -671,13 +702,13 @@ const App = ({
                 <span className="step-title">
                   <strong>Advance</strong> Options
                 </span>
-                <FontAwesomeIcon icon={currentTab === 2 ? faMinus : faPlus} />
+                <FontAwesomeIcon icon={faPlus} />
               </div>
-              {isActive && currentTab === 2 && (
+              <Collapse open={isActive && currentTab === 2}>
                 <div className="control-box-control">
                   <Advance />
                 </div>
-              )}
+              </Collapse>
             </>
           )}
 
@@ -690,13 +721,13 @@ const App = ({
             <span className="step-title">
               <strong>Add</strong> Colors
             </span>
-            <FontAwesomeIcon icon={currentTab === 3 ? faMinus : faPlus} />
+            <FontAwesomeIcon icon={faPlus} />
           </div>
-          {isActive && currentTab === 3 && (
+          <Collapse open={isActive && currentTab === 3}>
             <div className="control-box-control">
               <Colors />
             </div>
-          )}
+          </Collapse>
 
           <div
             className={
@@ -707,13 +738,13 @@ const App = ({
             <span className="step-title">
               <strong>Add</strong> Design
             </span>
-            <FontAwesomeIcon icon={currentTab === 4 ? faMinus : faPlus} />
+            <FontAwesomeIcon icon={faPlus} />
           </div>
-          {isActive && currentTab === 4 && (
+          <Collapse open={isActive && currentTab === 4}>
             <div className="control-box-control">
               <Designs />
             </div>
-          )}
+          </Collapse>
 
           <div
             className={
@@ -725,13 +756,13 @@ const App = ({
               <strong>Select</strong> Size
             </span>
             {currentTab === 5}
-            <FontAwesomeIcon icon={currentTab === 5 ? faMinus : faPlus} />
+            <FontAwesomeIcon icon={faPlus} />
           </div>
-          {isActive && currentTab === 5 && (
+          <Collapse open={isActive && currentTab === 5}>
             <div className="control-box-control">
               <Sizes />
             </div>
-          )}
+          </Collapse>
 
           <div className="cjd-panel-actions">
             <button className="cjd-btn cjd-btn-cart" onClick={handleSaveAction}>
@@ -769,12 +800,15 @@ const App = ({
       />
 
       {/* Share Modal */}
-      {showShareModal && (
+      <Presence open={showShareModal}>
         <div className="cjd-share-modal" onClick={() => setShowShareModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Share Your Creation</h3>
-              <button className="close-btn" onClick={() => setShowShareModal(false)}>
+              <div>
+                <div className="cjd-dialog-eyebrow">Share</div>
+                <h3>Share Your Creation</h3>
+              </div>
+              <button type="button" className="close-btn" aria-label="Close" onClick={() => setShowShareModal(false)}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             </div>
@@ -808,7 +842,7 @@ const App = ({
             </div>
           </div>
         </div>
-      )}
+      </Presence>
     </>
     </MaintenanceGate>
   );

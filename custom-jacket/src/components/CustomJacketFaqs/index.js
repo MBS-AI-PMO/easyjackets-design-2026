@@ -1,138 +1,91 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import axiosInstance from "../../utils/axiosConfig";
-import "./styles.scss";
+import { hasMarkup, safeHtml, stripHtml } from "../../utils/safeHtml";
+import "../../css/site.css";
+import "./styles.css";
 
-const HAS_MARKUP = /<\/?[a-z][^>]*>/i;
+// The builder's FAQs from the admin's Storefront FAQs screen (page "jacket-builder"), shown with
+// the storefront's FAQ block (frontend/src/components/PageFaqs.jsx + Faq.jsx): same layout, same
+// accordion, same FAQPage structured data.
+const PAGE_KEY = "jacket-builder";
 
-/**
- * FAQ answers are written in the admin's rich text editor, so they arrive as
- * HTML — a paragraph, sometimes with a link or a list. Answers written before
- * that editor existed are plain text and are rendered as text.
- *
- * A <div> rather than a <p>, because a paragraph cannot legally hold the lists
- * and headings the editor produces. The storefront app has the same component
- * in src/components/FaqAnswer.jsx; this builder ships separately and cannot
- * import from it.
- */
-const FaqAnswer = ({ answer }) => {
-  const value = String(answer || "");
-  if (!value.trim()) return null;
+// shown only when the API cannot be reached
+const fallbackFaqs = [
+  { q: "How do I save my custom jacket design?", a: "Use the Save button in the designer before starting a new jacket. Your saved design keeps the selected style, materials, colors, size, and artwork choices ready for review." },
+  { q: "Can I choose different materials for the body and sleeves?", a: "Yes. The custom jacket designer lets you choose the jacket body material and sleeve material separately, including melton wool and leather options where available." },
+  { q: "What size should I select for my jacket?", a: "Pick the size that best matches your usual jacket fit. If you are between sizes or want extra layering room, choose the next size up." },
+  { q: "Can I share my design before ordering?", a: "Yes. Use the Share button to send your current jacket configuration by email so you or your team can review the look before checkout." },
+  { q: "Is my jacket ready to order after customization?", a: "Once your materials, colors, designs, and size are selected, save the jacket and continue to cart. You can review the full custom jacket details before placing the order." },
+];
 
-  return HAS_MARKUP.test(value) ? (
-    <div className="faq-answer-body" dangerouslySetInnerHTML={{ __html: value }} />
-  ) : (
-    <div className="faq-answer-body">{value}</div>
+const faqSchema = (items) => {
+  const entities = items
+    .filter((f) => f.q && stripHtml(String(f.a || "")))
+    .map((f) => ({ "@type": "Question", name: stripHtml(f.q), acceptedAnswer: { "@type": "Answer", text: stripHtml(String(f.a)) } }));
+  return entities.length ? { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: entities } : null;
+};
+
+/** An accordion row that opens and closes smoothly; answers from the rich-text editor render as (sanitised) HTML. */
+const FaqItem = ({ q, a, points }) => {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  const body = hasMarkup(a)
+    ? <div className="ez-faq-rich" dangerouslySetInnerHTML={{ __html: safeHtml(a) }} />
+    : <p>{a}</p>;
+  return (
+    <div className={`ez-faq${open ? " is-open" : ""}`}>
+      <button type="button" className="ez-faq-q" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)}>
+        <span>{q}</span>
+        <span className="faq-plus" aria-hidden="true">+</span>
+      </button>
+      <div id={id} className="ez-faq-a" role="region">
+        <div className="ez-faq-inner">
+          {body}
+          {points?.length ? <ul className="ez-faq-points">{points.map((p) => <li key={p}>{p}</li>)}</ul> : null}
+        </div>
+      </div>
+    </div>
   );
 };
 
-const fallbackFaqs = [
-  {
-    question: "How do I save my custom jacket design?",
-    answer:
-      "Use the Save button in the designer before starting a new jacket. Your saved design keeps the selected style, materials, colors, size, and artwork choices ready for review.",
-  },
-  {
-    question: "Can I choose different materials for the body and sleeves?",
-    answer:
-      "Yes. The custom jacket designer lets you choose the jacket body material and sleeve material separately, including melton wool and leather options where available.",
-  },
-  {
-    question: "What size should I select for my jacket?",
-    answer:
-      "Pick the size that best matches your usual jacket fit. If you are between sizes or want extra layering room, choose the next size up.",
-  },
-  {
-    question: "Can I share my design before ordering?",
-    answer:
-      "Yes. Use the Share button to send your current jacket configuration by email so you or your team can review the look before checkout.",
-  },
-  {
-    question: "Is my jacket ready to order after customization?",
-    answer:
-      "Once your materials, colors, designs, and size are selected, save the jacket and continue to cart. You can review the full custom jacket details before placing the order.",
-  },
-];
-
 const CustomJacketFaqs = () => {
   const [faqs, setFaqs] = useState(null);
-  const [openFaqIndex, setOpenFaqIndex] = useState(0);
 
   useEffect(() => {
     let mounted = true;
-
-    const fetchFaqs = async () => {
-      try {
-        const res = await axiosInstance.get("/features/custom-jacket-faqs?limit=5");
-        const nextFaqs = Array.isArray(res.data?.faqs) ? res.data.faqs : [];
-        if (mounted) setFaqs(nextFaqs.slice(0, 5));
-      } catch (error) {
+    axiosInstance
+      .get("/features/page-faqs", { params: { pageKey: PAGE_KEY } })
+      .then((res) => {
+        const list = Array.isArray(res.data?.faqs) ? res.data.faqs : [];
+        if (mounted) setFaqs(list.map((f) => ({ id: f._id, q: f.question, a: f.answer || "", points: f.points || [] })));
+      })
+      .catch((error) => {
         console.error("Error fetching custom jacket FAQs:", error);
         if (mounted) setFaqs(fallbackFaqs);
-      }
-    };
-
-    fetchFaqs();
-
+      });
     return () => {
       mounted = false;
     };
   }, []);
 
-  if (!faqs) return null;
-  if (!faqs.length) return null;
+  // nothing while loading, nothing when the admin has no questions for the builder
+  if (!faqs?.length) return null;
+  const schema = faqSchema(faqs);
 
   return (
-    <section className="cjd-custom-faq-section">
-      <div className="ej-container">
-        <div className="cjd-custom-faq-heading">
-          <div className="ej-label">Questions</div>
-          <h2>
-            Frequently Asked <em>Questions</em>
-          </h2>
+    <section className="ez-site ez-builder-faqs" aria-labelledby="ez-builder-faqs-title">
+      <div className="ez-builder-faqs-grid">
+        <div>
+          <div className="ez-eyebrow">FAQ</div>
+          <h2 id="ez-builder-faqs-title" className="ez-builder-faqs-title">Good to know</h2>
+          <p className="ez-builder-faqs-intro">
+            Still stuck? Chat with us any time — we answer within the hour during business days.
+          </p>
         </div>
-
-        <div className="cjd-custom-faq-shell">
-          <div className="faq-editorial-wrapper">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaqIndex === index;
-              const key = faq._id || `${faq.question}-${index}`;
-
-              return (
-                <div
-                  key={key}
-                  className={`faq-editorial-item ${isOpen ? "is-active" : ""}`}
-                >
-                  <button
-                    className="cjd-custom-faq-button"
-                    type="button"
-                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                    aria-expanded={isOpen}
-                  >
-                    <span>{faq.question}</span>
-                    <div className="faq-toggle-icon" aria-hidden="true">
-                      <svg
-                        width="9"
-                        height="9"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
-                    </div>
-                  </button>
-                  <div className={`faq-answer ${isOpen ? "is-open" : ""}`}>
-                    <div className="faq-answer-inner">
-                      <FaqAnswer answer={faq.answer} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="ez-faq-list">
+          {schema ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} /> : null}
+          {faqs.map((f) => <FaqItem key={f.id || f.q} q={f.q} a={f.a} points={f.points} />)}
+          <div className="ez-faq-end" />
         </div>
       </div>
     </section>

@@ -890,57 +890,61 @@ const JacketRight = ({
           )}
 
           {designs["Right Sleeve"]?.letters && (
-            <g transform="translate(-163, 217)">
-              <text
-                x="0"
-                y="0"
-                fontFamily={designs["Right Sleeve"]?.letters.font}
-                fill="none"
-                fontSize={
-                  designs["Right Sleeve"]?.letters?.title?.length === 1
-                    ? 90
-                    : designs["Right Sleeve"]?.letters?.title?.length === 2
-                      ? 55
-                      : designs["Right Sleeve"]?.letters?.title?.length === 3
-                        ? 45
-                        : designs["Right Sleeve"]?.letters?.title?.length === 4
-                          ? 35
-                          : designs["Right Sleeve"]?.letters.size
-                }
-                textAnchor="middle"
-                dominantBaseline="middle"
-                strokeWidth="8"
-                stroke={designs["Right Sleeve"]?.letters.border}
-                style={{ paintOrder: "stroke fill" }}
-              >
-                {designs["Right Sleeve"]?.letters.title}
-              </text>
+            <>
+              {designs["Right Sleeve"]?.letters.type === "Type Your Own" && (
+                <g transform="translate(-163, 217)">
+                  <text
+                    x="0"
+                    y="0"
+                    fontFamily={designs["Right Sleeve"]?.letters.font}
+                    fill="none"
+                    fontSize={
+                      designs["Right Sleeve"]?.letters?.title?.length === 1
+                        ? 102
+                        : designs["Right Sleeve"]?.letters?.title?.length === 2
+                          ? 70
+                          : designs["Right Sleeve"]?.letters?.title?.length === 3
+                            ? 45
+                            : designs["Right Sleeve"]?.letters?.title?.length === 4
+                              ? 35
+                              : designs["Right Sleeve"]?.letters.size
+                    }
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    strokeWidth="8"
+                    stroke={designs["Right Sleeve"]?.letters.border}
+                    style={{ paintOrder: "stroke fill" }}
+                  >
+                    {designs["Right Sleeve"]?.letters.title}
+                  </text>
 
-              <text
-                x="0"
-                y="0"
-                fontFamily={designs["Right Sleeve"]?.letters.font}
-                fill={designs["Right Sleeve"]?.letters.fill}
-                fontSize={
-                  designs["Right Sleeve"]?.letters?.title?.length === 1
-                    ? 110
-                    : designs["Right Sleeve"]?.letters?.title?.length === 2
-                      ? 80
-                      : designs["Right Sleeve"]?.letters?.title?.length === 3
-                        ? 55
-                        : designs["Right Sleeve"]?.letters?.title?.length === 4
-                          ? 40
-                          : designs["Right Sleeve"]?.letters.size
-                }
-                textAnchor="middle"
-                dominantBaseline="middle"
-                strokeWidth="4"
-                stroke={designs["Right Sleeve"]?.letters.stroke}
-                style={{ paintOrder: "stroke fill" }}
-              >
-                {designs["Right Sleeve"]?.letters.title}
-              </text>
-            </g>
+                  <text
+                    x="0"
+                    y="0"
+                    fontFamily={designs["Right Sleeve"]?.letters.font}
+                    fill={designs["Right Sleeve"]?.letters.fill}
+                    fontSize={
+                      designs["Right Sleeve"]?.letters?.title?.length === 1
+                        ? 102
+                        : designs["Right Sleeve"]?.letters?.title?.length === 2
+                          ? 70
+                          : designs["Right Sleeve"]?.letters?.title?.length === 3
+                            ? 45
+                            : designs["Right Sleeve"]?.letters?.title?.length === 4
+                              ? 35
+                              : designs["Right Sleeve"]?.letters.size
+                    }
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    strokeWidth="4"
+                    stroke={designs["Right Sleeve"]?.letters.stroke}
+                    style={{ paintOrder: "stroke fill" }}
+                  >
+                    {designs["Right Sleeve"]?.letters.title}
+                  </text>
+                </g>
+              )}
+            </>
           )}
 
           {designs["Right Sleeve"]?.letters && (

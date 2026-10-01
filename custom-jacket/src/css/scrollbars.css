@@ -1,0 +1,56 @@
+/* Every scrollbar in the builder is a 4px line with no arrows (the storefront does the same in
+   frontend/src/styles/tokens.css). Chrome, Edge and Safari draw the ::-webkit-scrollbar rules, but
+   Chrome ignores them on any element whose scrollbar-width / scrollbar-color is set, so those go
+   back to auto in those browsers; the scrollers meant to show no bar at all keep hiding it with
+   ::-webkit-scrollbar { display: none }. The sizes are !important because a few old rules set
+   their own (the phone thumbnail strip had a 12px terracotta bar). Firefox has no
+   ::-webkit-scrollbar and gets its thinnest standard bar. */
+/* The page behind an open dialog or menu stays put: utils/scrollLock.js sets html.cjd-scroll-locked,
+   react-modal dialogs mark <body> with ReactModal__Body--open. The scrollbar keeps its lane, so
+   locking does not shift the page sideways. */
+html {
+  scrollbar-gutter: stable;
+}
+html.cjd-scroll-locked,
+html.cjd-scroll-locked body,
+html:has(body.ReactModal__Body--open),
+body.ReactModal__Body--open {
+  overflow: hidden !important;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: auto !important;
+    scrollbar-color: auto !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(20, 17, 15, 0.22) !important;
+  border-radius: 4px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 17, 15, 0.45) !important;
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(20, 17, 15, 0.25) transparent;
+  }
+}

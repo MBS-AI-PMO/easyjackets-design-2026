@@ -121,3 +121,28 @@ export const getDesignAreaConfig = (part) => {
         viewBox: '0 0 73 82'  // Default fallback
     };
 };
+
+/**
+ * The guide rectangles drawn on the jacket for each place (components/Jacket: front, back, left,
+ * right), as width / height. The add-design dialog shapes its preview like the place's guide, so
+ * what you see there is the area it will fill on the jacket. Read from the drawings: some
+ * DESIGN_AREA_CONFIG sizes above differ from them (Back Middle 245x190, not 245x95; Back Bottom
+ * 210x45, not 210x70). Places not listed have a square guide.
+ */
+const GUIDE_SIZES = {
+    'Front Center': [267, 44.92],
+    'Back Top': [260, 45],
+    'Back Middle': [245, 190],
+    'Back Bottom': [210, 45],
+    'Right Chest Verticle': [85, 175],
+    'Left Chest Verticle': [85, 175],
+};
+
+/** The place's guide as [width, height] (a square for the places not listed). */
+export const getGuideSize = (part) => GUIDE_SIZES[part] || [100, 100];
+
+/** The place's guide shape as width / height (1 for the square ones). */
+export const getGuideRatio = (part) => {
+    const [width, height] = getGuideSize(part);
+    return width / height;
+};

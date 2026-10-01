@@ -40,6 +40,8 @@ import { UPLOADS_ROOT, ensureUploadsRoot } from './helpers/localUploadStorage.js
 import { resizedImageHandler } from './helpers/imageResize.js'
 import { uploadMirror } from './helpers/uploadMirror.js'
 import { getStorageDriver } from './helpers/fileUpload.js'
+import { backgroundRemovalEnabled } from './helpers/backgroundRemoval.js'
+import { embeddedAllowed, startBgRemover } from './helpers/bgRemoverProcess.js'
 import fs from 'fs/promises'
 // const path = require("path");
 
@@ -154,6 +156,12 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(
     `📦 Product storage: ${getStorageDriver()} @ ${UPLOADS_ROOT}`.cyan
   );
+  // the background remover runs inside the backend: start it now so the first upload does not wait
+  if (backgroundRemovalEnabled() && embeddedAllowed()) {
+    startBgRemover()
+      .then(() => console.log('🪄 Background remover running'.cyan))
+      .catch((error) => console.error(`bg-remover: not running (${error.message}); product photos keep their backgrounds`));
+  }
 });
 
 // Global Error Handler

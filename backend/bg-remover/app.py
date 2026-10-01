@@ -1,4 +1,7 @@
-"""Background remover service for product photos.
+"""Background remover for product photos.
+
+Runs inside the backend: helpers/bgRemoverProcess.js starts it on 127.0.0.1
+next to the API and restarts it if it stops (no separate app to deploy).
 
 POST /remove  (multipart field `image`) -> PNG with alpha, same pixel size as the input.
     ?model=birefnet-general | isnet-general-use   (default: BG_MODEL, birefnet-general)
@@ -17,6 +20,7 @@ import threading
 import time
 
 import numpy as np
+import onnxruntime as ort
 from fastapi import FastAPI, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
@@ -37,10 +41,20 @@ _infer = threading.Semaphore(int(os.environ.get("BG_CONCURRENCY", "1")))
 _state = {"ready": False, "warming": False}
 
 
+def session_options():
+    # onnxruntime's CPU arena keeps every buffer it ever grew: BiRefNet then holds
+    # ~10 GB after one photo and ~18 GB after two. Without it memory falls back to
+    # ~1.6 GB after each photo (~7 GB at the peak of one); same mask, same speed.
+    opts = ort.SessionOptions()
+    opts.enable_cpu_mem_arena = False
+    opts.enable_mem_pattern = False
+    return opts
+
+
 def session_for(model: str):
     with _sessions_lock:
         if model not in _sessions:
-            _sessions[model] = new_session(model)
+            _sessions[model] = new_session(model, sess_opts=session_options())
         return _sessions[model]
 
 

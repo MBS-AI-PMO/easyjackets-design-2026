@@ -61,3 +61,10 @@ export const uploadUrl = (src) => {
   if (value.startsWith('/images/')) return `${FRONTEND_URL}${value}`; // a file in the storefront's public folder
   return value;
 };
+
+/** The same upload at a given width (the API snaps to 320/480/640/768/960/1280). */
+export const imageUrl = (src, w) => {
+  const u = uploadUrl(src);
+  if (!w || !u || !u.startsWith(`${API_ORIGIN}/uploads/`) || !/\.(webp|jpe?g|png)$/i.test(u)) return u;
+  return `${u}?w=${w}`;
+};

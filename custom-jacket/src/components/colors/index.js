@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 
 import Loader from "../loader";
 import SelectBox from "../selectBox";
+import Collapse from "../collapse";
 import { selectColor, updateGlobals } from "../../store/actions";
 
 const PartsBase = ["Body", "Sleeves", "Pockets", "Inside Lining", "Knit Base"];
@@ -182,7 +183,8 @@ const Colors = ({
               </svg>
             </div>
 
-            {isActive && currentTab === key && (
+            {/* the swatches slide open and shut (components/collapse) */}
+            <Collapse open={isActive && currentTab === key}>
               <div className="cjd-accordin-wrapper">
                 <div className="cjd-select-wrapper cjd-single cjd-colors-select">
                   {availableColorsForPart(part, materials).map(({ name, code }, index) => (
@@ -199,7 +201,7 @@ const Colors = ({
                   ))}
                 </div>
               </div>
-            )}
+            </Collapse>
           </div>
         );
       })}

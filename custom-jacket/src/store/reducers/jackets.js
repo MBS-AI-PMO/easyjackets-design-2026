@@ -89,7 +89,8 @@ const jackets = (state = initState, { type, data }) => {
     case 'REMOVE_JACKET':
       let newState = [...state];
       newState.splice(data, 1);
-      return newState
+      // ids follow the list again (the rest of the builder finds a jacket by its place)
+      return newState.map((jacket, index) => (jacket.id === index ? jacket : { ...jacket, id: index }))
 
     case 'REPLACE_JACKETS':
       return data

@@ -1,0 +1,632 @@
+// The builder's left panel (Materials Style, Advance Options, Add Colors, Add Design, Select Size,
+// then Save and Share) in the storefront's look: Big Shoulders headings, ink and gold, 2px corners,
+// fields like the storefront's .ez-input and its outlined / ink buttons. Every hover, choice and
+// opening is animated. Imported by App.js after css/App.scss (which comes after the components'
+// styles) and scoped to the two panels, the desktop one and the phone one under the jacket, so
+// these rules win over the old terracotta ones.
+
+$ease: .25s ease;
+
+// ---- section bodies open and close smoothly (components/collapse) -------------------------------
+.cjd-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows .32s ease, opacity $ease;
+
+  &.is-open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+.cjd-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+// once open, dropdowns inside may reach past the section's edge
+.cjd-collapse.is-settled > .cjd-collapse-inner {
+  overflow: visible;
+}
+
+// ---- dropdowns (components/select2Component) -----------------------------------------------------
+// The list opens inside its section, right under the field, sliding open and shut and moving what
+// is below it (a list floating over the page was cut off by the panel's scroll area). Closed, it
+// takes no room at all, so there is no empty strip under the field.
+.select2-container > .select2-container-dropdown {
+  position: static;
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  transition: grid-template-rows .28s ease, margin-top .28s ease, opacity .2s ease, visibility 0s linear .28s;
+
+  > .select2-dropdown {
+    min-height: 0;
+  }
+
+  &.select2-container--open {
+    grid-template-rows: 1fr;
+    margin-top: 6px;
+    opacity: 1;
+    visibility: visible;
+    transition: grid-template-rows .28s ease, margin-top .28s ease, opacity .2s ease, visibility 0s;
+  }
+}
+
+.select2-selection__arrow b {
+  transition: transform $ease;
+}
+
+.select2-container--open > .selection .select2-selection__arrow b {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cjd-collapse,
+  .select2-container > .select2-container-dropdown {
+    transition: none;
+  }
+}
+
+// ---- the panels -----------------------------------------------------------------------------------
+// Desktop: the sections scroll in their own area (.cjd-panel-scroll), which starts at the first
+// heading, so the scrollbar runs beside the sections only; Save and Share sit under it, outside
+// the scroll. The area only grows as tall as its sections, so the buttons stay right under a
+// short list and at the bottom of a long one.
+// phones: Save and Share sit in the toolbar over the jacket (App.js), not under the panel
+@media (max-width: 768px) {
+  .panel-mbl .cjd-panel-actions {
+    display: none !important;
+  }
+}
+
+.panel-desktop {
+  display: flex;
+  flex-direction: column;
+
+  // up to 1200px the phone panel under the jacket takes over (css/App.scss hides this one there,
+  // and the display above must not undo that)
+  @media (max-width: 1200px) {
+    display: none;
+  }
+  // room above and beside the panel, so it sits clear of the stats strip and the page edge
+  padding: 20px 0 20px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  .cjd-panel-scroll {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 10px; // space between the sections and the scrollbar
+    scrollbar-gutter: stable; // the 4px lane is kept even when nothing scrolls, so the edges never shift
+  }
+
+  .cjd-panel-actions {
+    flex: none;
+    padding: 16px 14px 0 0; // 10px + the 4px scrollbar lane: right edge in line with the sections
+  }
+}
+
+.panel-desktop,
+.panel-mbl {
+  color: var(--ink);
+
+  // ---- section headings -------------------------------------------------------------------
+  .control-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 60px;
+    margin-top: -1px; // rows share one hairline
+    padding: 0 18px 0 0;
+    line-height: normal;
+    border: 1px solid var(--cream-2);
+    border-radius: 0;
+    background: #fbf8f2;
+    color: var(--ink);
+    transition: background $ease, border-color $ease, color $ease;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:hover {
+      background: var(--cream-2);
+      color: var(--ink);
+    }
+
+    > .step-title {
+      padding: 0 18px;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 21px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--gold-2);
+      transition: color $ease;
+
+      strong {
+        font-weight: 800;
+        color: var(--ink);
+        transition: color $ease;
+      }
+    }
+
+    // one "+" that turns to "x" when the section opens, as on the storefront's FAQ
+    > svg {
+      width: 15px;
+      height: 15px;
+      color: var(--gold-2);
+      transition: transform .3s ease, color $ease;
+    }
+  }
+
+  .control-box.activeBox,
+  .control-box.activeBox:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--cream);
+
+    > .step-title {
+      color: var(--gold);
+
+      strong {
+        color: var(--cream);
+      }
+    }
+
+    > svg {
+      color: var(--gold);
+      transform: rotate(45deg);
+    }
+  }
+
+  .control-box-control {
+    padding: 18px 20px 22px;
+    background: #fff;
+    border: 1px solid var(--cream-2);
+    border-top: 0;
+  }
+
+  // ---- labels and fields ------------------------------------------------------------------
+  .select-label {
+    display: block;
+    margin: 16px 0 8px;
+    font-family: var(--body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .select2-container--default .select2-selection--single {
+    height: 50px;
+    border: 1.5px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    transition: border-color $ease, background $ease;
+
+    &:hover {
+      border-color: var(--ink);
+    }
+
+    .select2-selection__rendered {
+      padding: 0 40px 0 14px;
+      font-family: var(--body);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 47px;
+      color: var(--ink);
+    }
+
+    .select2-selection__arrow b {
+      border-color: var(--ink) transparent transparent transparent !important;
+    }
+  }
+
+  .select2-container--open .select2-selection--single {
+    border-color: var(--ink);
+  }
+
+  .select2-dropdown {
+    border: 1px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    overflow: hidden;
+  }
+
+  .select2-search__field {
+    height: 40px;
+    padding: 0 12px;
+    border: 1.5px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    font-family: var(--body);
+    font-size: 15px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color $ease;
+
+    &:focus {
+      border-color: var(--ink);
+    }
+  }
+
+  .select2-results__options {
+    font-family: var(--body);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    outline: none; // the list takes focus when it opens; the highlighted option shows where you are
+  }
+
+  .select2-results__option {
+    padding: 10px 16px;
+    border-bottom: 0;
+    background: transparent;
+    color: var(--ink);
+    transition: background .2s ease, color .2s ease;
+
+    &:hover,
+    &.select2-results__option--highlighted {
+      background: var(--cream);
+      color: var(--gold-2);
+    }
+
+    &[aria-selected="true"] {
+      color: var(--gold-2);
+    }
+  }
+
+  .cjd-form-control {
+    height: 50px;
+    padding: 0 14px;
+    border: 1.5px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    font-family: var(--body);
+    font-size: 15px;
+    color: var(--ink);
+    transition: border-color $ease;
+
+    &:hover,
+    &:focus {
+      border-color: var(--ink);
+      outline: none;
+    }
+  }
+
+  // a checkbox with its words (Add 1/2 zipout lining), clear of the field above it
+  .cjd-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    font-family: var(--body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color $ease;
+
+    input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--ink);
+      cursor: pointer;
+    }
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+
+  // ---- two-way choices (Yes / No, Set-In / Raglan, Buttons / Zipper) ------------------------
+  .control-panel-btn {
+    height: 44px;
+    line-height: 40px;
+    border: 2px solid var(--ink);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    transition: background $ease, color $ease, border-color $ease, transform .15s ease;
+
+    &:hover {
+      background: var(--cream-2);
+      color: var(--ink);
+    }
+
+    &:active {
+      transform: scale(.98);
+    }
+
+    &.active,
+    &.active:hover {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--cream);
+    }
+  }
+
+  // ---- picture choices (knit style and the like) --------------------------------------------
+  // On the phone panel they fill ONE row edge to edge in equal columns, whatever their number
+  // (they wrapped four and one), and never scroll sideways.
+  @at-root .panel-mbl .cjd-select-wrapper.cjd-single:not(.cjd-colors-select) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 8px;
+    overflow: visible;
+
+    .cjd-select-box-style {
+      width: 100% !important;
+      height: 40px;
+    }
+  }
+
+  .cjd-select-box-style {
+    border-radius: 2px;
+    transition: border-color $ease, transform .15s ease;
+
+    &:active {
+      transform: scale(.97);
+    }
+
+    &.cjd-active-box {
+      border: 2px solid var(--ink) !important;
+
+      &:before {
+        color: var(--gold-2);
+      }
+    }
+
+    .cjd-select-label {
+      font-family: var(--body);
+      color: var(--ink);
+    }
+  }
+
+  // ---- Add Colors: one row per part, opening its swatches -----------------------------------
+  .control-panel-color {
+    border: 1px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    box-shadow: none;
+    transition: border-color $ease, background $ease, box-shadow $ease;
+
+    &:hover {
+      border-color: var(--ink);
+      background: var(--cream);
+      box-shadow: none;
+    }
+
+    &:has(.control-box-color.open) {
+      border-color: var(--ink);
+      background: #fbf8f2;
+      box-shadow: 0 24px 48px -28px rgba(20, 17, 15, .45);
+    }
+
+    // components/collapse slides the swatches open and shut; the old max-height / opacity / padding
+    // switch here (css/components/Accordion) would snap them shut on close, so it is held still.
+    // The swatches start just under the row's name (the old spacing left a 45px gap).
+    .cjd-accordin-wrapper,
+    &:has(.control-box-color.open) .cjd-accordin-wrapper {
+      max-height: none;
+      opacity: 1;
+      overflow: visible;
+      margin-top: 0;
+      padding: 0 12px 14px;
+      background: transparent;
+      transition: none;
+    }
+
+    .cjd-colors-select {
+      padding-top: 14px;
+    }
+  }
+
+  .control-box-color {
+    min-height: 58px;
+    padding: 12px 16px;
+
+    &:hover {
+      background: transparent;
+    }
+
+    .step-title {
+      padding: 0;
+
+      strong {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      &::after {
+        font-family: var(--body);
+        font-size: 12px;
+        color: var(--muted);
+      }
+    }
+
+    svg {
+      color: var(--gold-2);
+    }
+
+    &:hover .step-title strong,
+    &.open .step-title strong {
+      color: var(--ink);
+    }
+
+    &:hover .step-title::after,
+    &.open .step-title::after {
+      color: var(--gold-2);
+    }
+
+    &.open svg,
+    &.close svg {
+      color: var(--gold-2);
+    }
+  }
+
+  // ---- Add Design: the places a design can go ----------------------------------------------
+  // Hover: darker cream, a gold bar grows in from the left edge, the words ease right and a gold
+  // arrow slides in on the right (as the storefront's menus and links answer a hover). Places that
+  // already carry a design (.cjd-done) show an ink tick and keep their remove icon on the right.
+  .cjd-cd-wrapper {
+    border: 1px solid var(--cream-2);
+    border-radius: 2px;
+    overflow: hidden;
+
+    .cjd-cd-box {
+      position: relative;
+      padding: 14px 44px 14px 16px;
+      background: #fbf8f2;
+      font-family: var(--body);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 var(--gold);
+      transform: none;
+      transition: background $ease, color $ease, padding-left $ease, box-shadow $ease;
+
+      + .cjd-cd-box {
+        border-top: 1px solid var(--cream-2);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        width: 7px;
+        height: 7px;
+        border-top: 2px solid var(--gold-2);
+        border-right: 2px solid var(--gold-2);
+        opacity: 0;
+        transform: translate(-8px, -50%) rotate(45deg);
+        transition: opacity $ease, transform $ease;
+      }
+
+      &:hover {
+        padding-left: 24px;
+        background: var(--cream-2);
+        color: var(--ink);
+        box-shadow: inset 3px 0 0 var(--gold);
+        transform: none;
+      }
+
+      &:hover::after {
+        opacity: 1;
+        transform: translate(0, -50%) rotate(45deg);
+      }
+
+      &:active {
+        background: var(--cream-2);
+        box-shadow: inset 5px 0 0 var(--gold);
+      }
+
+      &.cjd-done {
+        &::before {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          height: 18px;
+          margin-right: 10px;
+          vertical-align: -3px;
+          border: 0;
+          border-radius: 50%;
+          background: var(--ink);
+          color: var(--gold);
+          font-size: 10px;
+          content: "✔";
+        }
+
+        &::after {
+          display: none; // the remove icon is on the right
+        }
+      }
+    }
+  }
+
+  // ---- Save and Share -----------------------------------------------------------------------
+  .cjd-panel-actions {
+    gap: 12px;
+
+    .cjd-btn,
+    .cjd-btn-secondary {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center !important;
+      gap: 10px;
+      flex: 1;
+      height: 52px !important;
+      padding: 0 16px !important;
+      border: 2px solid var(--ink) !important;
+      border-radius: 2px !important;
+      box-shadow: none !important;
+      opacity: 1 !important;
+      font-family: var(--display) !important;
+      font-weight: 800 !important;
+      font-size: 20px !important;
+      letter-spacing: .06em !important;
+      text-transform: uppercase;
+      transition: transform .2s ease, background $ease, border-color $ease, color $ease !important;
+
+      svg {
+        margin: 0 !important;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+
+      &:active {
+        transform: translateY(0) scale(.98);
+      }
+
+      &:focus:not(:focus-visible) {
+        outline: none !important;
+      }
+    }
+
+    .cjd-btn {
+      background: var(--ink) !important;
+      color: var(--cream) !important;
+
+      &:hover {
+        background: var(--gold) !important;
+        border-color: var(--gold) !important;
+        color: var(--ink) !important;
+      }
+    }
+
+    .cjd-btn-secondary {
+      background: transparent !important;
+      color: var(--ink) !important;
+
+      &:hover {
+        background: var(--ink) !important;
+        color: var(--cream) !important;
+      }
+    }
+  }
+}

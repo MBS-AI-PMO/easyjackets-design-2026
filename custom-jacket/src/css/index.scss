@@ -21,6 +21,36 @@ body {
   transition: background-color .3s var(--ej-ease-out), color .3s var(--ej-ease-out);
 }
 
+// No browser blue anywhere, as on the storefront: no blue flash when a phone taps something (the
+// property is inherited, so this covers the jacket's SVG parts too), focus rings, selected text and
+// native checkboxes/radios/sliders in the brand colour. A focus ring shows for keyboard use only.
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a, button, input, select, textarea, label, summary, [role="button"], [role="tab"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+::selection {
+  background: rgba(196, 112, 58, .3);
+  color: inherit;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ej-terracotta);
+  outline-offset: 2px;
+}
+
+input, select, textarea, progress {
+  accent-color: var(--ej-terracotta);
+}
+
 body.admin-bar #cjd-root {
   top: 32px;
 

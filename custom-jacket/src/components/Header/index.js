@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { connect, useStore } from 'react-redux';
 import { svgAsPngUri } from 'save-svg-as-png';
 
@@ -8,8 +8,9 @@ import CartIcon from '../icons/cartIcon';
 import PencilIcon from '../icons/pencilIcon';
 
 import Back from '../../assets/images/icon-back.webp';
-import Logo from '../../assets/images/logor.webp'
 import { frontendUrl } from '../../config/url';
+import { NavBurger, NavDrawer, NavLinks, NavLogo, useNavLogo } from '../SiteNav';
+import Presence from '../presence';
 
 import {
   saveSvg,
@@ -70,23 +71,10 @@ const Header = ({
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line
   const [msg, setMsg] = useState('Please wait while we prepare your order!');
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('ej-theme') || 'light'; } catch { return 'light'; }
-  });
-
-  const toggleTheme = () => {
-    setTheme(t => {
-      const next = t === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('ej-theme', next); } catch { }
-      return next;
-    });
-  };
-
-  // Sync theme on mount
+  // The page is always light (the navbar's dark mode button is gone): drop a dark choice saved earlier.
   React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    // eslint-disable-next-line
+    document.documentElement.removeAttribute('data-theme');
+    try { localStorage.removeItem('ej-theme'); } catch { }
   }, []);
   // const [proceed, setProceed] = useState(false);
   const [guidemodal, setGuidemodal] = useState(false);
@@ -103,6 +91,10 @@ const Header = ({
   let state = store.getState();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1200);
+  // the storefront navbar parts of this bar: logo, links, and the menu drawer on narrow screens
+  const navLogo = useNavLogo();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -153,22 +145,12 @@ const Header = ({
       return;
     }
 
-    if (document.cookie.match(/^(.*;)?\s*cjdguidesshow\s*=\s*[^;]+(.*)?$/)) {
-      copyDefaults();
-    } else {
-      setGuidemodal(true);
-    }
+    // always explained first: the "Don't show this again" option was removed, and a choice saved
+    // by it earlier is no longer read
+    setGuidemodal(true);
   };
 
-  const proceedAfterGuide = (cookie) => {
-    if (cookie) {
-      document.cookie = 'cjdguidesshow=nah; expires=Sun, 1 Jan 2025 00:00:00 UTC; path=/';
-    } else {
-      document.cookie = 'cjdguidesshow=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
-    }
-
-    copyDefaults();
-  };
+  const proceedAfterGuide = () => copyDefaults();
 
   const copyDefaults = async () => {
     // guideModalState('open', true);
@@ -213,18 +195,33 @@ const Header = ({
     replaceAdvance(store.getState().jackets[key].data.advance);
   };
 
+  // Removing a jacket tab. The active jacket is its place in the list (ids are renumbered to match
+  // on removal, store/reducers/jackets.js). It used to be set one past the end of the list, so Save
+  // marked no jacket and "Save your jacket" came back forever.
   const remove = (key, e) => {
     e.stopPropagation();
+    const active = globals.activeJacket;
 
+    if (key !== active) {
+      // another tab: stay on this jacket, whose place moves up one if it came after the removed one
+      removeJacket(key);
+      const next = active > key ? active - 1 : active;
+      updateGlobals('activeJacket', next);
+      setActiveJacket(next);
+      return;
+    }
+
+    // the jacket being edited: open the one before it
+    const previous = store.getState().jackets[key - 1];
     removeJacket(key);
-    replaceMaterials(jackets[key - 1].data.materials);
-    replaceStyles(jackets[key - 1].data.styles);
-    replaceColors(jackets[key - 1].data.colors);
-    replaceDesigns(jackets[key - 1].data.designs);
-    replaceSizes(jackets[key - 1].data.sizes);
-    replaceAdvance(jackets[key - 1].data.advance);
-
-    updateGlobals('activeJacket', store.getState().jackets.length);
+    updateGlobals('activeJacket', key - 1);
+    setActiveJacket(key - 1);
+    replaceMaterials(previous.data.materials);
+    replaceStyles(previous.data.styles);
+    replaceColors(previous.data.colors);
+    replaceDesigns(previous.data.designs);
+    replaceSizes(previous.data.sizes);
+    replaceAdvance(previous.data.advance);
   };
 
   const rename = (key, title, e) => {
@@ -568,106 +565,73 @@ const Header = ({
   return (
 
     <header className='cjd-header'>
-      {/* {loading && (
-        <div className='cjd-loader'>
-          <div className='lds-roller'>
-            {' '}
-            <div /> <div /> <div /> <div /> <div /> <div /> <div /> <div />{' '}
+      <div className='ez-site cjd-nav'>
+        <NavLogo logo={navLogo} />
+
+        {/* {loading && (
+          <div className='cjd-loader'>
+            <div className='lds-roller'>
+              {' '}
+              <div /> <div /> <div /> <div /> <div /> <div /> <div /> <div />{' '}
+            </div>
+            <div className='cjd-loading-msg'>{msg}</div>
           </div>
-          <div className='cjd-loading-msg'>{msg}</div>
-        </div>
-      )} */}
+        )} */}
 
-      <div className='cjd-mono-wrapper'>
-        <a href={frontendUrl('/')}>
-          <img src={Logo} alt='Back to Easy Jackets' />
-        </a>
-        {/* {!isMobile && <div>EJacket</div>}   */}
-      </div>
-
-      <div className='cjd-jackets-tabs'>
-        <div className='cjd-scroll'>
-          {jackets.map((val, key) => {
-            return (
-              <div
-                className={`cjd-jacket-tab-item ${val.active && 'cjd-active'}`}
-                key={key}
-                onClick={() => changeJacket(key, val.id)}
-              >
-                <span className='cjd-tab-span' onClick={(e) => rename(val.id, val.title, e)}>
-                  {/* <CartIcon fill={'#ff9503'}></CartIcon> */}
-                  <PencilIcon></PencilIcon>
-                </span>
-                <h4>{val.title}</h4>
-                {key !== 0 && <div className='cjd-remove' onClick={(e) => remove(key, e)}></div>}
-              </div>
-            );
-          })}
-        </div>
-        {isMobile && (
-          <button
-            className='cjd-theme-toggle-btn cjd-theme-toggle-btn--mobile'
-            onClick={toggleTheme}
-            aria-label="Toggle dark mode"
-          >
-            {theme === 'dark' ? (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            )}
-          </button>
-        )}
-        {globals.design.update ? '' : <div className='cjd-jacket-tab-item cjd-add-more' onClick={() => openGuideModal()}></div>}
-      </div>
-
-      <div className='cjd-header-actions'>
-        <span className='cjd-price-wrapper'>
-          <strong className='current'>${getPrice(state)}</strong>
-        </span>
-
-        <button
-          className='cjd-theme-toggle-btn'
-          onClick={toggleTheme}
-          aria-label="Toggle dark mode"
-        >
-          {theme === 'dark' ? (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-              <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
+        <div className='cjd-jackets-tabs'>
+          <div className='cjd-scroll'>
+            {jackets.map((val, key) => {
+              return (
+                <div
+                  className={`cjd-jacket-tab-item ${val.active && 'cjd-active'}`}
+                  key={key}
+                  onClick={() => changeJacket(key, val.id)}
+                >
+                  <span className='cjd-tab-span' onClick={(e) => rename(val.id, val.title, e)}>
+                    {/* <CartIcon fill={'#ff9503'}></CartIcon> */}
+                    <PencilIcon></PencilIcon>
+                  </span>
+                  <h4>{val.title}</h4>
+                  {key !== 0 && <div className='cjd-remove' onClick={(e) => remove(key, e)}></div>}
+                </div>
+              );
+            })}
+          </div>
+          {globals.design.update ? '' : (
+            <button type='button' className='cjd-add-more' aria-label='Add another jacket' title='Add another jacket' onClick={() => openGuideModal()}>
+              <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3' strokeLinecap='round' aria-hidden='true'><path d='M12 4v16M4 12h16' /></svg>
+            </button>
           )}
-        </button>
+        </div>
 
-        <button className="cjd-btn-secondary" onClick={handleShareClick} title="Share your design">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-          Share
-        </button>
+        <NavLinks />
 
-        <button
-          className={`cjd-btn cjd-btn-cart  ${isMobile ? 'cjd-btn-mobile cjd-btn-addtocart-mobile' : ''}`}
-          onClick={() => (globals.design.update ? updateCart() : (globals.save ? saveDesign() : addToCart()))}
-        >
-          {globals.design.update ? 'Update Design' : (globals.save ? 'SAVE DESIGN' : 'ADD TO CART')}
-          {/* <span className='cjd-price-wrapper'>
+        <div className='cjd-header-actions'>
+          <span className='cjd-price-wrapper'>
             <strong className='current'>${getPrice(state)}</strong>
-          </span> */}
-          <strong className='current-mobile'>${getPrice(state)}</strong>
+          </span>
 
-        </button>
+          <button className="cjd-btn-secondary" onClick={handleShareClick} title="Share your design">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
+            Share
+          </button>
+
+          <button
+            className={`cjd-btn cjd-btn-cart  ${isMobile ? 'cjd-btn-mobile cjd-btn-addtocart-mobile' : ''}`}
+            onClick={() => (globals.design.update ? updateCart() : (globals.save ? saveDesign() : addToCart()))}
+          >
+            {globals.design.update ? 'Update Design' : (globals.save ? 'SAVE DESIGN' : 'ADD TO CART')}
+            {/* <span className='cjd-price-wrapper'>
+              <strong className='current'>${getPrice(state)}</strong>
+            </span> */}
+            <strong className='current-mobile'>${getPrice(state)}</strong>
+
+          </button>
+        </div>
+
+        <NavBurger open={menuOpen} onOpen={() => setMenuOpen(true)} />
       </div>
+      <NavDrawer open={menuOpen} onClose={closeMenu} logo={navLogo} />
 
       <NewGuide
         modal={guidemodal}
@@ -701,12 +665,15 @@ const Header = ({
       />
 
       {/* Share Modal */}
-      {showShareModal && (
+      <Presence open={showShareModal}>
         <div className="cjd-share-modal" onClick={() => setShowShareModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Share Your Creation</h3>
-              <button className="close-btn" onClick={() => setShowShareModal(false)}>
+              <div>
+                <div className="cjd-dialog-eyebrow">Share</div>
+                <h3>Share Your Creation</h3>
+              </div>
+              <button type="button" className="close-btn" aria-label="Close" onClick={() => setShowShareModal(false)}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             </div>
@@ -740,7 +707,7 @@ const Header = ({
             </div>
           </div>
         </div>
-      )}
+      </Presence>
     </header>
   );
 };

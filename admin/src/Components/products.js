@@ -29,7 +29,9 @@ import {
   Divider,
   CircularProgress,
   Tabs,
-  Tab
+  Tab,
+  Switch,
+  FormControlLabel
 } from "@mui/material";
 import {
   Delete,
@@ -102,6 +104,19 @@ const getMeaningfulProductDescription = (product) =>
 const DEFAULT_CARE_INSTRUCTIONS_HTML =
   '<h5>Care Instructions</h5><p><strong>Wool</strong> &mdash; Brush your jacket gently with a suede soft brush.</p><p><strong>Cowhide Leather</strong> &mdash; Don&apos;t leave the leather wet, dry immediately.</p>';
 
+// what the background remover is doing, as shown under the "Remove background" switch
+const BG_REMOVER_LINES = {
+  ready: { color: '#2e7d32', text: 'Remover ready' },
+  warming: { color: '#ed6c02', text: 'Remover loading its model' },
+  starting: { color: '#ed6c02', text: 'Remover starting' },
+  restarting: { color: '#ed6c02', text: 'Remover restarting' },
+  stopped: { color: '#d32f2f', text: 'Remover not running: it starts with the next upload' },
+  unavailable: { color: '#d32f2f', text: 'Remover not available: photos keep their backgrounds' },
+  unreachable: { color: '#d32f2f', text: 'Remover not reachable: photos keep their backgrounds' },
+  off: { color: '#999', text: 'Switched off on the server (AUTO_REMOVE_BG=false)' },
+};
+const REMOVE_BG_KEY = "ej-admin-remove-bg";
+
 const getProductCareInstructions = (product) =>
   cleanSeoText(product?.careInstructions) ? product.careInstructions : DEFAULT_CARE_INSTRUCTIONS_HTML;
 
@@ -144,6 +159,33 @@ function Products({ section = "jackets" }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSeoLoading, setIsSeoLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState({ category: "", color: "", sku: "" });
+  // "Remove background" for the photos uploaded in this form; the last choice is kept for the next product
+  const [removeBg, setRemoveBg] = useState(() => {
+    try { return localStorage.getItem(REMOVE_BG_KEY) !== "false"; } catch { return true; }
+  });
+  const [bgRemover, setBgRemover] = useState(null);
+
+  const handleRemoveBgChange = (checked) => {
+    setRemoveBg(checked);
+    try { localStorage.setItem(REMOVE_BG_KEY, String(checked)); } catch { /* private window */ }
+  };
+
+  // the remover's state while the form is open (it can still be starting, or busy with earlier photos)
+  useEffect(() => {
+    if (!open) return undefined;
+    let alive = true;
+    const load = async () => {
+      try {
+        const { data } = await instance.get("/product/background-removal");
+        if (alive) setBgRemover(data);
+      } catch {
+        if (alive) setBgRemover(null);
+      }
+    };
+    load();
+    const timer = setInterval(load, 10000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [open]);
 
   const handleClickOpen = () => {
     setEditorTab("description");
@@ -268,6 +310,7 @@ function Products({ section = "jackets" }) {
     formData.append('category', newProduct?.category);
     formData.append("material", JSON.stringify(newProduct?.material));
     formData.append("sizes", JSON.stringify(newProduct?.sizes));
+    formData.append('removeBackground', removeBg ? 'true' : 'false');
 
     if (newProduct.frontImage) {
       formData.append('frontImage', newProduct?.frontImage);
@@ -972,7 +1015,7 @@ function Products({ section = "jackets" }) {
         <DialogTitle sx={{ borderBottom: '1px solid #eee', fontWeight: 'bold', color: '#333' }}>
           {editingProduct ? "Update Product Details" : "Create New Inventory Item"}
         </DialogTitle>
-        <DialogContent sx={{ pt: 3, pb: 2 }}>
+        <DialogContent sx={{ pb: 2, '.MuiDialogTitle-root + &': { pt: 3 } }}>
           <Grid container spacing={3}>
             {/* Basic Info */}
             <Grid item xs={12} md={8}>
@@ -1079,6 +1122,31 @@ function Products({ section = "jackets" }) {
             <Grid item xs={12} md={4}>
               <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #eee' }}>
                 <Typography variant="subtitle2" sx={{ color: '#666', mb: 2 }}>Product Images</Typography>
+
+                <Box sx={{ mb: 2, p: 1.5, bgcolor: '#fff', borderRadius: 2, border: '1px solid #e3eef8' }}>
+                  <FormControlLabel
+                    labelPlacement="start"
+                    sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                    control={<Switch checked={removeBg} onChange={(e) => handleRemoveBgChange(e.target.checked)} />}
+                    label={<Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>Remove background</Typography>}
+                  />
+                  <Typography variant="caption" sx={{ display: 'block', color: '#777', lineHeight: 1.45, mt: 0.25 }}>
+                    {removeBg
+                      ? 'Photos you upload here are cut out after saving (takes a little while per photo). The original is kept.'
+                      : 'Photos you upload here are stored as they are, background included.'}
+                  </Typography>
+                  {removeBg && bgRemover && BG_REMOVER_LINES[bgRemover.status] && (
+                    <Tooltip title={bgRemover.detail || bgRemover.last?.error || ''} disableHoverListener={!bgRemover.detail && !bgRemover.last?.error}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, bgcolor: BG_REMOVER_LINES[bgRemover.status].color }} />
+                        <Typography variant="caption" sx={{ color: '#555', lineHeight: 1.4 }}>
+                          {BG_REMOVER_LINES[bgRemover.status].text}
+                          {(bgRemover.processing || bgRemover.queued > 0) && ` · ${(bgRemover.processing ? 1 : 0) + bgRemover.queued} photo(s) in progress`}
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                  )}
+                </Box>
 
                 <Button variant="outlined" component="label" fullWidth startIcon={<CloudUpload />} sx={{ color: '#37a6ff', borderColor: '#37a6ff', mb: 2, textTransform: 'none', fontWeight: 'bold' }}>
                   Upload Front Image

@@ -1,0 +1,47 @@
+/* The storefront's footer (frontend/src/components/footer.css), with its inline styles as classes. */
+.ez-footer { background: var(--ink); color: var(--cream); }
+.ez-footer a:hover { color: var(--gold) !important; }
+.ez-footer input::placeholder { color: rgba(244,239,230,0.5); }
+.ez-footer-grid { max-width: 1280px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px) 28px; display: grid; grid-template-columns: minmax(240px, 1.3fr) repeat(4, minmax(140px, 1fr)); gap: 40px clamp(24px, 3vw, 48px); font-size: 14px; }
+.ez-footer-news { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px 48px; align-items: center; padding-bottom: 40px; border-bottom: 1px solid rgba(244,239,230,0.15); }
+.ez-footer-kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+.ez-footer-headline { font-family: var(--display); font-weight: 900; font-size: clamp(32px, 3.5vw, 48px); line-height: 0.9; text-transform: uppercase; margin-top: 8px; }
+.ez-footer-form { display: flex; gap: 0; max-width: 520px; width: 100%; margin: 0; }
+.ez-footer-form input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 0 16px; height: 52px; border: 2px solid var(--cream); border-right: 0; border-radius: 2px 0 0 2px; background: transparent; color: var(--cream); outline-offset: 2px; }
+.ez-footer-news-msg { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: #f2b8b5; }
+.ez-footer-news-msg.is-ok { color: var(--gold); }
+.ez-footer-intro { margin: 16px 0 0; color: rgba(244,239,230,0.7); line-height: 1.6; max-width: 34ch; }
+.ez-footer-socials { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.ez-footer-social { width: 40px; height: 40px; display: grid; place-items: center; border: 1.5px solid rgba(244,239,230,0.3); border-radius: 2px; color: var(--cream); text-decoration: none; font-family: var(--display); font-weight: 900; font-size: 16px; }
+.ez-footer-title { font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px; color: var(--gold); }
+.ez-footer-links { display: grid; gap: 10px; }
+.ez-footer-link { text-decoration: none; color: rgba(244,239,230,0.8); }
+.ez-footer-legal { grid-column: 1 / -1; border-top: 1px solid rgba(244,239,230,0.15); padding-top: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; color: rgba(244,239,230,0.55); font-size: 13px; }
+.ez-footer-legal-links { display: flex; flex-wrap: wrap; gap: 20px; }
+.ez-footer-legal-links a { color: inherit; text-decoration: none; }
+/* up to 1200px the builder's Add to cart bar is fixed to the bottom of the screen (css/components/Header):
+   room for it, so the last line of the footer is not hidden behind it */
+@media (max-width: 1200px) {
+  .ez-footer { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 900px) {
+  .ez-footer-grid { grid-template-columns: 1fr 1fr; }
+  .ez-footer-grid > div:nth-child(2) { grid-column: 1 / -1; }
+}
+@media (max-width: 420px) {
+  .ez-footer-news { grid-template-columns: 1fr; }
+  .ez-footer-form { flex-wrap: wrap; }
+  .ez-footer-form input { border-right: 2px solid var(--cream); border-radius: 2px; flex-basis: 100%; }
+  .ez-footer-form .ez-btn { border-radius: 2px !important; width: 100%; margin-top: 8px; }
+}
+
+/* footer logo: the admin's footer logo at its size, always white on the dark footer (as the admin previews it) */
+.ez-footer-logo { display: block; height: var(--ez-footer-logo-h, 64px); width: auto; max-width: 100%; filter: brightness(0) invert(1); }
+@media (max-width: 640px) { .ez-footer-logo { height: calc(var(--ez-footer-logo-h, 64px) * 0.75); } }
+
+/* Contact column: phone, email, hours and the admin's addresses */
+.ez-footer-contact { display: grid; gap: 10px; }
+.ez-footer-contact a { overflow-wrap: anywhere; }
+.ez-footer-hours { font-size: 13px; color: rgba(244,239,230,0.6); }
+.ez-footer-addr { margin-top: 4px; font-size: 13px; line-height: 1.55; color: rgba(244,239,230,0.72); }
+.ez-footer-addr-label { margin-bottom: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }

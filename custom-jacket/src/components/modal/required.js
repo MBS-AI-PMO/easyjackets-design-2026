@@ -21,14 +21,18 @@ const Required = ({ modal, colors, sizes, setRequiremodal, jacket, styles, advan
         beforeClose: "cjd-modal-overlay--before-close",
       }}
       closeTimeoutMS={MODAL_ANIM_MS}
-      contentLabel={'Create Team (Identical) Jackets'}
+      contentLabel={'Required items'}
+      onRequestClose={() => setRequiremodal(false)}
       ariaHideApp={false}
     >
       <header className='cjd-modal-header'>
-        <h4>Please select all required items</h4>
-        <div className='cjd-modal-close' onClick={() => setRequiremodal(false)}>
-          ×
+        <div>
+          <div className='cjd-dialog-eyebrow'>Almost there</div>
+          <h4>Please select all <span>required</span> items</h4>
         </div>
+        <button type='button' className='cjd-modal-close' aria-label='Close' onClick={() => setRequiremodal(false)}>
+          ×
+        </button>
       </header>
 
       <div className='cjd-modal-content guides'>
@@ -53,9 +57,9 @@ const Required = ({ modal, colors, sizes, setRequiremodal, jacket, styles, advan
       </div>
 
       <div className='cjd-modal-footer'>
-        <div className='cjd-btn cjd-btn-primary cjd-btn-ok' onClick={() => setRequiremodal(false)}>
+        <button type='button' className='cjd-dialog-btn cjd-dialog-btn--ink' onClick={() => setRequiremodal(false)}>
           OK
-        </div>
+        </button>
       </div>
     </Modal>
   );

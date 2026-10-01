@@ -1,0 +1,40 @@
+/* The storefront navbar's look (frontend/src/components/nav.css) for the parts of the builder's bar
+   that come from it: logo, links, menu button and drawer. The bar itself: css/components/Header. */
+.ez-nav-logo { display: flex; align-items: center; flex: none; padding: 0; }
+.ez-nav-logo img { height: var(--ez-logo-h, 72px); width: auto; display: block; } /* --ez-logo-h: the admin's navbar size */
+
+.ez-nav-links { display: flex; align-items: center; gap: 26px; margin: 0 auto; flex: none; }
+.ez-nav-links a { text-decoration: none; font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); position: relative; padding: 6px 0; line-height: normal; white-space: nowrap; }
+.ez-nav-links a::after { content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 3px; background: var(--gold); transition: right .25s ease; }
+.ez-nav-links a:hover::after { right: 0; }
+
+/* hamburger */
+.ez-burger { display: none; width: 44px; height: 44px; padding: 10px; border: 0; background: transparent; cursor: pointer; flex-direction: column; justify-content: center; gap: 5px; flex: none; }
+.ez-burger span { display: block; height: 3px; background: var(--ink); border-radius: 2px; }
+
+/* the whole bar needs about 1270px on one row: below that the links move into the drawer */
+@media (max-width: 1300px) {
+  .ez-nav-links { display: none; }
+  .ez-burger { display: flex; }
+  .cjd-header-actions { margin-left: auto; }
+}
+@media (max-width: 1080px) { .ez-nav-logo img { height: calc(var(--ez-logo-h, 72px) * 0.78); } }
+/* phones: a shorter bar, logo and menu button the same height */
+@media (max-width: 720px) {
+  .ez-nav-logo img { height: calc(var(--ez-logo-h, 72px) * 0.56); }
+  .ez-burger { width: 40px; height: 40px; padding: 8px; }
+}
+
+/* drawer: above the builder's bar and its phone Add to cart bar */
+.ez-drawer-backdrop { position: fixed; inset: 0; background: rgba(20,17,15,0.55); z-index: 1100; opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility .2s; }
+.ez-drawer-backdrop.is-open { opacity: 1; visibility: visible; }
+.ez-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(360px, 88vw); background: var(--cream); z-index: 1110; box-shadow: -24px 0 48px -24px rgba(20,17,15,0.5); transform: translateX(100%); visibility: hidden; transition: transform .25s ease, visibility .25s; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+.ez-drawer.is-open { transform: translateX(0); visibility: visible; }
+.ez-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 12px 20px; border-bottom: 1px solid var(--cream-2); }
+.ez-drawer-head img { height: 48px; width: auto; display: block; }
+.ez-drawer-close { width: 44px; height: 44px; border: 0; background: transparent; font-size: 34px; line-height: 1; cursor: pointer; color: var(--ink); }
+.ez-drawer-links { display: grid; padding: 8px 0 24px; }
+.ez-drawer-links a { text-decoration: none; color: var(--ink); padding: 11px 24px; font-size: 16px; font-weight: 600; }
+.ez-drawer-links a:hover { background: #fbf8f2; color: var(--gold-2); }
+.ez-drawer-top { font-family: var(--display); font-weight: 800 !important; font-size: 22px !important; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 6px; border-top: 1px solid var(--cream-2); padding-top: 16px !important; }
+.ez-drawer-top:first-child { border-top: 0; margin-top: 0; }

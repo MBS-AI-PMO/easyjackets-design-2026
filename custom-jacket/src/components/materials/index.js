@@ -376,8 +376,10 @@ const Materials = ({
             globals.catName === "Varsity Jackets" &&
             (
               <>
-                <input type="checkbox" id="zip" name="zipoutlining" value="Bike" />
-                <label for="zipoutlining" className="select-label" style={{ display: "inline" }}>Add 1/2 zipout lining</label>
+                <label className="cjd-check">
+                  <input type="checkbox" id="zip" name="zipoutlining" value="Bike" />
+                  <span>Add 1/2 zipout lining</span>
+                </label>
               </>
             )}
           {/* {defaults.materials.map((val) => {

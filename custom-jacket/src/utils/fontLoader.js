@@ -1,4 +1,3 @@
-import WebFont from 'webfontloader';
 import axiosInstance from './axiosConfig';
 import { autoFitCustomizerText } from './autoFitText';
 
@@ -29,8 +28,33 @@ const appendGoogleLink = (font) => {
   const link = document.createElement('link');
   link.id = id;
   link.rel = 'stylesheet';
-  link.href = font.googleUrl;
+  link.href = withSwap(font.googleUrl);
   document.head.appendChild(link);
+};
+
+// text shows at once in a stand-in font and switches when the font arrives (without it Chrome steps
+// in on slow connections and warns about every font)
+const withSwap = (url) => (/[?&]display=/.test(url) ? url : `${url}${url.includes('?') ? '&' : '?'}display=swap`);
+
+// all the Google families in one stylesheet; the jacket's text is refitted once they have loaded
+const appendGoogleFamilies = (families) => {
+  const id = 'cjd-google-fonts';
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css?family=${families.map((f) => encodeURIComponent(f).replace(/%20/g, '+')).join('|')}&display=swap`;
+  // A font downloads only once something uses it, but names are sized to their place from the real
+  // letters: fetch them all in the background (as webfontloader did), and refit the jacket's text
+  // whenever one finishes.
+  const preload = () => {
+    if (!document.fonts?.load) return autoFitCustomizerText();
+    Promise.allSettled(families.map((family) => document.fonts.load(`16px "${family}"`))).then(autoFitCustomizerText);
+  };
+  link.onload = preload;
+  link.onerror = autoFitCustomizerText;
+  document.head.appendChild(link);
+  if (document.fonts?.addEventListener) document.fonts.addEventListener('loadingdone', autoFitCustomizerText);
 };
 
 const appendFileFace = (font) => {
@@ -70,13 +94,7 @@ export const injectCustomizerFonts = (fonts = []) => {
   });
 
   if (googleFamilies.length) {
-    WebFont.load({
-      google: {
-        families: [...new Set(googleFamilies)],
-      },
-      active: autoFitCustomizerText,
-      inactive: autoFitCustomizerText,
-    });
+    appendGoogleFamilies([...new Set(googleFamilies)]);
   }
 };
 

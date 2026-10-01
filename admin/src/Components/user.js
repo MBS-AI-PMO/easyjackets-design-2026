@@ -405,7 +405,7 @@ const UserTable = () => {
         </DialogTitle>
 
         <form onSubmit={handleAddUser}>
-          <DialogContent sx={{ pt: 4 }}>
+          <DialogContent sx={{ '.MuiDialogTitle-root + &': { pt: 4 } }}>
             <Grid container spacing={1}>
               <Grid item xs={12}>
                 <TextField

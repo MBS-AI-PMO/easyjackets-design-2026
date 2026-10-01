@@ -477,7 +477,7 @@ const AdminTable = () => {
                 </DialogTitle>
 
                 <form onSubmit={handleAddAdmin}>
-                    <DialogContent sx={{ pt: 4 }}>
+                    <DialogContent sx={{ '.MuiDialogTitle-root + &': { pt: 4 } }}>
                         <Grid container spacing={1}>
                             <Grid item xs={12}>
                                 <TextField
@@ -648,7 +648,7 @@ const AdminTable = () => {
                     </IconButton>
                 </DialogTitle>
 
-                <DialogContent sx={{ pt: 4 }}>
+                <DialogContent sx={{ '.MuiDialogTitle-root + &': { pt: 4 } }}>
                     <Typography sx={{ color: '#333' }}>
                         Are you sure you want to permanently revoke administrative access for:
                     </Typography>

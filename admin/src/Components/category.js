@@ -581,7 +581,7 @@ const Categories = () => {
         </DialogTitle>
 
         <form onSubmit={handleSubmit}>
-          <DialogContent sx={{ pt: 4 }}>
+          <DialogContent sx={{ '.MuiDialogTitle-root + &': { pt: 4 } }}>
             <TextField
               fullWidth
               label="Category Name"

@@ -10,6 +10,7 @@ import rootReducer from "./store/reducers";
 import { getProduct, getSetProduct, setProduct } from "./store/actions";
 
 import "./css/index.scss";
+import "./css/scrollbars.css";
 import App from "./App";
 import { loadSiteFavicon } from "./utils/favicon";
 

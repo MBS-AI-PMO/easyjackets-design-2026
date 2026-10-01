@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Dropdown from 'react-dropdown';
 import { designColor, chooseName } from '../../store/actions';
 import { BODY_COLORS, getColorName } from '../../utils';
-import { getDesignAreaConfig, isWideDesignArea } from '../../config/designAreaConfig';
+import { getGuideSize, isWideDesignArea } from '../../config/designAreaConfig';
 
 import SelectBox from '../selectBox';
 // import { ReactComponent as Seniors } from '../../assets/images/badges/symbol.svg';
@@ -86,7 +86,6 @@ const Symbol = ({ globals, part, colors, defaults, updateColor, updateName, desi
     return alphabets;
   };
 
-  const designConfig = getDesignAreaConfig(part);
 
   return (
     <div className='cjd-modal-form-wrapper'>
@@ -94,7 +93,9 @@ const Symbol = ({ globals, part, colors, defaults, updateColor, updateName, desi
         <div className='cjd-modal-half'>
           <div className='cjd-form-group'>
             <Dropdown
-              options={['Show All', 'Badges', 'Flags', 'Mascots']}
+              // no badges are offered to pick (there is no list for them), so Badges is not an option;
+              // a design already saved with a badge still draws it below
+              options={['Show All', 'Flags', 'Mascots']}
               onChange={onSelect}
               value={view}
               placeholder='Select an option'
@@ -156,18 +157,20 @@ const Symbol = ({ globals, part, colors, defaults, updateColor, updateName, desi
                   part === 'Left Mid Sleeve Lower'
                   ? colors.sleeves
                   : colors.body,
-              aspectRatio: `${designConfig.width} / ${designConfig.height}`,
             }}
           >
+            {/* drawn in the place's guide (as on the jacket); the preview box has the guide's shape */}
             <svg
               xmlns='http://www.w3.org/2000/svg'
-              viewBox={`0 0 ${designConfig.width} ${designConfig.height}`}
+              viewBox={`0 0 ${getGuideSize(part).join(' ')}`}
             >
               <g>
                 {flag && (
+                  // flags in their 176x102 frame; mascots and badges are square, as the jacket draws them
+                  // (74 and 190 units), so they fill the guide instead of a flag-shaped strip of it
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 176 102'
+                    viewBox={type === 'Mascots' ? '0 0 74 74' : type === 'Badges' ? '0 0 190 190' : '0 0 176 102'}
                   >
                     {type === 'Flags' && (
                       <>
@@ -190,8 +193,8 @@ const Symbol = ({ globals, part, colors, defaults, updateColor, updateName, desi
 
                     {type === 'Mascots' && (
                       <image
-                        width='176'
-                        height='102'
+                        width='74'
+                        height='74'
                         xlinkHref={require(`../../assets/images/mascots/${flag}.svg`)}
                       />
                     )}

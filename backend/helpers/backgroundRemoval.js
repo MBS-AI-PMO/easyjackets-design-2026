@@ -1,40 +1,52 @@
 // helpers/backgroundRemoval.js
 //
-// Product photos get their background removed by the bg-remover service
-// (../bg-remover). Uploads are stored exactly as before; the cut-out is
+// Product photos get their background removed by the built-in remover
+// (bg-remover/, started by bgRemoverProcess.js). Uploads are stored exactly as before; the cut-out is
 // produced afterwards by a small in-process queue and written over the same
 // file (so URLs never change), the original kept beside it as
 // <name>.original.<ext>. The pixel size is preserved: the service returns the
 // upload's own pixels with an alpha channel. Resized copies of the file are
 // purged so the next request re-renders them from the cut-out.
 //
-// Env: BG_REMOVER_URL (service base URL; unset = feature off), BG_REMOVER_KEY,
+// Env: BG_REMOVER_URL + BG_REMOVER_KEY (an outside service instead of the built-in one),
 // BG_REMOVER_MODEL (default birefnet-general), AUTO_REMOVE_BG (false = pause).
 import fs from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
 import { keyFromUrl, resolveUploadPath } from './localUploadStorage.js';
+import { EMBEDDED_KEY, embeddedAllowed, refreshEmbeddedState, startBgRemover } from './bgRemoverProcess.js';
 
-const SERVICE = (process.env.BG_REMOVER_URL || '').replace(/\/+$/, '');
-const KEY = process.env.BG_REMOVER_KEY || '';
+const EXTERNAL = (process.env.BG_REMOVER_URL || '').replace(/\/+$/, '');
 const MODEL = process.env.BG_REMOVER_MODEL || 'birefnet-general';
 const RESIZE_WIDTHS = [320, 480, 640, 768, 960, 1280];
 const TIMEOUT_MS = Number(process.env.BG_REMOVER_TIMEOUT_MS) || 180000;
 
-export const backgroundRemovalEnabled = () => !!SERVICE && process.env.AUTO_REMOVE_BG !== 'false';
+export const backgroundRemovalEnabled = () => (!!EXTERNAL || embeddedAllowed()) && process.env.AUTO_REMOVE_BG !== 'false';
+
+/** Where to send photos: the outside service when one is configured, else the built-in one (started on demand). */
+async function service() {
+  if (EXTERNAL) return { url: EXTERNAL, key: process.env.BG_REMOVER_KEY || '' };
+  return { url: await startBgRemover(), key: EMBEDDED_KEY };
+}
 
 /** Buffer in → PNG with alpha (same size) from the service. A short outage (restart, deploy) is retried, not failed. */
 export async function removeBackground(buffer, { model = MODEL, matting = false, fill = 0.02, filename = 'image' } = {}) {
-  if (!SERVICE) throw new Error('BG_REMOVER_URL is not set');
-  const url = `${SERVICE}/remove?model=${encodeURIComponent(model)}&matting=${matting ? 1 : 0}&fill=${fill}`;
+  if (!backgroundRemovalEnabled()) throw new Error('background removal is switched off');
+  const query = `/remove?model=${encodeURIComponent(model)}&matting=${matting ? 1 : 0}&fill=${fill}`;
   const waits = [5000, 15000, 30000, 60000];
   for (let attempt = 0; ; attempt += 1) {
     const form = new FormData();
     form.append('image', new Blob([buffer]), filename);
+    let target;
+    try { target = await service(); } catch (error) {
+      if (attempt >= waits.length) throw error;
+      await new Promise((r) => setTimeout(r, waits[attempt]));
+      continue;
+    }
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const res = await fetch(url, { method: 'POST', body: form, headers: KEY ? { 'X-BG-Key': KEY } : {}, signal: controller.signal });
+      const res = await fetch(`${target.url}${query}`, { method: 'POST', body: form, headers: target.key ? { 'X-BG-Key': target.key } : {}, signal: controller.signal });
       if (res.ok) return { png: Buffer.from(await res.arrayBuffer()), model: res.headers.get('x-model') || model, ms: Number(res.headers.get('x-elapsed-ms')) || 0 };
       const detail = (await res.text()).slice(0, 200);
       if (![502, 503, 504].includes(res.status) || attempt >= waits.length) throw new Error(`bg-remover ${res.status}: ${detail}`);
@@ -126,17 +138,23 @@ export async function isCutOut(keyOrUrl) {
 // ---- background queue for fresh uploads ----
 const queue = [];
 let draining = false;
+let current = null;
+let lastResult = null;
 async function drain() {
   if (draining) return;
   draining = true;
   while (queue.length) {
     const key = queue.shift();
+    current = key;
     try {
       const r = await cutoutStoredImage(key);
+      lastResult = { key, ok: true, ms: r.ms, at: new Date().toISOString() };
       console.log(`bg-remover: ${key} cut out in ${r.ms} ms (${r.width}x${r.height}, ${Math.round(r.bytes / 1024)} KB)`);
     } catch (error) {
       console.error(`bg-remover: ${key} failed: ${error.message}`);
+      lastResult = { key, ok: false, error: error.message, at: new Date().toISOString() };
     }
+    current = null;
   }
   draining = false;
 }
@@ -148,4 +166,19 @@ export function queueProductCutout(keyOrUrl) {
   queue.push(key);
   setImmediate(drain);
   return true;
+}
+
+/** What the admin shows beside the "Remove background" switch. */
+export async function backgroundRemovalStatus() {
+  const base = { enabled: backgroundRemovalEnabled(), queued: queue.length, processing: current, last: lastResult };
+  if (!base.enabled) return { ...base, mode: 'off', status: 'off' };
+  if (EXTERNAL) {
+    try {
+      const res = await fetch(`${EXTERNAL}/health`, { signal: AbortSignal.timeout(2000) });
+      const h = res.ok ? await res.json() : null;
+      return { ...base, mode: 'external', status: h?.ok ? (h.ready ? 'ready' : 'warming') : 'unreachable', model: h?.model || MODEL };
+    } catch { return { ...base, mode: 'external', status: 'unreachable', model: MODEL }; }
+  }
+  const s = await refreshEmbeddedState();
+  return { ...base, mode: 'built-in', status: s.status, detail: s.detail, model: s.model, restarts: s.restarts };
 }

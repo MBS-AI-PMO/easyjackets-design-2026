@@ -996,10 +996,13 @@ const JacketBack = ({
               <g transform="translate(58, 175)">
                 {designs["Back Middle"]?.symbol.type === "Flags" && (
                   <g transform="translate(0, 0)">
+                    {/* the flag across the guide (245 wide, from x 133; 140 tall on the cropped varsity),
+                        cropped to the flag and its outline: in a 190 square it used ~3/4 of the guide */}
                     <svg
-                      width="400"
-                      height="190"
-                      viewBox="0 0 72 72"
+                      x="80"
+                      width="235"
+                      height={globals.productId == "4893" ? 140 : 190}
+                      viewBox="0 12 72 48"
                       preserveAspectRatio="xMidYMid meet"
                     >
                       <image

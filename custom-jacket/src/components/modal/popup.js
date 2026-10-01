@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import Modal from 'react-modal';
 
 import { MODAL_ANIM_MS } from '../../config/modalAnimation';
+import { getGuideRatio } from '../../config/designAreaConfig';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 import Letters from './letters';
@@ -10,6 +11,7 @@ import Name from './name';
 import Upload from './upload';
 import Symbol from './symbol';
 import { modalState, changePose, saveName, deleteDesign } from '../../store/actions';
+import CjdAlert from '../alert';
 
 const nameTab = [
   'Front Center',
@@ -28,63 +30,35 @@ const nameTab = [
   'Back Middle',
 ];
 const nameOnly = ['Front Center', 'Back Top', 'Back Bottom'];
+const verticalChest = ['Right Chest Verticle', 'Left Chest Verticle'];
+
+// The section a tab position stands for in a place's dialog: the tabs differ per place (pockets
+// start at Letters, Back Middle has no Letters, the vertical chest places only Uploads).
+const tabForIndex = (title, idx) => {
+  if (verticalChest.includes(title)) return 'upload';
+  const noName = title === 'Left Pocket' || title === 'Right Pocket';
+  const noLetters = noName || title === 'Back Middle';
+  const order = noName ? ['letters', 'symbol', 'upload'] : noLetters ? ['name', 'symbol', 'upload'] : ['name', 'letters', 'symbol', 'upload'];
+  return order[idx] || order[0];
+};
 
 const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose, styles }) => {
 
-  const { open, title, tab, index } = popup;
+  const { open, title, index } = popup;
+  // what Save says when there is nothing to save yet, in the builder's own notice (was the browser's alert)
+  const [notice, setNotice] = React.useState(null);
 
   const setActiveTab = (idx) => {
-    let activeTab = 'name';
-
-    if (idx === 1) activeTab = 'letters';
-    else if (idx === 2) activeTab = 'symbol';
-    else if (idx === 3) activeTab = 'upload';
-
-    if (idx === 0 && (title === 'Left Pocket' || title === 'Right Pocket')) activeTab = 'letters';
-
-    if (
-      idx === 1 &&
-      (title === 'Left Pocket' || title === 'Right Pocket' || title === 'Back Middle')
-    )
-      activeTab = 'symbol';
-
-    if (
-      idx === 2 &&
-      (title === 'Left Pocket' || title === 'Right Pocket' || title === 'Back Middle')
-    )
-      activeTab = 'upload';
-
-    modalState('tab', activeTab);
+    modalState('tab', tabForIndex(title, idx));
     modalState('index', idx);
   };
 
+  // a place without a design opens on its first tab (the tab shown could be left over from the
+  // dialog opened before)
   const afterOpenModal = () => {
-    let currentTab;
-
     if (!designs[title]?.done) {
-      if (nameTab.includes(title) || nameOnly.includes(title)) {
-        currentTab = 'name';
-      } else if (
-        !nameOnly.includes(title) &&
-        title !== 'Back Middle' &&
-        title !== 'Right Chest Verticle' &&
-        title !== 'Left Chest Verticle'
-      ) {
-        currentTab = 'letters';
-      } else if (
-        !nameOnly.includes(title) &&
-        title !== 'Back Middle' &&
-        title !== 'Right Chest Verticle' &&
-        title !== 'Left Chest Verticle'
-      ) {
-        currentTab = 'symbol';
-      } else if (
-        !nameOnly.includes(title) &&
-        (title === 'Right Chest Verticle' || title === 'Left Chest Verticle')
-      ) {
-        currentTab = 'upload';
-      }
-      modalState('tab', currentTab);
+      modalState('index', 0);
+      modalState('tab', tabForIndex(title, 0));
     }
   };
 
@@ -94,20 +68,25 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
     modalState('open', false);
   };
 
-  const saveDesign = (tabActive) => {
+  // Saves what is set in the tab on screen and shows it on the jacket.
+  const saveDesign = () => {
     const part = title;
-    const curPart = designs[title][tabActive];
+    const tabActive = tabForIndex(title, index);
+    const curPart = designs[title]?.[tabActive];
     let data;
 
+    // nothing set in this tab yet
     if (typeof curPart === 'undefined') {
-      alert('Pimp up your Jacket before saving!');
+      setNotice({ title: 'Pimp up your jacket', message: 'Add a name, letters, a symbol or an upload before saving.' });
       return false;
     }
 
     switch (tabActive) {
       case 'name':
-        if (curPart.title === undefined || curPart?.title === '')
-          alert('Please enter your desired name');
+        if (curPart.title === undefined || curPart?.title === '') {
+          setNotice({ title: 'Type a name', message: 'Type the name you want on the jacket, then save.' });
+          return false;
+        }
 
         data = {
           title: curPart.title,
@@ -124,13 +103,13 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
           curPart.type === 'Type Your Own' &&
           (curPart.title === undefined || curPart?.title === '')
         ) {
-          alert('Please enter your desired letter');
+          setNotice({ title: 'Type a letter', message: 'Type the letters you want on the jacket, then save.' });
           return false;
         } else if (
           curPart.type === 'Ready To Use' &&
           (curPart.path === undefined || curPart?.path === '')
         ) {
-          alert('Please select your patch');
+          setNotice({ title: 'Pick a letter', message: 'Pick one of the ready-to-use letters, then save.' });
           return false;
         }
 
@@ -159,7 +138,7 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
 
       case 'editables':
         if (curPart.path === undefined || curPart?.path === '') {
-          alert('Please Select Editable badge');
+          setNotice({ title: 'Pick a badge', message: 'Pick a badge, then save.' });
           return false;
         }
 
@@ -210,6 +189,7 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
   };
 
   return (
+    <>
     <Modal
       isOpen={open}
       onAfterOpen={afterOpenModal}
@@ -224,15 +204,20 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
         beforeClose: "cjd-modal-overlay--before-close",
       }}
       closeTimeoutMS={MODAL_ANIM_MS}
+      // the preview takes the shape of this place's guide on the jacket (css/builder-design-modal.scss)
+      style={{ content: { '--cjd-guide-ratio': getGuideRatio(title) } }}
       contentLabel={title}
       onRequestClose={() => modalState('open', false)}
       ariaHideApp={false}
     >
       <header className='cjd-modal-header'>
-        <h4>{styles.collar === 'Zipper Hood' && title === 'Back Top' ? 'Overhood' : title}</h4>
-        <div className='cjd-modal-close' onClick={() => modalState('open', false)}>
-          ×
+        <div>
+          <div className='cjd-dialog-eyebrow'>Add design</div>
+          <h4>{styles.collar === 'Zipper Hood' && title === 'Back Top' ? 'Overhood' : title}</h4>
         </div>
+        <button type='button' className='cjd-modal-close' aria-label='Close' onClick={() => modalState('open', false)}>
+          ×
+        </button>
       </header>
 
       <Tabs
@@ -316,14 +301,22 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
       </Tabs>
 
       <div className='cjd-modal-footer'>
-        <div className='cjd-btn cjd-btn-secondary' onClick={(e) => removeDesign(title, e)}>
+        <button type='button' className='cjd-dialog-btn cjd-dialog-btn--line' onClick={(e) => removeDesign(title, e)}>
           Remove
-        </div>
-        <div className='cjd-btn cjd-btn-primary' onClick={() => saveDesign(tab)}>
+        </button>
+        <button type='button' className='cjd-dialog-btn cjd-dialog-btn--ink' onClick={saveDesign}>
           Save
-        </div>
+        </button>
       </div>
     </Modal>
+    <CjdAlert
+      open={Boolean(notice)}
+      tone="info"
+      title={notice?.title}
+      message={notice?.message}
+      onClose={() => setNotice(null)}
+    />
+    </>
   );
 };
 

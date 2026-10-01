@@ -1,44 +1,43 @@
 @import "./assets/scss/variables";
 
+// The lettering fonts. Smallest file first with its real format (browsers take the first they can
+// use: the lists used to start with the .ttf, and called .woff files "truetype"), and swap, so text
+// shows at once in a stand-in font instead of Chrome stepping in on slow connections.
 @font-face {
   font-family: "Ballpark";
-  src: url("./assets/fonts/ballpark-weiner.eot");
-  src: url("./assets/fonts/ballpark-weiner.eot?#iefix") format("embedded-opentype"),
-    url("./assets/fonts/ballpark-weiner.ttf") format("truetype"),
-    url("./assets/fonts/ballpark-weiner.svg#Ballpark") format("svg");
+  src: url("./assets/fonts/ballpark-weiner.ttf") format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Baseball";
-  src: url("./assets/fonts/baseball-webfont.eot");
-  src: url("./assets/fonts/baseball-webfont.eot?#iefix") format("embedded-opentype"),
-    url("./assets/fonts/baseball-webfont.ttf") format("truetype"),
-    url("./assets/fonts/baseball-webfont.woff") format("truetype"),
-    url("./assets/fonts/baseball-webfont.woff2") format("truetype"),
-    url("./assets/fonts/baseball-webfont.svg#Baseball") format("svg");
+  src: url("./assets/fonts/baseball-webfont.woff2") format("woff2"),
+    url("./assets/fonts/baseball-webfont.woff") format("woff"),
+    url("./assets/fonts/baseball-webfont.ttf") format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Rookie";
-  src: url("./assets/fonts/rookiejnl-webfont.woff") format("truetype"),
-    url("./assets/fonts/rookiejnl-webfont.woff2") format("truetype");
+  src: url("./assets/fonts/rookiejnl-webfont.woff2") format("woff2"),
+    url("./assets/fonts/rookiejnl-webfont.woff") format("woff");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Franchise";
-  src: url("./assets/fonts/franchise-bold-webfont.woff") format("truetype"),
-    url("./assets/fonts/franchise-bold-webfont.woff2") format("truetype"),
+  src: url("./assets/fonts/franchise-bold-webfont.woff2") format("woff2"),
+    url("./assets/fonts/franchise-bold-webfont.woff") format("woff"),
     url("./assets/fonts/franchise-bold-webfont.ttf") format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Geek";
-  src: url("./assets/fonts/geek.eot");
-  src: url("./assets/fonts/geek.eot?#iefix") format("embedded-opentype"),
-    url("./assets/fonts/geek.woff") format("truetype"),
-    url("./assets/fonts/geek.woff2") format("truetype"),
-    url("./assets/fonts/geek.ttf") format("truetype"),
-    url("./assets/fonts/geek.svg#Geek") format("svg");
+  src: url("./assets/fonts/geek.woff2") format("woff2"),
+    url("./assets/fonts/geek.woff") format("woff"),
+    url("./assets/fonts/geek.ttf") format("truetype");
+  font-display: swap;
 }
 
 .panel-mbl {
@@ -1590,7 +1589,7 @@
     padding: 2px;
     font-size: 12px;
     line-height: 1.4;
-    color: $blue;
+    color: var(--ej-terracotta);
     // text-decoration: none;
     // border-bottom: 1px solid $blue;
 
@@ -2393,6 +2392,19 @@
 
 .react-toggle .react-toggle-track {
   background-color: #6a6a6a;
+}
+
+// react-toggle glows #0099E0 blue on focus and while pressed (every tap on a phone): no glow,
+// and a ring in the brand colour for keyboard focus only
+.react-toggle.react-toggle--focus .react-toggle-thumb,
+.react-toggle.react-toggle:active:not(.react-toggle--disabled) .react-toggle-thumb {
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.react-toggle.react-toggle:has(input:focus-visible) .react-toggle-thumb {
+  box-shadow: 0 0 0 3px rgba(196, 112, 58, .45);
 }
 
 .designLocations:hover {

@@ -1,0 +1,472 @@
+// The toolbar over the jacket (Guides switch, light/dark canvas, Share on phones) in the storefront's
+// look: cream boxes with 2px corners, Big Shoulders labels, ink and gold, and every change animated.
+// Imported by App.js after css/App.scss, which holds the old pill styles (hence the longer
+// selectors and the !important where the old rules use it). 36px tall from 12px down: the jacket's
+// card starts 56px down, so the toolbar clears it (40px tall it overlapped the card's corner).
+
+$ease: .25s ease;
+
+.cjd-content-wrapper .cjd-jacket-guides.ez-site {
+  top: 12px;
+  gap: 8px;
+
+  .cjd-guides-pill {
+    gap: 12px;
+    height: 36px;
+    padding: 0 5px 0 14px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    backdrop-filter: none;
+    box-shadow: 0 12px 28px -18px rgba(20, 17, 15, .35);
+    transition: border-color $ease, background $ease, box-shadow $ease;
+
+    &:hover {
+      transform: none;
+      border-color: var(--ink);
+      box-shadow: 0 16px 32px -18px rgba(20, 17, 15, .45);
+    }
+
+    .cjd-guides-label {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: .08em;
+      color: var(--ink);
+    }
+
+    // the canvas button is a square of its own, without the box around it
+    &:has(.cjd-canvas-bg-toggle) {
+      height: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+
+  // Guides: a sliding switch. Off: ink knob on the left, the word on the right. On: ink track, the
+  // knob slides right and turns gold, the word moves left.
+  .cjd-guides-pill .cjd-guides-toggle {
+    position: relative;
+    width: 66px;
+    min-width: 0;
+    height: 26px;
+    padding: 0;
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--ink);
+    box-shadow: none;
+    transform: none;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    transition: background $ease, color $ease, border-color $ease;
+
+    .cjd-switch-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 17px;
+      height: 17px;
+      border-radius: 1px;
+      background: var(--ink);
+      transition: transform $ease, background $ease;
+    }
+
+    .cjd-switch-text {
+      position: absolute;
+      top: 50%;
+      left: 27px;
+      line-height: 1;
+      transform: translateY(-50%);
+      transition: left $ease, color $ease;
+    }
+
+    &:not(.on):hover {
+      background: var(--cream-2);
+      color: var(--ink);
+      transform: none;
+    }
+
+    &.on {
+      background: var(--ink);
+      color: var(--cream);
+      box-shadow: none;
+
+      .cjd-switch-knob {
+        transform: translateX(40px);
+        background: var(--gold);
+      }
+
+      .cjd-switch-text {
+        left: 9px;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+      border-color: var(--ink);
+      box-shadow: none;
+    }
+  }
+
+  // light / dark canvas behind the jacket
+  .cjd-guides-pill .cjd-canvas-bg-toggle {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    color: var(--ink);
+    box-shadow: 0 12px 28px -18px rgba(20, 17, 15, .35);
+    transform: none;
+    transition: background $ease, color $ease, border-color $ease, box-shadow $ease;
+
+    &:not(.on):hover {
+      background: var(--cream-2);
+      border-color: var(--ink);
+      color: var(--ink);
+      transform: none;
+    }
+
+    &.on {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--gold);
+    }
+
+    &.on:hover {
+      background: var(--ink-2);
+      transform: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+
+    // a new icon (moon / sun) spins in
+    svg {
+      width: 16px !important;
+      height: 16px !important;
+      animation: cjd-icon-in .35s ease;
+    }
+  }
+
+  // Save and Share, on phones only
+  .cjd-guides-pill.cjd-action-pill {
+    gap: 8px;
+    height: 36px !important;
+    padding: 0 14px !important;
+    border: 1.5px solid var(--cream-2) !important;
+    border-radius: 2px !important;
+    background: #fbf8f2 !important;
+    transition: background $ease, border-color $ease !important;
+
+    svg {
+      width: 15px !important;
+      height: 15px !important;
+      margin-right: 0 !important;
+      color: var(--ink) !important;
+    }
+
+    .cjd-guides-label {
+      font-family: var(--display) !important;
+      font-weight: 800 !important;
+      font-size: 16px !important;
+      letter-spacing: .08em !important;
+      color: var(--ink) !important;
+    }
+
+    &:hover {
+      background: var(--cream-2) !important;
+      border-color: var(--ink) !important;
+      transform: none !important;
+    }
+  }
+
+  // Save, on phones only: the main action, filled ink
+  .cjd-guides-pill.cjd-action-pill.cjd-action-pill--primary {
+    border-color: var(--ink) !important;
+    background: var(--ink) !important;
+
+    svg {
+      color: var(--gold) !important;
+    }
+
+    .cjd-guides-label {
+      color: var(--cream) !important;
+    }
+
+    &:hover {
+      border-color: var(--gold) !important;
+      background: var(--gold) !important;
+
+      svg,
+      .cjd-guides-label {
+        color: var(--ink) !important;
+      }
+    }
+
+    &:active {
+      transform: scale(.97) !important;
+    }
+  }
+}
+
+@keyframes cjd-icon-in {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(.6);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cjd-content-wrapper .cjd-jacket-guides.ez-site .cjd-canvas-bg-toggle svg {
+    animation: none;
+  }
+}
+
+// ---- the four views (front, back, left, right) ---------------------------------------------------
+// Minimal (the user's pick): just the four jacket icons, no labels (the names stay for screen readers).
+// The view on screen sits in a white box with a gold bar along its foot (the storefront's gold
+// underline); the others are faded and brighten on hover. Every icon has the same slot, so the box is
+// the same size whichever view is chosen. A column on the right on desktop, a row under the jacket up
+// to 1200px. Longer selectors: App.scss styles these at three breakpoints.
+.cjd-main .cjd-jacket-nav.ez-site {
+  gap: 10px;
+  align-items: center;
+
+  .cjd-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 84px;
+    height: 84px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    background: transparent;
+    box-shadow: none;
+    font: inherit;
+    cursor: pointer;
+    transition: background $ease, border-color $ease, box-shadow $ease, transform .2s ease;
+
+    img {
+      width: auto;
+      height: 64px;
+      opacity: .38;
+      transition: opacity $ease, transform .3s ease;
+    }
+
+    &.is-mirrored img {
+      transform: scaleX(-1);
+    }
+
+    // visually hidden, still read out
+    .cjd-nav-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    // the old corner tick, and any dot
+    &::before,
+    &::after {
+      content: none;
+      display: none;
+    }
+
+    &:hover {
+      background: transparent;
+
+      img {
+        opacity: .8;
+        transform: scale(1.06);
+      }
+
+      &.is-mirrored img {
+        transform: scaleX(-1) scale(1.06);
+      }
+    }
+
+    &:active {
+      transform: scale(.95);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    &.cjd-active-nav,
+    &.cjd-active-nav:hover {
+      background: #fff;
+      border-color: var(--cream-2);
+      box-shadow: inset 0 -3px 0 var(--gold), 0 14px 30px -16px rgba(20, 17, 15, .35);
+
+      img {
+        opacity: 1;
+      }
+    }
+  }
+
+  // up to 1200px: a row under the jacket
+  @media (max-width: 1200px) {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    justify-content: center;
+    gap: 12px; // a fixed gap: spreading them out left wide holes on bigger phones
+    width: 100% !important; // the old rules capped the row narrower than the icons need
+    height: auto !important;
+    padding: 4px 4px 12px !important; // room for the box's shadow: the row clips what sticks out
+
+    .cjd-nav-item {
+      width: 80px;
+      height: 80px;
+
+      img {
+        height: 64px;
+      }
+    }
+  }
+
+  // the narrowest phones
+  @media (max-width: 380px) {
+    gap: 8px;
+
+    .cjd-nav-item {
+      width: 70px;
+      height: 70px;
+
+      img {
+        height: 56px;
+      }
+    }
+  }
+}
+
+// ---- phones: the whole toolbar on one line ------------------------------------------------------
+// Guides, the canvas button, Save and Share (Save and Share appear up to 768px, App.js) in a slightly
+// more compact size so they never wrap onto a second line over the jacket.
+@media (max-width: 768px) {
+  .cjd-content-wrapper .cjd-jacket-guides.ez-site {
+    // end to end, with the screen's padding on both sides
+    left: 16px;
+    right: 16px;
+    flex-wrap: nowrap;
+    gap: 6px;
+
+    // Guides and the canvas button keep their size; Save and Share share out the rest of the width
+    .cjd-guides-pill {
+      flex: none;
+      gap: 8px;
+      height: 34px;
+      padding: 0 4px 0 10px;
+
+      .cjd-guides-label {
+        font-size: 14px;
+        letter-spacing: .06em;
+      }
+    }
+
+    .cjd-guides-pill .cjd-guides-toggle {
+      width: 54px;
+      height: 24px;
+      font-size: 12px;
+
+      .cjd-switch-knob {
+        width: 15px;
+        height: 15px;
+      }
+
+      .cjd-switch-text {
+        left: 23px;
+      }
+
+      &.on .cjd-switch-knob {
+        transform: translateX(30px);
+      }
+
+      &.on .cjd-switch-text {
+        left: 7px;
+      }
+    }
+
+    .cjd-guides-pill .cjd-canvas-bg-toggle {
+      width: 34px;
+      height: 34px;
+    }
+
+    .cjd-guides-pill.cjd-action-pill {
+      flex: 1 1 0;
+      justify-content: center !important;
+      gap: 6px;
+      height: 34px !important;
+      padding: 0 10px !important;
+
+      svg {
+        width: 13px !important;
+        height: 13px !important;
+      }
+
+      .cjd-guides-label {
+        font-size: 14px !important;
+      }
+    }
+  }
+}
+
+// the narrowest phones: Save and Share as icons only
+@media (max-width: 350px) {
+  .cjd-content-wrapper .cjd-jacket-guides.ez-site .cjd-guides-pill.cjd-action-pill {
+    min-width: 34px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+
+    .cjd-guides-label {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      overflow: hidden !important;
+      clip: rect(0 0 0 0);
+    }
+  }
+}
+
+// ---- on the jacket: the design-spot guides and the hovered part's outline in the site's gold ----
+// (#C9A227, the storefront's --gold; they were red). A touch heavier than the old 1px so the gold
+// reads on the white jacket.
+.cjd-content-wrapper .cjd-guides {
+  stroke: #c9a227;
+  stroke-width: 1.5;
+
+  &.cjd-guides-hide:hover {
+    stroke-width: 1.5;
+  }
+}
+
+.cjd-content-wrapper .cjd-color-hover:hover path,
+.cjd-content-wrapper .cjd-color-hover:hover {
+  stroke: #c9a227 !important;
+  stroke-width: 1.5 !important;
+}

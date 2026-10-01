@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useScrollLock } from '../../utils/scrollLock'
 
 // Replaces window.alert() across the customiser. Rendered as a dialog rather
 // than a browser alert so it can be styled, and animated in and out.
@@ -36,6 +38,8 @@ const CjdAlert = ({ open, tone = 'info', title, message, actionLabel = 'OK', onC
   // `mounted` outlives `open` by one animation so the dialog can play its exit.
   const [mounted, setMounted] = useState(Boolean(open))
   const [entered, setEntered] = useState(false)
+  // the page behind stays put while the alert is open
+  useScrollLock(Boolean(open))
   const buttonRef = useRef(null)
 
   // Callers clear their notice state on close, which blanks these props while
@@ -47,8 +51,11 @@ const CjdAlert = ({ open, tone = 'info', title, message, actionLabel = 'OK', onC
   useEffect(() => {
     if (open) {
       setMounted(true)
-      // A frame late, so the browser has painted the closed state to move from.
-      const frame = requestAnimationFrame(() => setEntered(true))
+      // Two frames late, so the browser has painted the closed state to move from (one frame
+      // can run before that first paint, and the dialog then appeared without its pop-in).
+      let frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(() => setEntered(true))
+      })
       return () => cancelAnimationFrame(frame)
     }
 
@@ -74,7 +81,9 @@ const CjdAlert = ({ open, tone = 'info', title, message, actionLabel = 'OK', onC
 
   const tint = content.tone || 'info'
 
-  return (
+  // Rendered at the page level, so it sits above any dialog (react-modal draws dialogs there too;
+  // inside the builder it stayed under them, with its OK out of reach).
+  return createPortal(
     <div
       className={`cjd-alert-overlay${entered ? ' is-open' : ''}`}
       onClick={handleOverlayClick}
@@ -111,7 +120,7 @@ const CjdAlert = ({ open, tone = 'info', title, message, actionLabel = 'OK', onC
         </button>
       </div>
     </div>
-  )
+  , document.body)
 }
 
 export default CjdAlert

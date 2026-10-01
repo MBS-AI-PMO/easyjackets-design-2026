@@ -266,7 +266,7 @@ const Colors = () => {
         <DialogTitle sx={{ borderBottom: '1px solid #eee', fontWeight: 'bold', color: '#333' }}>
           {editMode ? 'Modify Theme Color' : 'Register New Color'}
         </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
+        <DialogContent sx={{ '.MuiDialogTitle-root + &': { pt: 3 } }}>
           <form onSubmit={handleSubmit} style={{ marginTop: '10px' }}>
             <TextField
               margin="dense"

@@ -55,7 +55,7 @@
   --ej-ease-smooth: cubic-bezier(.6, .05, .1, 1);
 
   /* Semantic tokens — light mode */
-  --ej-bg: #FAF7F2;
+  --ej-bg: #F4EFE6; /* the storefront's cream, as behind the FAQs and on every storefront page */
   --ej-bg-raised: #ffffff;
   --ej-bg-elev: #ffffff;
   --ej-fg: #141210;

@@ -1,0 +1,625 @@
+// The add-design dialog (components/modal/popup.js and its tabs: name.js, letters.js, symbol.js,
+// upload.js) in the storefront's look: a cream card, a gold eyebrow over a Big Shoulders title, tabs
+// with a gold underline, storefront fields, ink / outlined buttons, white tiles for the letters and
+// symbols, and every hover and choice animated. Imported by App.js after css/App.scss, which holds
+// the old terracotta styles (hence .cjd-modal.cjd-modal-design on everything, and !important where
+// the old rules use it). The open / close animation stays the shared one (App.scss).
+
+$ease: .25s ease;
+
+.cjd-modal.cjd-modal-design {
+  background: var(--cream);
+  color: var(--ink);
+  border: 1px solid var(--cream-2);
+  border-radius: 4px;
+  box-shadow: 0 40px 80px -30px rgba(20, 17, 15, .55);
+  font-family: var(--body);
+
+  // ---- header -----------------------------------------------------------------------------
+  .cjd-modal-header {
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    height: auto;
+    padding: 24px 28px 14px;
+    border-bottom: 0;
+
+    h4 {
+      margin: 0;
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(28px, 4vw, 36px);
+      line-height: .95;
+      letter-spacing: .01em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .cjd-modal-close {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 40px;
+      height: 40px;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      border: 1.5px solid var(--cream-2);
+      border-radius: 2px;
+      background: transparent;
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background $ease, border-color $ease, transform .2s ease;
+
+      &:hover {
+        background: var(--cream-2);
+        border-color: var(--ink);
+      }
+
+      &:active {
+        transform: scale(.94);
+      }
+    }
+  }
+
+  // ---- tabs: Name, Letters, Symbol, Uploads ---------------------------------------------------
+  .cjd-modal-tabs {
+    flex-wrap: nowrap;
+    gap: 28px;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--cream-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cjd-tab-option {
+      position: relative;
+      flex: none;
+      min-width: 0;
+      min-height: 0;
+      padding: 12px 0;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      transition: color $ease;
+
+      // the gold underline grows in under the open tab, as under the storefront's links
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 100%;
+        bottom: -1px;
+        height: 3px;
+        background: var(--gold);
+        transition: right .25s ease;
+      }
+
+      &:hover {
+        background: transparent;
+        color: var(--ink);
+
+        &::after {
+          right: 0;
+        }
+      }
+
+      &.cjd-active,
+      &.cjd-active:hover {
+        background: transparent;
+        border-color: transparent;
+        color: var(--ink) !important;
+
+        &::after {
+          right: 0;
+        }
+      }
+
+      // a dialog with a single tab shows no tab row (as before)
+      &.cjd-active:only-child {
+        display: none;
+      }
+    }
+  }
+
+  // ---- body -------------------------------------------------------------------------------------
+  .cjd-modal-form-wrapper {
+    padding: 22px 28px;
+  }
+
+  label,
+  .cjd-form-group > label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .cjd-form-control {
+    width: 100%;
+    height: 50px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    font-family: var(--body);
+    font-size: 15px;
+    color: var(--ink);
+    transition: border-color $ease, background $ease;
+
+    &::placeholder {
+      color: rgba(20, 17, 15, .4);
+    }
+
+    &:hover {
+      border-color: rgba(20, 17, 15, .45);
+    }
+
+    &:focus {
+      border-color: var(--ink);
+      background: #fff;
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  // the font / symbol-set dropdown (react-dropdown)
+  .Dropdown-root {
+    position: relative;
+  }
+
+  .Dropdown-control {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    padding: 0 40px 0 14px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    font-family: var(--body);
+    font-size: 15px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color $ease, background $ease;
+
+    &:hover {
+      border-color: var(--ink);
+      box-shadow: none;
+    }
+
+    .Dropdown-placeholder {
+      color: var(--ink);
+    }
+
+    .Dropdown-arrow {
+      border-color: var(--ink) transparent transparent;
+      transition: transform $ease;
+    }
+  }
+
+  .Dropdown-root.is-open .Dropdown-control {
+    border-color: var(--ink);
+    background: #fff;
+
+    .Dropdown-arrow {
+      transform: rotate(180deg);
+    }
+  }
+
+  // opens inside the dialog, moving what is below (floating, it was cut off by the footer)
+  .Dropdown-menu {
+    position: relative;
+    top: auto;
+    margin-top: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--cream-2);
+    border-radius: 2px;
+    background: #fbf8f2;
+    box-shadow: 0 24px 48px -20px rgba(20, 17, 15, .4);
+    animation: cjd-menu-in .2s ease both;
+    z-index: 30;
+  }
+
+  .Dropdown-option {
+    padding: 10px 16px;
+    font-family: var(--body);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    transition: background .2s ease, color .2s ease;
+
+    &:hover {
+      background: var(--cream);
+      color: var(--gold-2);
+    }
+
+    &.is-selected {
+      background: transparent;
+      color: var(--gold-2);
+    }
+  }
+
+  // ---- two-way choices: Straight / Arc, Ready To Use / Type Your Own, Felt / Embroidery --------
+  .cjd-form-group.cjd-btn-group {
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .cjd-btn {
+      flex: 1;
+      height: 44px;
+      min-height: 0;
+      margin: 0;
+      padding: 0 14px !important;
+      box-sizing: border-box;
+      border: 2px solid var(--ink) !important;
+      border-radius: 2px !important;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 17px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap; // one line: Embroidery Patch wrapped on phones
+      transition: background $ease, color $ease, border-color $ease, transform .15s ease;
+
+      // phones: a little smaller, so the longest label fits half the row
+      @media (max-width: 680px) {
+        padding: 0 8px !important;
+        font-size: 15px;
+        letter-spacing: .03em;
+      }
+
+      // the chosen one
+      &:not(.cjd-btn-secondary),
+      &:not(.cjd-btn-secondary):hover,
+      &:not(.cjd-btn-secondary):focus {
+        background: var(--ink) !important;
+        border-color: var(--ink) !important;
+        color: var(--cream) !important;
+      }
+
+      &.cjd-btn-secondary {
+        background: transparent !important;
+        color: var(--ink) !important;
+      }
+
+      &.cjd-btn-secondary:hover,
+      &.cjd-btn-secondary:focus {
+        background: var(--cream-2) !important;
+        color: var(--ink) !important;
+      }
+
+      &:active {
+        transform: scale(.98);
+      }
+    }
+  }
+
+  // ---- letters and symbols to pick from ----------------------------------------------------
+  .cjd-alphabets-wrapper {
+    padding-right: 4px;
+
+    .cjd-font-option {
+      gap: 8px;
+
+      + .cjd-font-option {
+        margin-top: 18px;
+      }
+
+      .cjd-letter-wrapper {
+        border: 1px solid var(--cream-2);
+        border-radius: 2px;
+        background: #fff;
+        transition: border-color $ease, transform .2s ease, box-shadow $ease;
+
+        &:hover {
+          border-color: var(--ink);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px -14px rgba(20, 17, 15, .45);
+        }
+
+        &.cjd-active,
+        &.cjd-active-letter {
+          border: 2px solid var(--ink) !important;
+          background: #fff !important;
+          box-shadow: inset 0 -3px 0 var(--gold) !important;
+        }
+      }
+    }
+  }
+
+  // ---- the preview and its colour choices ---------------------------------------------------
+  // Shaped like the place's guide on the jacket (--cjd-guide-ratio, width / height, set by
+  // components/modal/popup.js from config/designAreaConfig.js), and the same in every tab: each tab
+  // used to size it its own way (Back Middle: 400×320 on Name, 400×155 on Symbol, 400×263 on
+  // Uploads), so it jumped as the tabs changed. As wide as its column allows (up to 420px) and at
+  // most 360px tall (260px on phones); the drawing fills it, as the design fills the guide. The
+  // colour choices under it take the same width. App.scss sizes it per place and per breakpoint
+  // with !important, hence the !important here.
+  $preview-width: min(100%, 420px, calc(360px * var(--cjd-guide-ratio, 1)));
+  $preview-width-phone: min(100%, calc(300px * var(--cjd-guide-ratio, 1)));
+
+  .cjd-modal-half .cjd-mock-preview,
+  .cjd-modal-half .cjd-mock-preview[data-square],
+  .cjd-modal-half .cjd-mock-preview[data-pocket],
+  .cjd-modal-half .cjd-mock-preview[data-wide] {
+    width: $preview-width !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important; // App.scss pins phone previews at 210px tall
+    max-height: none !important;
+    aspect-ratio: var(--cjd-guide-ratio, 1) !important;
+    margin: 0 auto;
+    // room around a symbol or picture, so it never touches the edge (symbols are drawn a little past
+    // their own frame, so this is more than it looks)
+    padding: 28px !important;
+    box-sizing: border-box;
+    border: 1px solid var(--cream-2);
+    border-radius: 2px 2px 0 0;
+
+    > svg {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+    }
+
+    @media (max-width: 680px) {
+      width: $preview-width-phone !important;
+    }
+  }
+
+  // the thin name bands keep slim top and bottom padding, or their lettering would shrink
+  .cjd-modal-half .cjd-mock-preview[data-wide="true"] {
+    padding: 6px 14px !important;
+  }
+
+  .cjd-modal-half .cjd-preview-colors-wrapper,
+  .cjd-modal-half .cjd-preview-colors-wrapper[data-square],
+  .cjd-modal-half .cjd-preview-colors-wrapper[data-pocket],
+  .cjd-modal-half .cjd-preview-colors-wrapper[data-wide] {
+    width: max($preview-width, 260px) !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+
+    @media (max-width: 680px) {
+      width: max($preview-width-phone, 280px) !important;
+    }
+  }
+
+  // the preview stays at the top of its column, whatever the form beside it holds
+  .cjd-modal-form-wrapper .cjd-row {
+    align-items: flex-start;
+  }
+
+  .cjd-preview-colors-wrapper .cjd-color-selector {
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--cream-2);
+    background: #fbf8f2;
+    font-family: var(--body);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    transition: background $ease, color $ease;
+
+    &:hover {
+      background: var(--cream-2);
+    }
+
+    .cjd-color-pointer {
+      border-radius: 2px;
+      box-shadow: inset 0 0 0 1px rgba(20, 17, 15, .2);
+
+      &:before {
+        border-radius: 1px;
+      }
+    }
+  }
+
+  // the colour box under the preview, with the swatches. They fill its width in as many equal
+  // columns as fit and never run past it (on phones App.scss set five 44px columns with 12px gaps in
+  // a 234px box, which scrolled sideways).
+  .cjd-preview-colors-wrapper .cjd-color-box {
+    overflow-x: hidden !important;
+
+    .cjd-select-wrapper.cjd-single {
+      grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)) !important;
+      gap: 8px !important;
+      justify-content: stretch !important;
+      justify-items: stretch !important;
+      width: 100% !important;
+      margin: 0 !important;
+
+      .cjd-select-box.cjd-colors-box {
+        width: 100% !important;
+        height: 30px !important;
+        margin: 0 !important;
+      }
+    }
+
+    border: 1px solid var(--cream-2);
+    border-top: 0;
+    background: #fff;
+    animation: cjd-menu-in .2s ease both;
+
+    .cjd-note {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .cjd-close-color-box {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 2px;
+      color: var(--ink);
+      font-size: 20px;
+      transition: background $ease;
+
+      &:hover {
+        background: var(--cream-2);
+      }
+    }
+  }
+
+  // ---- uploads ------------------------------------------------------------------------------
+  .cjd-btn.cjd-btn-lg {
+    display: flex !important;
+    align-items: center;
+    justify-content: center !important;
+    width: 100%;
+    height: 52px;
+    padding: 0 20px !important;
+    box-sizing: border-box;
+    border: 2px solid var(--ink);
+    border-radius: 2px;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    transition: transform .2s ease, background $ease, color $ease, border-color $ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--ink);
+      opacity: 1;
+    }
+
+    &:active {
+      transform: translateY(0) scale(.98);
+    }
+  }
+
+  .cjd-modal-half > .cjd-note {
+    margin-top: 14px;
+    background: transparent;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  // ---- footer: Remove and Save --------------------------------------------------------------
+  .cjd-modal-footer {
+    justify-content: space-between;
+    gap: 12px;
+    height: auto;
+    padding: 18px 28px 24px;
+    border-top: 1px solid var(--cream-2);
+
+    .cjd-dialog-btn {
+      flex: 0 0 auto;
+      min-width: 160px;
+    }
+
+    .cjd-dialog-btn--ink {
+      min-width: 220px;
+    }
+  }
+
+  // one height on desktop too, so switching tabs never resizes the dialog or moves the preview;
+  // a long tab scrolls inside it (phones already have a fixed height, App.scss)
+  @media (min-width: 681px) {
+    height: min(820px, calc(100vh - 40px)) !important;
+  }
+
+  @media (max-width: 680px) {
+    .cjd-modal-header {
+      padding: 18px 18px 10px;
+    }
+
+    // nothing in the dialog scrolls sideways
+    .cjd-modal-content,
+    .cjd-modal-tab-content {
+      overflow-x: hidden !important;
+    }
+
+    // Fill / Stroke / Border share a narrower row
+    .cjd-preview-colors-wrapper .cjd-color-selector {
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 6px !important;
+      font-size: 13px !important;
+
+      .cjd-color-pointer {
+        flex: 0 0 18px !important;
+        width: 18px !important;
+        height: 18px !important;
+        margin-right: 0 !important;
+      }
+    }
+
+    // the four tabs share the width, so none is cut off
+    .cjd-modal-tabs {
+      gap: 0;
+      padding: 0 18px;
+
+      .cjd-tab-option {
+        flex: 1 1 auto;
+        justify-content: center;
+        font-size: 16px;
+        letter-spacing: .05em;
+      }
+    }
+
+    .cjd-modal-form-wrapper {
+      padding: 18px;
+    }
+
+    .cjd-modal-footer {
+      padding: 14px 18px 18px;
+
+      .cjd-dialog-btn,
+      .cjd-dialog-btn--ink {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  }
+}
+
+@keyframes cjd-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cjd-modal.cjd-modal-design .Dropdown-menu,
+  .cjd-modal.cjd-modal-design .cjd-color-box {
+    animation: none;
+  }
+}

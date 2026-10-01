@@ -72,7 +72,8 @@ const Name = ({
   // Front Center now previews on the jacket's own arc, so the size fitted here is the
   // size the chest renders at - no scale factor on the jacket side.
   const getTextFitViewBox = (isArc = view === "Arc") => {
-    if (part === "Back Top" && isArc) return "0 0 260 34";
+    // a little taller than it was (34): the arched name filled too little of the Back Top
+    if (part === "Back Top" && isArc) return "0 0 260 42";
     // Front Center arcs on a deep circle (see modalFrontArt below), so a fitted name is
     // far taller than the 45 unit panel and the height rule would stop the fit long
     // before the width does. The width is what actually decides how much of the chest
@@ -89,11 +90,51 @@ const Name = ({
   // so the glyphs run roughly y -12 to 75; -20 to 80 clears that. Growing the box costs
   // nothing but empty space - the viewBox *width* is what maps to the panel width, so
   // the letters keep their size and the preview simply gets taller.
+  // The back's arcs (Top, Middle, Bottom) are framed around the fitted letters instead: their
+  // panels are as short as Front Center's, and Back Bottom's arc runs off-centre, so the preview
+  // cut the tops of the letters off or sat the name to one side. The frame keeps the panel's
+  // width (the letters keep their size against it) and centres the name inside it.
+  const [arcFrame, setArcFrame] = useState(null);
+  const framesArc = view === "Arc" && ["Back Top", "Back Middle", "Back Bottom"].includes(part);
   const renderViewBox =
-    part === "Front Center" && view === "Arc" ? "0 -20 267 100" : props.viewBox;
+    part === "Front Center" && view === "Arc"
+      ? "0 -20 267 100"
+      : framesArc && arcFrame
+        ? arcFrame
+        : props.viewBox;
+
+  // The preview is shaped like the place's guide (css/builder-design-modal.scss), but an arched name
+  // rises above and below its guide on the jacket: in Arc the preview takes the frame's shape
+  // instead (still the guide's width), so the name shows at its size on the jacket rather than
+  // squeezed into the band.
+  const arcPreviewRatio = (() => {
+    if (view !== "Arc") return null;
+    const [, , width, height] = String(renderViewBox).split(/\s+/).map(Number);
+    return width && height ? width / height : null;
+  })();
+
+  const frameArc = () => {
+    const text = svgText.current;
+    if (!text) return;
+    const box = text.getBBox();
+    if (!box.width || !box.height) return;
+    const [, , panelWidth, panelHeight] = props.viewBox.split(/\s+/).map(Number);
+    const pad = 8;
+    const width = Math.max(panelWidth, box.width + pad * 2);
+    const height = Math.max(panelHeight, box.height + pad * 2);
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    setArcFrame([cx - width / 2, cy - height / 2, width, height].map((v) => +v.toFixed(2)).join(" "));
+  };
 
   useEffect(() => {
-    fixTextSize(svgText, svgText1, "name", getTextFitViewBox(), view === "Arc", name);
+    let current = true;
+    fixTextSize(svgText, svgText1, "name", getTextFitViewBox(), view === "Arc", name).then(() => {
+      if (current && framesArc) frameArc();
+    });
+    return () => {
+      current = false;
+    };
   }, [part, props.viewBox, view, name]);
 
   const nameFun = (val) => {
@@ -161,6 +202,7 @@ const Name = ({
       name
     ).then((size) => {
       updateName("size", name, part, size);
+      if (framesArc) frameArc(); // another font, other letter shapes
     });
   };
 
@@ -257,6 +299,7 @@ const Name = ({
                   part === "Left Mid Sleeve Lower"
                   ? colors.sleeves
                   : colors.body,
+              ...(arcPreviewRatio ? { "--cjd-guide-ratio": arcPreviewRatio } : {}),
             }}
           >
             <svg
@@ -365,13 +408,6 @@ const Name = ({
                       ? designs.stroke
                       : "none"
                   }
-                  borderColor={
-                    part === 'Front Center' ||
-                      part === 'Back Middle'
-                      ? designs.border
-                      : 'none'
-                  }
-
                   strokeWidth={
                     part === "Front Center" || part === "Back Middle"
                       ? "5.5"

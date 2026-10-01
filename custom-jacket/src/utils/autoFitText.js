@@ -168,12 +168,36 @@ const getInkMetrics = (() => {
 
     if (maxX <= minX || maxY <= minY) return null;
 
+    // Where the ink sits inside the box the browser lays the text out in (getBBox: the font's ascent
+    // to descent, the advance width centred on the anchor), as a share of the font size. Capitals
+    // fill only the upper part of that box, so centring the box set names high in their guide, with
+    // the top of the letters against the edge and a gap below.
+    context.textBaseline = 'alphabetic';
+    const m = context.measureText(content);
+    const hasMetrics = Number.isFinite(m.actualBoundingBoxAscent) && Number.isFinite(m.fontBoundingBoxAscent);
+    const offsetX = hasMetrics ? (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2 / sampleSize : 0;
+    const offsetY = hasMetrics
+      ? ((m.actualBoundingBoxDescent - m.actualBoundingBoxAscent) - (m.fontBoundingBoxDescent - m.fontBoundingBoxAscent)) / 2 / sampleSize
+      : 0;
+
     return {
       widthRatio: (maxX - minX + 1) / sampleSize,
       heightRatio: (maxY - minY + 1) / sampleSize,
+      offsetX,
+      offsetY,
     };
   };
 })();
+
+// The ink's centre relative to the centre of the text's layout box, in the text's own units. Zero for
+// text laid out in several lines or with moved letters (tspans), which the measurement cannot follow.
+const getInkCenterOffset = (text) => {
+  if (!text || text.querySelector('tspan[x], tspan[y], tspan[dx], tspan[dy]')) return { x: 0, y: 0 };
+  const ink = getInkMetrics(text);
+  const fontSize = Number(text.getAttribute('font-size') || window.getComputedStyle(text).fontSize.replace('px', ''));
+  if (!ink || !fontSize) return { x: 0, y: 0 };
+  return { x: ink.offsetX * fontSize, y: ink.offsetY * fontSize, inkWidth: ink.widthRatio * fontSize, inkHeight: ink.heightRatio * fontSize };
+};
 
 const getVisualScaleBoost = (target, textBox) => {
   const text = getRepresentativeText(target);
@@ -254,8 +278,13 @@ const fitTarget = (target) => {
   const rawScale = Math.min(maxWidth / textScreenBox.width, maxHeight / textScreenBox.height);
   const visualScaleBoost = getVisualScaleBoost(target, textBox);
   const fitScale = Math.max(0.2, Math.min(rawScale * visualScaleBoost, 8));
-  const scaledCenterX = anchorScreenPoint.x + (textScreenBox.centerX - anchorScreenPoint.x) * fitScale;
-  const scaledCenterY = anchorScreenPoint.y + (textScreenBox.centerY - anchorScreenPoint.y) * fitScale;
+  // centre the ink, not the layout box (see getInkMetrics)
+  const inkOffset = getInkCenterOffset(representativeText);
+  const screenPerUnit = textScreenBox.width / textBox.width;
+  const inkCenterX = textScreenBox.centerX + inkOffset.x * screenPerUnit;
+  const inkCenterY = textScreenBox.centerY + inkOffset.y * screenPerUnit;
+  const scaledCenterX = anchorScreenPoint.x + (inkCenterX - anchorScreenPoint.x) * fitScale;
+  const scaledCenterY = anchorScreenPoint.y + (inkCenterY - anchorScreenPoint.y) * fitScale;
   const localDelta = getLocalDelta(matrix, guideBox.centerX - scaledCenterX, guideBox.centerY - scaledCenterY);
   const anchorX = representativeText.x?.baseVal?.[0]?.value || 0;
   const anchorY = representativeText.y?.baseVal?.[0]?.value || 0;
@@ -270,17 +299,24 @@ const fitTarget = (target) => {
     .join(' ');
 
   target.setAttribute('transform', autoTransform);
+  // Keep what shows inside the guide: the ink (plus its outline) when it could be measured, else the
+  // layout box. The trim scales around the ink's centre, so the name stays centred.
   const fittedBox = getScreenBox(target, svg);
-  if (fittedBox && (fittedBox.width > guideBox.width * 0.98 || fittedBox.height > guideBox.height * 0.98)) {
+  const unitsToScreen = screenPerUnit * fitScale;
+  const visibleWidth = inkOffset.inkWidth ? (inkOffset.inkWidth * unitsToScreen) + strokePadding : fittedBox?.width;
+  const visibleHeight = inkOffset.inkHeight ? (inkOffset.inkHeight * unitsToScreen) + strokePadding : fittedBox?.height;
+  if (visibleWidth && visibleHeight && (visibleWidth > guideBox.width * 0.98 || visibleHeight > guideBox.height * 0.98)) {
     const trimScale = Math.min(
-      (guideBox.width * 0.98) / fittedBox.width,
-      (guideBox.height * 0.98) / fittedBox.height
+      (guideBox.width * 0.98) / visibleWidth,
+      (guideBox.height * 0.98) / visibleHeight
     );
+    const inkX = textBox.x + textBox.width / 2 + inkOffset.x;
+    const inkY = textBox.y + textBox.height / 2 + inkOffset.y;
     const trimmedTransform = [
       autoTransform,
-      `translate(${anchorX} ${anchorY})`,
+      `translate(${inkX.toFixed(3)} ${inkY.toFixed(3)})`,
       `scale(${trimScale.toFixed(4)})`,
-      `translate(${-anchorX} ${-anchorY})`,
+      `translate(${(-inkX).toFixed(3)} ${(-inkY).toFixed(3)})`,
     ].join(' ');
     target.setAttribute('transform', trimmedTransform);
   }

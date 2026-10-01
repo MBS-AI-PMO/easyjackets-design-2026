@@ -9,3 +9,5 @@ npm-debug.log
 .DS_Store
 coverage
 *.zip
+**/__pycache__
+*.pyc

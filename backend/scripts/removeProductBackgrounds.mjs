@@ -10,7 +10,8 @@
 //   --limit N       first N photos only      --category slug   one category
 //   --model isnet-general-use   faster model  --keys a,b        given upload keys or URLs, no database
 //
-// Needs BG_REMOVER_URL (+ BG_REMOVER_KEY) in .env, and the photos on local
+// Uses the built-in remover (the running backend's, or one started for the run;
+// BG_REMOVER_URL = an outside service instead), and the photos on local
 // storage (UPLOADS_ROOT); files not on disk are skipped and listed. Safe to
 // re-run: photos already cut out are skipped, and their copies under --save
 // are refreshed from the backup without another pass through the model.

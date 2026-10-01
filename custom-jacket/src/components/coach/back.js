@@ -413,10 +413,12 @@ const CoachBack = ({
           <g style={{ transform: "translate(58px, 175px)" }}>
             {designs["Back Middle"]?.symbol.type === "Flags" && (
               <g style={{ transform: "translate(0px, 0px)" }}>
+                {/* the flag across the guide (255 wide, from x 130), cropped to the flag and its outline */}
                 <svg
-                  width="400"
+                  x="77"
+                  width="245"
                   height="190"
-                  viewBox="0 0 72 72"
+                  viewBox="0 12 72 48"
                   preserveAspectRatio="xMidYMid meet"
                 >
                   <image

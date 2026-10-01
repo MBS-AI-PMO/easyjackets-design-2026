@@ -1,4 +1,4 @@
-import axiosInstance from './axiosConfig';
+import { getSiteSettings } from './siteSettings';
 import { uploadUrl } from '../config/url';
 
 // The tab icon from the admin's Settings → Site Identity & Logos, the same one the storefront and
@@ -26,9 +26,8 @@ const applyFavicons = ({ light, dark }) => {
 
 export const loadSiteFavicon = async () => {
   try {
-    const { data } = await axiosInstance.get('/metadata/global-settings');
-    const metadata = data?.metadata;
-    if (!metadata) return;
+    const metadata = await getSiteSettings();
+    if (!metadata?._id) return;
     const version = metadata.updatedAt || metadata._id;
     const light = metadata.favicon ? withVersion(uploadUrl(metadata.favicon), version) : '';
     const dark = metadata.faviconDark ? withVersion(uploadUrl(metadata.faviconDark), version) : light;

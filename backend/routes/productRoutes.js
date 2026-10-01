@@ -1,6 +1,7 @@
 import express from "express";
 import {
   activateAndDeactivateProduct,
+  backgroundRemovalStatusController,
   brainTreePaymentController,
   braintreeTokenController,
   createDraftProduct,
@@ -62,6 +63,9 @@ router.put(
   isAdmin,
   activateAndDeactivateProduct
 );
+
+// is the background remover running (admin product form)
+router.get("/background-removal", requireSignin, isAdmin, backgroundRemovalStatusController);
 
 //get products
 router.get("/get-product", getProductController);
