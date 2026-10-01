@@ -1,7 +1,10 @@
 # Background remover
 
-Self-hosted cut-out service for product photos. The backend sends every new
-product image here; the result replaces the stored file (the original is kept
+Self-hosted cut-out service for product photos, part of the backend: the API
+starts it on 127.0.0.1 (`helpers/bgRemoverProcess.js`) and restarts it if it
+stops, and the backend's Docker image installs it with both models. The
+backend sends every new product image here (when the admin's "Remove
+background" switch is on); the result replaces the stored file (the original is kept
 next to it) at the **same pixel size** — the model only produces the alpha
 mask, the photo's own pixels are never resampled.
 
@@ -32,17 +35,19 @@ BG_API_KEY=change-me uvicorn app:app --port 7860
 curl -H "X-BG-Key: change-me" -F image=@jacket.jpg "http://127.0.0.1:7860/remove?model=birefnet-general" -o cutout.png
 ```
 
-Docker: `docker build -t bg-remover .` (downloads both models into the image,
-so allow ~2 GB and a long first build), then run with `-e BG_API_KEY=… -p 7860:7860`.
+Normally you do not run it by hand: `node server.mjs` starts it (with `python`
+on Windows, `python3` elsewhere, or `BG_PYTHON`), using a key derived from the
+backend's secrets. Run it by hand only to test it, as above.
 
-## Coolify
+## Deploying
 
-A separate application with Base Directory `/bg-remover`, Dockerfile build,
-port 7860, environment `BG_API_KEY` (any long secret), 4 GB RAM. It does not
-need a public domain: the backend reaches it over the internal network. Give
-the backend `BG_REMOVER_URL=http://<service>:7860` and the same
-`BG_REMOVER_KEY`; set `AUTO_REMOVE_BG=false` to pause processing without
-removing the service.
+Nothing separate: the backend's Dockerfile installs Python, these packages and
+both models (`/opt/bg-remover`, ~2 GB, a long first build). Memory: ~1.6 GB
+with BiRefNet loaded, ~7 GB at the peak of one photo (the onnxruntime CPU arena
+is off, otherwise it holds ~18 GB after two photos);
+`BG_REMOVER_MODEL=isnet-general-use` needs ~1.2 GB. Backend env: `AUTO_REMOVE_BG=false` pauses
+processing, `BG_REMOVER_EMBEDDED=false` never starts it, `BG_REMOVER_URL` +
+`BG_REMOVER_KEY` point at an outside service instead.
 
 ## Endpoints
 

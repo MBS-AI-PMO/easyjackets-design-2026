@@ -112,6 +112,15 @@ const getTextStrokePadding = (target) => {
   return Math.min(Math.max(strokeWidth * 1.25, 2), 10);
 };
 
+// The most of a guide a name's letters (with their outline) may cover, so a margin shows all round.
+const INK_FILL = 0.9;
+
+// The thickest outline among the name's layers (the outline layer is drawn with a wider stroke).
+const getTargetStrokeWidth = (target) => {
+  const texts = target.tagName.toLowerCase() === 'text' ? [target] : Array.from(target.querySelectorAll('text'));
+  return Math.max(0, ...texts.map((text) => Number(text.getAttribute('stroke-width')) || 0));
+};
+
 const getTargetFillRatio = (target, guideBox, textScreenBox) => {
   const isSquare = Math.abs(guideBox.width - guideBox.height) <= Math.max(guideBox.width, guideBox.height) * 0.12;
   const isSingleLetter = (getRepresentativeText(target)?.textContent || '').trim().length === 1;
@@ -299,16 +308,20 @@ const fitTarget = (target) => {
     .join(' ');
 
   target.setAttribute('transform', autoTransform);
-  // Keep what shows inside the guide: the ink (plus its outline) when it could be measured, else the
-  // layout box. The trim scales around the ink's centre, so the name stays centred.
+  // Keep what shows inside the guide: the ink plus its whole outline (at most INK_FILL of the guide, a
+  // margin all round) when it could be measured, else the layout box. The trim scales around the ink's
+  // centre, so the name stays centred.
   const fittedBox = getScreenBox(target, svg);
   const unitsToScreen = screenPerUnit * fitScale;
-  const visibleWidth = inkOffset.inkWidth ? (inkOffset.inkWidth * unitsToScreen) + strokePadding : fittedBox?.width;
-  const visibleHeight = inkOffset.inkHeight ? (inkOffset.inkHeight * unitsToScreen) + strokePadding : fittedBox?.height;
-  if (visibleWidth && visibleHeight && (visibleWidth > guideBox.width * 0.98 || visibleHeight > guideBox.height * 0.98)) {
+  const outline = getTargetStrokeWidth(target) * unitsToScreen;
+  const measured = Boolean(inkOffset.inkWidth && inkOffset.inkHeight);
+  const visibleWidth = measured ? (inkOffset.inkWidth * unitsToScreen) + outline : fittedBox?.width;
+  const visibleHeight = measured ? (inkOffset.inkHeight * unitsToScreen) + outline : fittedBox?.height;
+  const limit = measured ? INK_FILL : 0.98;
+  if (visibleWidth && visibleHeight && (visibleWidth > guideBox.width * limit || visibleHeight > guideBox.height * limit)) {
     const trimScale = Math.min(
-      (guideBox.width * 0.98) / visibleWidth,
-      (guideBox.height * 0.98) / visibleHeight
+      (guideBox.width * limit) / visibleWidth,
+      (guideBox.height * limit) / visibleHeight
     );
     const inkX = textBox.x + textBox.width / 2 + inkOffset.x;
     const inkY = textBox.y + textBox.height / 2 + inkOffset.y;
