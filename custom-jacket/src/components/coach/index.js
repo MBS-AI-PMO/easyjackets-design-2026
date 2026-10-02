@@ -7,6 +7,19 @@ import { getStaggeredElm } from "../../utils";
 import Hood from "../Jacket/collar/hood";
 import BadgeTemp from "../Jacket/badge";
 
+// Ready-to-use pocket letters: the box (width, height) each letter is drawn in, centred on its pocket's
+// 55 x 55 guide (right 150,410 / left 250,410) at the letter's own viewBox, so a narrow I and a wide X
+// both sit in the middle. 45.5 tall is the size they had before.
+const POCKET_LETTER_BOX = [51, 45.5];
+const pocketLetterBox = (guideX, path) => ({
+  x: guideX + 27.5 - POCKET_LETTER_BOX[0] / 2,
+  y: 410 + 27.5 - POCKET_LETTER_BOX[1] / 2,
+  width: POCKET_LETTER_BOX[0],
+  height: POCKET_LETTER_BOX[1],
+  viewBox: path.match(/viewBox="(.*?)"/)?.[1] || "0 0 100 100",
+  preserveAspectRatio: "xMidYMid meet",
+});
+
 const Coach = ({
   globals,
   styles,
@@ -204,7 +217,7 @@ const Coach = ({
             colorPicker={(part) => colorPicker(part)}
             outside={colors.outside ? colors.outside : "#ffffff"}
             inside={colors.inside ? colors.inside : "#000000"}
-            lining={colors.lining ? colors.lining : "#000000"}
+            lining={colors.lining ? colors.lining : "#ffffff"} // the coach lining only comes in white
             lace={colors.lace ? colors.lace : "#c4c6c6"}
           />
         </g>
@@ -213,7 +226,7 @@ const Coach = ({
           {styles.collar !== "Hood" && (
             <polygon
               points="195.64 32.37 267.35 32.37 233.03 62.08 222.82 62.35 195.64 32.37"
-              fill={colors.inside}
+              fill={colors.lining ? colors.lining : "#ffffff"} // the inside lining showing at the neck (it read the collar inside colour)
               className="cjd-color-hover"
               onClick={() => colorPicker("lining")}
             />
@@ -386,6 +399,7 @@ const Coach = ({
             height="85"
             fill="#e6e6e6"
             data-name="right-chest"
+            data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
             onClick={() => openModal("Right Chest")}
           />
           {designs["Right Chest"]?.done && (
@@ -645,6 +659,7 @@ const Coach = ({
             height="85"
             fill="#e6e6e6"
             data-name="left-chest"
+            data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
             onClick={() => openModal("Left Chest")}
           />
           {designs["Left Chest"]?.done && (
@@ -842,14 +857,15 @@ const Coach = ({
             height="55"
             fill="#e6e6e6"
             data-name="right-pocket"
+            data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
             onClick={() => openModal("Right Pocket")}
           />
           {designs["Right Pocket"]?.done && (
             <g>
               {designs["Right Pocket"]?.letters?.type ===
                 "Ready To Use" && designs["Right Pocket"]?.letters.path && (
-                  <g transform="translate(157, 414)">
-                    <svg width="50" height="50" viewBox="0 0 100 100" style={{ transform: 'scale(1.8)' }}>
+                  <g>
+                    <svg {...pocketLetterBox(150, designs["Right Pocket"].letters.path)}>
                       {designs["Right Pocket"]?.letters.path
                         .match(/(<path.*?><\/path>)/g)
                         .map((li, idx) => {
@@ -1050,6 +1066,7 @@ const Coach = ({
             height="55"
             fill="#e6e6e6"
             data-name="left-pocket"
+            data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
             onClick={() => openModal("Left Pocket")}
           />
           {designs["Left Pocket"]?.done && (
@@ -1058,14 +1075,8 @@ const Coach = ({
                 <>
                   {designs["Left Pocket"]?.letters?.type ===
                     "Ready To Use" && designs["Left Pocket"]?.letters.path && (
-                      <g transform="translate(260, 415)">
-                        <svg
-                          width="50"
-                          height="50"
-                          viewBox="0 0 100 100"
-                          preserveAspectRatio="xMidYMin meet"
-                          style={{ transform: 'scale(1.8)' }}
-                        >
+                      <g>
+                        <svg {...pocketLetterBox(250, designs["Left Pocket"].letters.path)}>
                           {designs["Left Pocket"]?.letters.path
                             .match(/(<path.*?><\/path>)/g)
                             .map((li, idx) => {

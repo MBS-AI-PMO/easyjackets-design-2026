@@ -6,7 +6,7 @@ import Fonts from "../dropdown";
 
 import { designColor, chooseName } from "../../store/actions";
 import { fixTextSize } from "../../utils";
-import { getDesignAreaConfig, isWideDesignArea } from '../../config/designAreaConfig';
+import { getGuideSize, getProductDesignAreaConfig, isWideDesignArea } from '../../config/designAreaConfig';
 
 const Name = ({
   defaults,
@@ -61,8 +61,9 @@ const Name = ({
   const [cPanel, setCpanel] = useState(false);
   const [colPart, setColPart] = useState("fill");
 
-  // Get dynamic design area configuration based on the part
-  const designConfig = getDesignAreaConfig(part);
+  // Get dynamic design area configuration based on the part (and the product: the cropped varsity's Back
+  // Middle is shorter)
+  const designConfig = getProductDesignAreaConfig(part, globals?.productId);
   let props = {
     viewBox: designConfig.viewBox,
   };
@@ -95,21 +96,39 @@ const Name = ({
   // cut the tops of the letters off or sat the name to one side. The frame keeps the panel's
   // width (the letters keep their size against it) and centres the name inside it.
   const [arcFrame, setArcFrame] = useState(null);
-  const framesArc = view === "Arc" && ["Back Top", "Back Middle", "Back Bottom"].includes(part);
+  const framesArc = view === "Arc" && ["Back Top", "Back Middle"].includes(part);
+  const FRONT_ARC_FRAME = "0 -20 267 100";
+  // Back Bottom is previewed the way the jacket draws it (components/Jacket/back.js): its 210 x 45 guide,
+  // the jacket's own curve and spacing, and the jacket's arc fit (utils/autoFitText.js fitArcInGuide,
+  // on the hidden guide below), in Straight and in Arc alike.
+  // The frame is taller than the band (15 units above and below it), so the name has room around it;
+  // the arc is still fitted to the band itself (the hidden guide is 0 0 210 45).
+  // (210 x 45; 230 x 58 on the coach, config/designAreaConfig.js)
+  const [BACK_BOTTOM_WIDTH, BACK_BOTTOM_HEIGHT] = getGuideSize("Back Bottom", globals?.productId);
+  const BACK_BOTTOM_BAND = `0 -15 ${BACK_BOTTOM_WIDTH} ${BACK_BOTTOM_HEIGHT + 30}`;
   const renderViewBox =
-    part === "Front Center" && view === "Arc"
-      ? "0 -20 267 100"
-      : framesArc && arcFrame
-        ? arcFrame
-        : props.viewBox;
+    part === "Back Bottom"
+      ? BACK_BOTTOM_BAND
+      : part === "Front Center" && view === "Arc"
+        ? FRONT_ARC_FRAME
+        : framesArc && arcFrame
+          ? arcFrame
+          : props.viewBox;
 
   // The preview is shaped like the place's guide (css/builder-design-modal.scss), but an arched name
   // rises above and below its guide on the jacket: in Arc the preview takes the frame's shape
   // instead (still the guide's width), so the name shows at its size on the jacket rather than
-  // squeezed into the band.
+  // squeezed into the band. Front Center and Back Top keep one preview box in Straight and Arc, so the
+  // preview does not change size with the appearance: Front Center's arc frame, and for Back Top a box
+  // just taller than its tallest arc frame (260 x 52 for one letter to 260 x 77 for "WILDCATS"). The
+  // drawing (band or arc frame, same fit as before) sits centred in it at its usual size. (Drawing
+  // Straight in the taller frame instead threw off the arc fit, which measures there.)
+  // (Back Bottom keeps its frame around the guide's band in both, above.)
+  const FIXED_PREVIEW = { "Front Center": FRONT_ARC_FRAME, "Back Top": "0 0 260 84", "Back Bottom": BACK_BOTTOM_BAND };
   const arcPreviewRatio = (() => {
-    if (view !== "Arc") return null;
-    const [, , width, height] = String(renderViewBox).split(/\s+/).map(Number);
+    if (view !== "Arc" && !FIXED_PREVIEW[part]) return null;
+    const frame = FIXED_PREVIEW[part] || renderViewBox;
+    const [, , width, height] = String(frame).split(/\s+/).map(Number);
     return width && height ? width / height : null;
   })();
 
@@ -309,12 +328,25 @@ const Name = ({
               viewBox={renderViewBox}
             >
               {part === "Back Bottom" ? (
-                <path
-                  id="modalFrontArt"
-                  d="M-90,190.9c26.2,25.9,62.2,41.9,102,41.9c39.8,0,75.8-16,102-41.9"
-                  fill="none"
-                  style={{ transform: "translate(83px, -182px)" }}
-                />
+                <>
+                  {/* the jacket's Back Bottom curve (back.js #backBottomArc, its group's origin moved to the
+                      middle of the band) and a hidden guide the arc fit sizes the name against */}
+                  <path
+                    id="modalFrontArt"
+                    d="M107.448,346.152 c76.631,76.631,200.649,76.631,277.28,0"
+                    fill="none"
+                    transform={`translate(${BACK_BOTTOM_WIDTH / 2 - 245}, ${BACK_BOTTOM_HEIGHT / 2 - 393})`}
+                  />
+                  <rect
+                    className="cjd-guides"
+                    data-arc-fit="true"
+                    x="0"
+                    y="0"
+                    width={BACK_BOTTOM_WIDTH}
+                    height={BACK_BOTTOM_HEIGHT}
+                    visibility="hidden"
+                  />
+                </>
               ) : part === "Back Top" ? (
                 <path
                   id="modalFrontArt"
@@ -411,7 +443,9 @@ const Name = ({
                   strokeWidth={
                     part === "Front Center" || part === "Back Middle"
                       ? "5.5"
-                      : "2"
+                      : part === "Back Bottom"
+                        ? "2.5" // as the jacket
+                        : "2"
                   }
                   style={{ paintOrder: "stroke fill" }}
                   textAnchor="middle"
@@ -425,7 +459,7 @@ const Name = ({
                       xlinkHref="#modalFrontArt"
                       startOffset="50%"
                       style={{
-                        letterSpacing: part === "Front Center" ? "1px" : "5px",
+                        letterSpacing: part === "Front Center" || part === "Back Bottom" ? "1px" : "5px", // Back Bottom: as the jacket
                       }}
                     >
                       {name}

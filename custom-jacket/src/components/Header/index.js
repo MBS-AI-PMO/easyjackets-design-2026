@@ -602,6 +602,11 @@ const Header = ({
               <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3' strokeLinecap='round' aria-hidden='true'><path d='M12 4v16M4 12h16' /></svg>
             </button>
           )}
+          {/* phones: Share sits up here next to + (it was in the workspace toolbar), css/components/Header/styles.scss */}
+          <button type='button' className='cjd-tab-share' aria-label='Share your design' title='Share your design' onClick={handleShareClick}>
+            <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'><circle cx='18' cy='5' r='3' /><circle cx='6' cy='12' r='3' /><circle cx='18' cy='19' r='3' /><line x1='8.59' y1='13.51' x2='15.42' y2='17.49' /><line x1='15.41' y1='6.51' x2='8.59' y2='10.49' /></svg>
+            Share
+          </button>
         </div>
 
         <NavLinks />

@@ -7,11 +7,9 @@ let initState = {
   inserts: false,
   insertsCount: 1,
   sleevePocket: false,
-  // On by default so the mid-sleeve placement guides are already there the
-  // first time guides are switched on, instead of the customer having to find
-  // this option and answer Yes before they can see where a patch would go.
-  // Answering No still removes them. Carries no price, unlike the options above
-  // it — see the advance block in reducers/pricing.js.
+  // Always on: the extra sleeve patch places (mid-sleeve upper/lower) are part of
+  // every jacket and there is no switch for them any more. Carries no price,
+  // unlike the options above it — see the advance block in reducers/pricing.js.
   extraSleevePatches: true,
 };
 
@@ -23,8 +21,9 @@ const advance = (state = initState, { type, data }) => {
         [data.key]: data.val,
       };
 
+    // a saved design may say No (or predate the setting): the patch places stay on regardless
     case 'REPLACE_ADVANCE':
-      return data;
+      return { ...data, extraSleevePatches: true };
 
     default:
       return state;

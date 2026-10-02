@@ -22,7 +22,6 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
     piping,
     proCuff,
     sleevesPiping,
-    extraSleevePatches,
   } = advance;
 
   const sholderInserList = [
@@ -37,6 +36,8 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
   const cuffList = [{ name: "Pro Cuff" }, { name: "Knit Cuff" }];
 
   const transformedCuffArray = replaceKeyName(cuffList);
+  // the ladies jacket (?id=4893) has no shoulder insert and no cuff style choice
+  const isLadiesJacket = String(globals.productId).trim() === "4893";
   return (
     <>
       {globals.catName !== "Hoodies" && globals.catName !== "ladies Varsity Jackets" && (
@@ -73,6 +74,7 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
       ></Select2>*/}
 
       {!stripes &&
+        !isLadiesJacket &&
         globals.catName !== "Hoodies" &&
         globals.catName !== "Bomber Jackets" &&
         // globals.catName !== "ladies Varsity Jackets" &&
@@ -106,7 +108,7 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
           </div>
         )}
 
-      {inserts && styles.sleeves !== "Raglan" && (
+      {inserts && !isLadiesJacket && styles.sleeves !== "Raglan" && (
         <>
           <div
             className=""
@@ -214,7 +216,7 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
         </>
       )}
 
-      {globals.catName !== "Hoodies" && globals.catName !== "Bomber Jackets" && (
+      {globals.catName !== "Hoodies" && globals.catName !== "Bomber Jackets" && !isLadiesJacket && (
         <>
           <label className="select-label">Cuff Style</label>
           <Select2
@@ -427,44 +429,7 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
         </div>
       )}
 
-      {!(globals.productId === 6046 || globals.productId === "6046") && (
-        <div
-          className="cjd-form-group"
-          style={{
-            display: 'flex',
-            marginTop: '0px',
-            marginBottom: '10px'
-            // padding: '10px',
-            // borderTop: '1px solid #e6e6e6',
-          }}
-        >
-          <div style={{ width: '100%' }}>
-
-            <span id="extra-sleeve-patches" className="select-label" style={{ marginRight: 'auto', display: 'block', marginBottom: '10px' }}>
-              Extra Sleeve Patches
-            </span>
-
-            <div
-              className=""
-              style={{ display: "flex", justifyContent: "space-between" }}
-            >
-              <button
-                class={`control-panel-btn ${extraSleevePatches && "active"}`}
-                onClick={() => advanceOption("extraSleevePatches", true)}
-              >
-                Yes
-              </button>
-              <button
-                class={`control-panel-btn ${!extraSleevePatches && "active"}`}
-                onClick={() => advanceOption("extraSleevePatches", false)}
-              >
-                No
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* no "Extra Sleeve Patches" switch on any jacket: the extra sleeve patch places stay on (store default) */}
     </>
   );
 };

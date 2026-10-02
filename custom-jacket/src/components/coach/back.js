@@ -215,6 +215,7 @@ const CoachBack = ({
           height="190"
           fill="#e6e6e6"
           data-name="cjd-back-middle"
+          data-patch="true" // names fitted like a sleeve patch: as large as it fits, centred (utils/autoFitText.js)
           onClick={() => openModal("Back Middle")}
         />
 
@@ -487,19 +488,22 @@ const CoachBack = ({
       </g>
 
       <g id="back-bottom" style={{ transform: "translate(-28px, 60px)" }}>
+        {/* 58 tall (it was 45, grown upwards): an arched name is fitted to its height, so the taller band
+            draws it bigger. config/designAreaConfig.js has the same size for the dialog's preview. */}
         <rect
           className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
           x="142"
-          y="385"
+          y="372"
           width="230"
-          height="45"
+          height="58"
           fill="#e6e6e6"
           data-name="cjd-back-bottom"
+          data-arc-fit="true" // an arched name is fitted to this guide (utils/autoFitText.js fitArcInGuide)
           onClick={() => openModal("Back Bottom")}
         />
 
         {designs["Back Bottom"]?.done && designs["Back Bottom"]?.name && (
-          <g style={{ transform: "translate(258px, 407.5px)" }}>
+          <g style={{ transform: "translate(257px, 401px)" }}>
             <path
               id="backBottomArc"
               d="M107.448,346.152
@@ -544,7 +548,7 @@ const CoachBack = ({
             colorPicker={(part) => colorPicker(part)}
             outside={colors.outside ? colors.outside : "#ffffff"}
             inside={colors.inside ? colors.inside : "#000000"}
-            lining={colors.lining ? colors.lining : "#000000"}
+            lining={colors.lining ? colors.lining : "#ffffff"} // the coach lining only comes in white
             lace={colors.lace ? colors.lace : "#c4c6c6"}
             flip={true}
           />

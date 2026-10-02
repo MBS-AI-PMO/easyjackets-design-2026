@@ -4,6 +4,7 @@ import Modal from 'react-modal';
 
 import { MODAL_ANIM_MS } from '../../config/modalAnimation';
 import { getGuideRatio } from '../../config/designAreaConfig';
+import { followWhileOpening } from '../../utils/followOpening';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 import Letters from './letters';
@@ -32,6 +33,11 @@ const nameTab = [
 const nameOnly = ['Front Center', 'Back Top', 'Back Bottom'];
 const verticalChest = ['Right Chest Verticle', 'Left Chest Verticle'];
 
+// the height the drawer is laid out for (its content with a colour list open); zoomed to fit below it
+const DRAWER_HEIGHT = 1000;
+// places besides the sleeve patches that open in the drawer
+const DRAWER_PLACES = ['Right Chest', 'Left Chest', 'Right Pocket', 'Left Pocket', 'Front Center', 'Back Top', 'Back Middle', 'Back Bottom'];
+
 // The section a tab position stands for in a place's dialog: the tabs differ per place (pockets
 // start at Letters, Back Middle has no Letters, the vertical chest places only Uploads).
 const tabForIndex = (title, idx) => {
@@ -42,9 +48,48 @@ const tabForIndex = (title, idx) => {
   return order[idx] || order[0];
 };
 
-const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose, styles }) => {
+const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose, styles, globals }) => {
 
   const { open, title, index } = popup;
+  // The sleeve patches, chests, pockets and Front Center open in a drawer from the right (a sheet from the bottom on
+  // phones) with a smaller preview of the same shape: the whole screen height, and the jacket stays in
+  // view. On every jacket, the coach too (css/builder-design-modal.scss).
+  const inDrawer = /Sleeve/.test(title || '') || DRAWER_PLACES.includes(title);
+
+  // The drawer keeps its look when the page is zoomed or the screen is scaled (150% and so on): it is laid
+  // out for DRAWER_HEIGHT and zoomed down to fit the window, but never below its size at 100%
+  // (1 / devicePixelRatio), so a small screen at 100% is not shrunk (it scrolls instead). Not on phones.
+  const [drawerZoom, setDrawerZoom] = React.useState(1);
+  React.useEffect(() => {
+    if (!open || !inDrawer) return undefined;
+    const update = () => {
+      const fit = window.innerWidth > 680
+        ? Math.max(1 / (window.devicePixelRatio || 1), Math.min(1, window.innerHeight / DRAWER_HEIGHT))
+        : 1;
+      setDrawerZoom(Math.round(fit * 1000) / 1000);
+    };
+    update();
+    window.addEventListener('resize', update); // zooming the page fires resize
+    return () => window.removeEventListener('resize', update);
+  }, [open, inDrawer]);
+
+  // In the drawer, a colour list that opens past the bottom scrolls its column along, so it is seen
+  // whole without scrolling by hand (a screen too short for preview, Fill / Stroke and the list).
+  const colourWatcher = React.useRef(null);
+  const watchColourLists = React.useCallback((node) => {
+    colourWatcher.current?.disconnect();
+    colourWatcher.current = null;
+    if (!node || !node.classList.contains('cjd-modal--drawer')) return;
+    colourWatcher.current = new MutationObserver((records) => {
+      records.forEach((record) => record.addedNodes.forEach((added) => {
+        if (added.nodeType !== 1) return;
+        const list = added.matches('.cjd-color-box') ? added : added.querySelector('.cjd-color-box');
+        const colours = list?.closest('.cjd-preview-colors-wrapper');
+        if (list && colours) followWhileOpening(colours, list);
+      }));
+    });
+    colourWatcher.current.observe(node, { childList: true, subtree: true });
+  }, []);
   // what Save says when there is nothing to save yet, in the builder's own notice (was the browser's alert)
   const [notice, setNotice] = React.useState(null);
 
@@ -116,16 +161,8 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
         data = {
           title: curPart.title,
           path: curPart.path,
-          type:
-            curPart.type ||
-            (part === 'Right Sleeve End' ||
-              part === 'Left Sleeve End' ||
-              part === 'Right Mid Sleeve Upper' ||
-              part === 'Left Mid Sleeve Upper' ||
-              part === 'Right Chest Verticle' ||
-              part === 'Left Chest Verticle'
-              ? 'Type Your Own'
-              : 'Ready To Use'),
+          // the Letters tab opens on Ready To Use everywhere (components/modal/letters.js)
+          type: curPart.type || 'Ready To Use',
           appearance: curPart?.appearance || 'Straight',
           treatment: curPart?.treatment || false,
           size: curPart.size,
@@ -164,6 +201,10 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
         break;
 
       case 'upload':
+        if (!curPart.file) {
+          setNotice({ title: 'Upload a picture', message: 'Upload a picture (or wait for it to finish uploading), then save.' });
+          return false;
+        }
         data = {
           file: curPart.file,
           image: curPart.image,
@@ -194,18 +235,25 @@ const PopUp = ({ popup, designs, modalState, saveName, deleteDesign, changePose,
       isOpen={open}
       onAfterOpen={afterOpenModal}
       className={{
-        base: "cjd-modal cjd-modal-design",
+        base: `cjd-modal cjd-modal-design${inDrawer ? ' cjd-modal--drawer' : ''}`,
         afterOpen: "cjd-modal--after-open",
         beforeClose: "cjd-modal--before-close",
       }}
       overlayClassName={{
-        base: "cjd-modal-overlay",
+        base: `cjd-modal-overlay${inDrawer ? ' cjd-modal-overlay--drawer' : ''}`,
         afterOpen: "cjd-modal-overlay--after-open",
         beforeClose: "cjd-modal-overlay--before-close",
       }}
       closeTimeoutMS={MODAL_ANIM_MS}
       // the preview takes the shape of this place's guide on the jacket (css/builder-design-modal.scss)
-      style={{ content: { '--cjd-guide-ratio': getGuideRatio(title) } }}
+      // (the drawer sizes its preview from the screen height: css/builder-design-modal.scss)
+      style={{
+        content: {
+          '--cjd-guide-ratio': getGuideRatio(title, globals?.productId),
+          ...(inDrawer && { '--cjd-drawer-zoom': drawerZoom }),
+        },
+      }}
+      contentRef={watchColourLists}
       contentLabel={title}
       onRequestClose={() => modalState('open', false)}
       ariaHideApp={false}

@@ -2,6 +2,7 @@ import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as common from "select2-component";
+import { followWhileOpening } from "../../utils/followOpening";
 export * from "select2-component";
 
 /**
@@ -351,6 +352,14 @@ export class Select2 extends React.PureComponent<
     this.isOpen = !this.isOpen;
     this.setState({ isOpen: this.isOpen });
     if (this.isOpen) {
+      // the list opens in place: the panel scrolls along so all of it comes into view
+      const root = this.rootRef.current;
+      if (root) {
+        followWhileOpening(
+          root.querySelector(".selection") as HTMLElement,
+          root.querySelector(".select2-container-dropdown") as HTMLElement
+        );
+      }
       if (!this.props.keepSearchText) {
         this.innerSearchText = "";
       }
@@ -519,14 +528,15 @@ export class Select2 extends React.PureComponent<
   private isDisabled(option: common.Select2Option) {
     return option.disabled ? "true" : "false";
   }
+  // preventScroll: the browser would jump the page to centre the list; followWhileOpening scrolls instead
   private focusSearchboxOrResultsElement() {
     if (!this.isSearchboxHidden) {
       if (this.searchInputElement) {
-        this.searchInputElement.focus();
+        this.searchInputElement.focus({ preventScroll: true });
       }
     } else {
       if (this.resultsElement) {
-        this.resultsElement.focus();
+        this.resultsElement.focus({ preventScroll: true });
       }
     }
   }

@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 
 import { modalState, activeSidebar, colorPicker } from "../../store/actions";
 import BadgeTemp from "../Jacket/badge";
+import { COACH_SLEEVE_PATCH, moveTransform, patchArt, patchGuide, patchMove } from "../../config/sleevePatches";
 
 const CoachLeft = ({
   globals,
@@ -178,6 +179,8 @@ const CoachLeft = ({
       )}
 
       {designs["Left Sleeve"]?.done && (
+        <g transform={patchArt(124, 198, 84, 80, COACH_SLEEVE_PATCH, patchMove(globals.productId, "Left Sleeve"))}>
+          {/* sized like every sleeve patch (config/sleevePatches.js) */}
         <g id="leftSleeveArt" style={{ transform: "translate(-40px, 0px)" }}>
           {designs["Left Sleeve"]?.name && (
             <g style={{ transform: "translate(164px, 198px)" }}>
@@ -435,9 +438,12 @@ const CoachLeft = ({
             </g>
           )}
         </g>
+        </g>
       )}
 
       {globals.coach && (globals.productId === 6046 || globals.productId === "6046") && designs["Left Mid Sleeve Upper"]?.done && (
+        <g transform={patchArt(116.19, 303.67, 74, 70, COACH_SLEEVE_PATCH, patchMove(globals.productId, "Left Mid Sleeve Upper"))}>
+          {/* sized like every sleeve patch (config/sleevePatches.js) */}
         <g id="leftMidSleeveUpperArt" style={{ transform: "translate(-41px, -114px)" }}>
           <g transform="rotate(11 160 410)">
             {designs["Left Mid Sleeve Upper"]?.name && (
@@ -699,9 +705,12 @@ const CoachLeft = ({
             )}
           </g>
         </g>
+        </g>
       )}
 
       {globals.coach && (globals.productId === 6046 || globals.productId === "6046") && designs["Left Mid Sleeve Lower"]?.done && (
+        <g transform={patchArt(98.94, 403.79, 70, 64, COACH_SLEEVE_PATCH, patchMove(globals.productId, "Left Mid Sleeve Lower"))}>
+          {/* sized like every sleeve patch (config/sleevePatches.js) */}
         <g id="leftMidSleeveLowerArt" style={{ transform: "translate(-50px, -14px)" }}>
           <g transform="rotate(15 160 410)">
             {designs["Left Mid Sleeve Lower"]?.name && (
@@ -963,9 +972,12 @@ const CoachLeft = ({
             )}
           </g>
         </g>
+        </g>
       )}
 
       {designs["Left Sleeve End"]?.done && (
+        <g transform={patchArt(74.79, 494.54, 50, 50, COACH_SLEEVE_PATCH, patchMove(globals.productId, "Left Sleeve End"))}>
+          {/* sized like every sleeve patch (config/sleevePatches.js) */}
         <g
           id="leftSleeveEndArt"
           style={{ transform: `translate(246px, 2px) rotate(31deg) scaleX(1)` }}
@@ -978,11 +990,26 @@ const CoachLeft = ({
                 fontFamily={designs["Left Sleeve End"]?.name?.font}
                 fill={designs["Left Sleeve End"]?.name?.fill}
                 stroke={designs["Left Sleeve End"]?.name?.stroke}
-                fontSize={calculateSleeveFontSize(
-                  designs["Left Sleeve End"]?.name?.title,
-                  designs["Left Sleeve End"]?.name?.font,
-                  "end"
-                )}
+                // sized like the right sleeve end (calculateSleeveFontSize never existed: this crashed the builder)
+                fontSize={(() => {
+                  const len = designs["Left Sleeve End"]?.name?.title?.length || 0;
+                  const font = designs["Left Sleeve End"]?.name?.font;
+                  let size = designs["Left Sleeve End"]?.name?.size;
+
+                  if (len === 1) size = 62;
+                  else if (len === 2) size = 45;
+                  else if (len === 3) size = 30;
+                  else if (len === 4) size = 22;
+                  else if (len === 5) size = 17;
+                  else if (len === 6) size = 14;
+                  else if (len === 7) size = 12;
+                  else if (len >= 8) size = 11;
+
+                  if (font === "Graduate" || font === "Cutive" || font === "Merienda One") {
+                    size = Math.floor(size * 0.7);
+                  }
+                  return size;
+                })()}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 strokeWidth="2"
@@ -1176,51 +1203,48 @@ const CoachLeft = ({
             </g>
           )}
         </g>
+        </g>
       )}
 
+      <g transform={moveTransform(patchMove(globals.productId, "Left Sleeve"))}>
       <rect
-        x="122"
-        y="158"
-        width="84"
-        height="80"
+        {...patchGuide(122, 158, 84, 80, COACH_SLEEVE_PATCH)}
         style={{ transform: "translate(-40px, 0px)" }}
         className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
         onClick={() => openModal("Left Sleeve")}
       />
+      </g>
 
       {globals.coach && (globals.productId === 6046 || globals.productId === "6046") && advance.extraSleevePatches && (
+        <g transform={moveTransform(patchMove(globals.productId, "Left Mid Sleeve Upper"))}>
         <rect
-          x="197"
-          y="345"
-          width="74"
-          height="70"
+          {...patchGuide(197, 345, 74, 70, COACH_SLEEVE_PATCH)}
           className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
           onClick={() => openModal("Left Mid Sleeve Upper")}
           style={{ transform: "translate(-41px, -114px) rotate(11deg)" }}
         />
+        </g>
       )}
 
       {globals.coach && (globals.productId === 6046 || globals.productId === "6046") && advance.extraSleevePatches && (
+        <g transform={moveTransform(patchMove(globals.productId, "Left Mid Sleeve Lower"))}>
         <rect
-          x="217"
-          y="333"
-          width="70"
-          height="64"
+          {...patchGuide(217, 333, 70, 64, COACH_SLEEVE_PATCH)}
           className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
           onClick={() => openModal("Left Mid Sleeve Lower")}
           style={{ transform: "translate(-50px, -14px) rotate(15deg)" }}
         />
+        </g>
       )}
 
+      <g transform={moveTransform(patchMove(globals.productId, "Left Sleeve End"))}>
       <rect
-        x="40"
-        y="430"
-        width="50"
-        height="50"
+        {...patchGuide(40, 430, 50, 50, COACH_SLEEVE_PATCH)}
         className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
         onClick={() => openModal("Left Sleeve End")}
         style={{ transform: "translate(-375px, 400px) rotate(-70deg)" }}
       />
+      </g>
     </svg >
   );
 };

@@ -368,6 +368,21 @@ $ease: .25s ease;
 // ---- phones: the whole toolbar on one line ------------------------------------------------------
 // Guides, the canvas button, Save and Share (Save and Share appear up to 768px, App.js) in a slightly
 // more compact size so they never wrap onto a second line over the jacket.
+// "Outlines: Off" (App.js): the jacket without the thin lines drawn around each part (App.scss gives
+// every colour part a 1px #cacae8 stroke; a few pieces set those greys themselves), so it shows as it is
+// made. App.js then strokes each colour part in its own colour (inline), closing the hairline gaps the
+// outline covered. Hovering a part still outlines it in gold (that rule is !important); the guides and
+// the designs' own outlines are untouched.
+.cjd-content-wrapper.outlines-off svg {
+  .cjd-color-hover,
+  .cjd-color-hover path,
+  [stroke="#cacae8"],
+  [stroke="#c6c6c4"],
+  [stroke="#c6c6c6"] {
+    stroke: none;
+  }
+}
+
 @media (max-width: 768px) {
   .cjd-content-wrapper .cjd-jacket-guides.ez-site {
     // end to end, with the screen's padding on both sides
@@ -469,4 +484,54 @@ $ease: .25s ease;
 .cjd-content-wrapper .cjd-color-hover:hover {
   stroke: #c9a227 !important;
   stroke-width: 1.5 !important;
+}
+
+// Phones: Guides, Outlines and the canvas button a few px tighter, so Save gets a little more width
+@media (max-width: 768px) {
+  .cjd-content-wrapper .cjd-jacket-guides.ez-site {
+    gap: 5px;
+
+    .cjd-guides-pill:not(.cjd-action-pill) {
+      gap: 6px;
+      padding: 0 3px 0 8px;
+    }
+
+    .cjd-guides-pill .cjd-canvas-bg-toggle {
+      width: 30px;
+    }
+  }
+}
+
+// Narrow phones: Guides and Outlines keep their names but take a little less room, so Save still fits
+@media (max-width: 380px) {
+  .cjd-content-wrapper .cjd-jacket-guides.ez-site {
+    gap: 5px;
+
+    .cjd-guides-pill {
+      gap: 6px;
+      padding: 0 3px 0 8px;
+
+      .cjd-guides-label {
+        font-size: 12px;
+        letter-spacing: .02em;
+      }
+    }
+
+    .cjd-guides-pill .cjd-guides-toggle {
+      width: 46px;
+
+      .cjd-switch-text {
+        left: 20px;
+        font-size: 11px;
+      }
+
+      &.on .cjd-switch-knob {
+        transform: translateX(22px);
+      }
+
+      &.on .cjd-switch-text {
+        left: 5px;
+      }
+    }
+  }
 }

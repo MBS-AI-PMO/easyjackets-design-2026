@@ -30,18 +30,8 @@ const Letters = ({
   const [colPart, setColPart] = useState('fill');
   const [selectedItem, setSelectedItem] = useState(null);
 
-  let defaultType = 'Ready To Use';
-  if (
-    designs[part]?.letters?.type === 'Type Your Own' ||
-    part === 'Left Sleeve End' ||
-    part === 'Right Sleeve End' ||
-    part === 'Left Mid Sleeve Upper' ||
-    part === 'Right Mid Sleeve Upper' ||
-    part === 'Right Chest Verticle' ||
-    part === 'Left Chest Verticle'
-  ) {
-    defaultType = 'Type Your Own';
-  }
+  // Ready To Use first on every place; a place saved with typed letters reopens on Type Your Own
+  const defaultType = designs[part]?.letters?.type === 'Type Your Own' ? 'Type Your Own' : 'Ready To Use';
   const [type, setType] = useState(defaultType);
 
   // Get the design area configuration for this part

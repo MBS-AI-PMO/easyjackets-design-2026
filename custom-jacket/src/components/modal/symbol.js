@@ -162,7 +162,7 @@ const Symbol = ({ globals, part, colors, defaults, updateColor, updateName, desi
             {/* drawn in the place's guide (as on the jacket); the preview box has the guide's shape */}
             <svg
               xmlns='http://www.w3.org/2000/svg'
-              viewBox={`0 0 ${getGuideSize(part).join(' ')}`}
+              viewBox={`0 0 ${getGuideSize(part, globals?.productId).join(' ')}`}
             >
               <g>
                 {flag && (

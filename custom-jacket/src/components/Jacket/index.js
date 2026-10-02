@@ -393,7 +393,7 @@ const Jacket = ({
                   data-name="pocket slash"
                   transform={
                     laddiesJacket
-                      ? "translate(140, 290)"
+                      ? "translate(140, 280)"
                       : "translate(140, 336)"
                   }
                 >
@@ -1216,6 +1216,7 @@ const Jacket = ({
                 height="85"
                 fill="#e6e6e6"
                 data-name="right-chest"
+                data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
                 onClick={() => openModal("Right Chest")}
               />
               {designs["Right Chest"]?.done && (
@@ -1500,6 +1501,7 @@ const Jacket = ({
                 height="85"
                 fill="#e6e6e6"
                 data-name="left-chest"
+                data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
                 onClick={() => openModal("Left Chest")}
               />
               {designs["Left Chest"]?.done && (
@@ -1752,6 +1754,7 @@ const Jacket = ({
                 height="68"
                 fill="#e6e6e6"
                 data-name="right-pocket"
+                data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
                 onClick={() => openModal("Right Pocket")}
                 /* 167.63 keeps this guide exactly 62 units left of the jacket centre
                    (257.13), mirroring the left pocket. They were 62.84 / 61.16 before,
@@ -1954,11 +1957,14 @@ const Jacket = ({
                   )}
 
                   {designs["Right Pocket"]?.upload && (
-                    <g transform="translate(168, 374)">
+                    // in the pocket guide (161.13, 353.23, 68 x 68) with the 2-unit margin the symbols and
+                    // letters keep: as large as it fits, centred (it sat 3 right and 17 low, past the guide)
+                    <g transform="translate(163.13, 355.23)">
                       <image
                         xlinkHref={designs["Right Pocket"]?.upload.file}
-                        width="61"
-                        height="61"
+                        width="64"
+                        height="64"
+                        preserveAspectRatio="xMidYMid meet"
                       />
                     </g>
                   )}
@@ -1977,6 +1983,7 @@ const Jacket = ({
                 height="68"
                 fill="#e6e6e6"
                 data-name="left-pocket"
+                data-patch="true" // fitted like a sleeve patch (utils/autoFitText.js)
                 onClick={() => openModal("Left Pocket")}
               />
               {designs["Left Pocket"]?.done && (
@@ -2184,11 +2191,13 @@ const Jacket = ({
                   )}
 
                   {designs["Left Pocket"]?.upload && (
-                    <g transform="translate(287, 374)">
+                    // in the pocket guide (285.13, 353.23, 68 x 68), as the right pocket
+                    <g transform="translate(287.13, 355.23)">
                       <image
                         xlinkHref={designs["Left Pocket"]?.upload.file}
-                        width="61"
-                        height="61"
+                        width="64"
+                        height="64"
+                        preserveAspectRatio="xMidYMid meet"
                       />
                     </g>
                   )}

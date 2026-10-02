@@ -21,6 +21,7 @@ import {
   saveSvg,
   jacketSnapshot,
   markJacketSaved,
+  selectColor,
 } from "./store/actions";
 
 import Header from "./components/Header";
@@ -95,7 +96,14 @@ const App = ({
   saveSvg,
   jacketSnapshot,
   markJacketSaved,
+  selectColor,
 }) => {
+  // the coach jacket's inside lining only comes in white: it starts white, and stays white after a
+  // design or another jacket tab is loaded
+  React.useEffect(() => {
+    if (String(globals.productId).trim() === "6046" && colors.lining !== "#ffffff") selectColor("lining", "#ffffff");
+  }, [globals.productId, colors.lining, selectColor]);
+
   React.useEffect(() => {
     // the tab icon comes from the admin (utils/favicon.js, loaded in index.js)
     loadCustomizerFonts();
@@ -104,6 +112,49 @@ const App = ({
   React.useEffect(() => {
     autoFitCustomizerText();
   }, [designs, globals.activeJacket, globals.pose]);
+
+  // Outlines off (toolbar switch): each part is stroked in its own colour instead of the grey outline,
+  // which closes the hairline gaps between neighbouring parts that the outline used to cover (a white
+  // line showed along the top of the waistband). The gold hover outline still wins (it is !important).
+  React.useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      // every shape of a colour part, not only paths (the coach's pocket strips are polygons with a
+      // black stroke of their own)
+      document
+        .querySelectorAll([
+          '.cjd-content-wrapper svg .cjd-color-hover',
+          ...['path', 'polygon', 'rect', 'circle', 'ellipse', 'polyline'].map((shape) => `.cjd-content-wrapper svg .cjd-color-hover ${shape}`),
+        ].join(', '))
+        .forEach((part) => {
+          if (globals.outlines === false) {
+            // a group passes its stroke on to lines inside it that have none of their own (the line down
+            // the front opening): groups get none, only the shapes themselves are stroked
+            if (part.tagName.toLowerCase() === 'g') {
+              part.style.stroke = 'none';
+              return;
+            }
+            const fill = window.getComputedStyle(part).fill;
+            // a part that is only a line (drawn by its outline) shows nothing, rather than a line in its fill
+            let thin = false;
+            try {
+              const box = part.getBBox();
+              thin = box.width < 2 || box.height < 2;
+            } catch {
+              thin = false;
+            }
+            part.style.stroke = fill && fill !== 'none' && !thin ? fill : 'none';
+          } else {
+            part.style.removeProperty('stroke');
+          }
+        });
+      // the black line down the front opening stays (it has no stroke of its own: it took the outline's)
+      document.querySelectorAll('.cjd-content-wrapper #jacketFront .cjd-color-hover line').forEach((line) => {
+        if (globals.outlines === false) line.style.stroke = line.getAttribute('stroke') || '#000';
+        else line.style.removeProperty('stroke');
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [globals.outlines, globals.pose, globals.activeJacket, colors, styles, materials, advance]);
 
   const [openSideBar, setOpenSideBar] = React.useState(true);
   const svgContainerStyle = { paddingRight: "10px", paddingLeft: "20px" };
@@ -465,7 +516,8 @@ const App = ({
             {globals.catName === "Hoodies" ||
               globals.catName === "Coach Jackets" ||
               globals.productId === "5995" ||
-              globals.productId === "6046" ? (
+              globals.productId === "6046" ||
+              String(globals.productId).trim() === "4893" ? (
               <></>
             ) : (
               <>
@@ -550,7 +602,7 @@ const App = ({
           </div>
         </div>
 
-        <div className={`cjd-content-wrapper${canvasDark ? ' canvas-dark' : ''}`}>
+        <div className={`cjd-content-wrapper${canvasDark ? ' canvas-dark' : ''}${globals.outlines === false ? ' outlines-off' : ''}`}>
           <div className="ez-site cjd-jacket-guides">
             <div className="cjd-guides-pill">
               <span className="cjd-guides-label">Guides</span>
@@ -564,6 +616,22 @@ const App = ({
               >
                 <span className="cjd-switch-knob" aria-hidden="true" />
                 <span className="cjd-switch-text">{globals.guides ? "On" : "Off"}</span>
+              </button>
+            </div>
+            {/* the thin lines drawn around each part: off shows the jacket as it is made */}
+            <div className="cjd-guides-pill cjd-outlines-pill">
+              <span className="cjd-guides-label">Outlines</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={globals.outlines !== false}
+                aria-label="Outlines"
+                className={`cjd-guides-toggle cjd-outlines-toggle${globals.outlines !== false ? ' on' : ''}`}
+                onClick={() => updateGlobals("outlines", globals.outlines === false)}
+                title={globals.outlines !== false ? "Hide the outlines" : "Show the outlines"}
+              >
+                <span className="cjd-switch-knob" aria-hidden="true" />
+                <span className="cjd-switch-text">{globals.outlines !== false ? "On" : "Off"}</span>
               </button>
             </div>
             <div className="cjd-guides-pill" style={{ padding: "3px" }}>
@@ -590,7 +658,8 @@ const App = ({
               </button>
             </div>
 
-            {/* Phones: Save and Share live here (the buttons under the panel are hidden there, css/builder-panel.scss) */}
+            {/* Phones: Save lives here (the buttons under the panel are hidden there, css/builder-panel.scss);
+                Share is at the top, next to + (components/Header) */}
             {isMobile && (
               <>
                 <div
@@ -602,10 +671,6 @@ const App = ({
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
                   <span className="cjd-guides-label">Save</span>
-                </div>
-                <div className="cjd-guides-pill cjd-action-pill" onClick={() => setShowShareModal(true)}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-                  <span className="cjd-guides-label">Share</span>
                 </div>
               </>
             )}
@@ -689,7 +754,8 @@ const App = ({
           {globals.catName === "Hoodies" ||
             globals.catName === "Coach Jackets" ||
             globals.productId === "5995" ||
-            globals.productId === "6046" ? (
+            globals.productId === "6046" ||
+            String(globals.productId).trim() === "4893" ? (
             <></>
           ) : (
             <>
@@ -873,6 +939,7 @@ const mapDispatchToProps = (dispatch) => ({
   saveSvg: (key, part, svg) => dispatch(saveSvg(key, part, svg)),
   jacketSnapshot: (key) => dispatch(jacketSnapshot(key)),
   markJacketSaved: (key, saved, snapshot) => dispatch(markJacketSaved(key, saved, snapshot)),
+  selectColor: (key, val) => dispatch(selectColor(key, val)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

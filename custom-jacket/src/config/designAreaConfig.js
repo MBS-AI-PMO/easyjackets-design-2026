@@ -138,11 +138,26 @@ const GUIDE_SIZES = {
     'Left Chest Verticle': [85, 175],
 };
 
-/** The place's guide as [width, height] (a square for the places not listed). */
-export const getGuideSize = (part) => GUIDE_SIZES[part] || [100, 100];
+// Places a product draws at another size: the cropped varsity's shorter back has a 245 x 140 Back Middle
+// guide (components/Jacket/back.js), not 245 x 190; the coach (components/coach/back.js) has a wider back.
+const PRODUCT_GUIDE_SIZES = {
+    4893: { 'Back Middle': [245, 140] },
+    6046: { 'Back Middle': [255, 190], 'Back Bottom': [230, 58] },
+};
+
+/** The place's guide as [width, height] on the given product (a square for the places not listed). */
+export const getGuideSize = (part, productId) =>
+    PRODUCT_GUIDE_SIZES[String(productId).trim()]?.[part] || GUIDE_SIZES[part] || [100, 100];
 
 /** The place's guide shape as width / height (1 for the square ones). */
-export const getGuideRatio = (part) => {
-    const [width, height] = getGuideSize(part);
+export const getGuideRatio = (part, productId) => {
+    const [width, height] = getGuideSize(part, productId);
     return width / height;
+};
+
+/** getDesignAreaConfig for a product: a place it draws at another size gets that size's viewBox. */
+export const getProductDesignAreaConfig = (part, productId) => {
+    const config = getDesignAreaConfig(part);
+    const own = PRODUCT_GUIDE_SIZES[String(productId).trim()]?.[part];
+    return own ? { ...config, height: own[1], viewBox: `0 0 ${own[0]} ${own[1]}` } : config;
 };

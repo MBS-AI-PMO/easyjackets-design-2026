@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { modalState, activeSidebar, colorPicker } from "../../store/actions";
 
 import BadgeTemp from "./badge";
+import { SLEEVE_PATCH, moveTransform, patchArt, patchGuide, patchMove } from "../../config/sleevePatches";
 
 const JacketRight = ({
   advance,
@@ -829,6 +830,8 @@ const JacketRight = ({
       </g>
 
       {designs["Right Sleeve"]?.done && (
+        <g transform={patchArt(162.5, 217.5, 85, 85, SLEEVE_PATCH, patchMove(globals.productId, "Right Sleeve"))}>
+          {/* sized like every sleeve patch (config/sleevePatches.js) */}
         <g id="rightSleeveArt 123" style={{ transform: "scaleX(-1)" }}>
           {designs["Right Sleeve"]?.name && (
             <g transform="translate(-162, 227)">
@@ -1058,10 +1061,13 @@ const JacketRight = ({
             </g>
           )}
         </g>
+        </g>
       )}
 
       {/* Right Mid Sleeve Upper Rendering */}
       {advance.extraSleevePatches && designs["Right Mid Sleeve Upper"]?.done && (
+        <g transform={patchArt(167.5, 304.5, 65, 65, SLEEVE_PATCH, patchMove(globals.productId, "Right Mid Sleeve Upper"))}>
+          {/* sized like every sleeve patch (config/sleevePatches.js) */}
         <g id="rightMidSleeveUpperArt" style={{ transform: "scaleX(-1)" }}>
           {designs["Right Mid Sleeve Upper"]?.name && (
             <g transform="translate(-168  , 304)">
@@ -1264,10 +1270,13 @@ const JacketRight = ({
             </g>
           )}
         </g>
+        </g>
       )}
 
       {/* Right Mid Sleeve Lower Rendering */}
       {advance.extraSleevePatches && designs["Right Mid Sleeve Lower"]?.done && (
+        <g transform={patchArt(152.51, 387.41, 55, 55, SLEEVE_PATCH, patchMove(globals.productId, "Right Mid Sleeve Lower"))}>
+          {/* sized like every sleeve patch (config/sleevePatches.js) */}
         <g id="rightMidSleeveLowerArt" style={{ transform: "scaleX(-1)" }}>
           {designs["Right Mid Sleeve Lower"]?.name && (
             <g transform="translate(-152, 387) rotate(-29)">
@@ -1479,10 +1488,13 @@ const JacketRight = ({
             </g>
           )}
         </g>
+        </g>
       )}
 
       {
         designs["Right Sleeve End"]?.done && (
+          <g transform={patchArt(122.11, 446.05, 47, 47, SLEEVE_PATCH, patchMove(globals.productId, "Right Sleeve End"))}>
+            {/* sized like every sleeve patch (config/sleevePatches.js) */}
           <g
             id="rightSleeveArt"
             style={{
@@ -1693,56 +1705,53 @@ const JacketRight = ({
               </g>
             )}
           </g>
+          </g>
         )
       }
 
+      <g transform={moveTransform(patchMove(globals.productId, "Right Sleeve"))}>
       <rect
-        x="120"
-        y="175"
-        width="85"
-        height="85"
+        {...patchGuide(120, 175, 85, 85, SLEEVE_PATCH)}
         className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
         onClick={() => openModal("Right Sleeve")}
       />
+      </g>
 
       {/* Right Mid Sleeve Upper - between Right Sleeve and Right Sleeve End */}
       {
         advance.extraSleevePatches && (
+          <g transform={moveTransform(patchMove(globals.productId, "Right Mid Sleeve Upper"))}>
           <rect
-            x="135"
-            y="272"
-            width="65"
-            height="65"
+            {...patchGuide(135, 272, 65, 65, SLEEVE_PATCH)}
             className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
             onClick={() => openModal("Right Mid Sleeve Upper")}
           />
+          </g>
         )
       }
 
       {/* Right Mid Sleeve Lower - between Mid Upper and Sleeve End */}
       {
         advance.extraSleevePatches && (
+          <g transform={moveTransform(patchMove(globals.productId, "Right Mid Sleeve Lower"))}>
           <rect
-            x="120"
-            y="350"
-            width="55"
-            height="55"
+            {...patchGuide(120, 350, 55, 55, SLEEVE_PATCH)}
             className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
             onClick={() => openModal("Right Mid Sleeve Lower")}
             style={{ transform: "translate(-250px, 340px) rotate(-61.94deg)" }}
           />
+          </g>
         )
       }
 
+      <g transform={moveTransform(patchMove(globals.productId, "Right Sleeve End"))}>
       <rect
-        x="95"
-        y="420"
-        width="47"
-        height="47"
+        {...patchGuide(95, 420, 47, 47, SLEEVE_PATCH)}
         className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
         onClick={() => openModal("Right Sleeve End")}
         style={{ transform: "translate(-325px, 342px) rotate(-61.94deg)" }}
       />
+      </g>
     </svg >
   );
 };

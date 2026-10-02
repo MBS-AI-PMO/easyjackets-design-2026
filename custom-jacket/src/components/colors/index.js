@@ -118,6 +118,11 @@ const Colors = ({
   ];
 
   const availableColorsForPart = (part, materials) => {
+    // the coach jacket's inside lining only comes in white
+    if (part.name === 'Inside Lining' && String(globals.productId).trim() === '6046') {
+      const white = colors.find((c) => /^white$/i.test(c?.name?.trim()) || /^#?(fff|ffffff)$/i.test(c?.code?.trim()));
+      return [white || { name: 'White', code: '#ffffff' }];
+    }
     // If colors for a specific part are available from the backend
     const partColors = colors.filter(color => {
       if (Array.isArray(color?.parts) && color.parts.length > 0) {
@@ -193,7 +198,7 @@ const Colors = ({
                         type={part?.nick}
                         label={code}
                         tooltip={name}
-                        current={colors.body}
+                        current={color[part?.nick]}
                         colors={true}
                         dispatch={(type, label) => updateColor(type, label)}
                       />

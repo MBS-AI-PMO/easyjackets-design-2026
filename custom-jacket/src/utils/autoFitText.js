@@ -1,3 +1,5 @@
+import { PATCH_NAME_FILL, PATCH_NAME_OUTLINE, PATCH_TYPED_STROKE } from '../config/sleevePatches';
+
 const fittedTextSelector = [
   '#jacketFront text[font-family]',
   '#jacketBack text[font-family]',
@@ -248,11 +250,145 @@ const getRepresentativeText = (target) => {
   return target.querySelector('text');
 };
 
+// The guide element nearest a point on screen, with its screen box.
+const findNearestGuideElement = (svg, point) => {
+  let nearest = null;
+  svg.querySelectorAll('rect.cjd-guides').forEach((guide) => {
+    const box = getScreenBox(guide, svg);
+    if (!box || !box.width || !box.height) return;
+    const distance = Math.hypot(box.centerX - point.x, box.centerY - point.y);
+    if (!nearest || distance < nearest.distance) nearest = { guide, box, distance };
+  });
+  return nearest;
+};
+
+// Sets a name's outline to `width` (in its own units). A name drawn in two layers keeps the layers'
+// proportion; the widths the drawing gave them are kept aside, so fitting again starts from them.
+// The outline layers of a name or typed letters, with the widths the drawing gave them (kept aside, so
+// fitting again starts from them). Typed letters have two: a wide border under the letter's own stroke.
+const getOutlineLayers = (target) => {
+  const texts = target.tagName.toLowerCase() === 'text' ? [target] : Array.from(target.querySelectorAll('text'));
+  texts.forEach((text) => {
+    if (text.dataset.cjdBaseStroke === undefined) text.dataset.cjdBaseStroke = text.getAttribute('stroke-width') || '';
+  });
+  const widths = texts.map((text) => Number(text.dataset.cjdBaseStroke) || 0).filter((width) => width > 0);
+  const thinnest = widths.length ? Math.min(...widths) : 1;
+  const widest = widths.length ? Math.max(...widths) : 1;
+  return { texts, thinnest, widest };
+};
+
+// Sets the thinnest layer (the letters' own stroke) to `width`, in the text's own units; a wider layer
+// (the border of typed letters) keeps its proportion to it, so the border still shows around the stroke.
+const setPatchOutline = ({ texts, thinnest }, width) => {
+  texts.forEach((text) => {
+    const base = Number(text.dataset.cjdBaseStroke) || thinnest;
+    text.setAttribute('stroke-width', (width * (base / thinnest)).toFixed(4));
+  });
+};
+
+// Sleeve patches (data-patch, config/sleevePatches.js) are fitted in the patch's own frame: two of them
+// are angled, and a fit on the screen boxes around them left their names small and off-centre. The
+// name's ink and outline fill PATCH_NAME_FILL of the patch, centred, at any angle.
+const fitInPatch = (target, guide, representativeText, textBox, baseTransform) => {
+  const svg = guide.ownerSVGElement;
+  const toTarget = target.getScreenCTM()?.inverse();
+  const guideToScreen = guide.getScreenCTM();
+  if (!svg || !toTarget || !guideToScreen) return false;
+
+  // the patch's corners in the name's own units (the angles line up, so this box is the patch)
+  const x = guide.x.baseVal.value;
+  const y = guide.y.baseVal.value;
+  const w = guide.width.baseVal.value;
+  const h = guide.height.baseVal.value;
+  const corners = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]
+    .map(([px, py]) => getSvgPoint(svg, px, py, guideToScreen).matrixTransform(toTarget));
+  const xs = corners.map((p) => p.x);
+  const ys = corners.map((p) => p.y);
+  const patch = {
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+    centerX: (Math.max(...xs) + Math.min(...xs)) / 2,
+    centerY: (Math.max(...ys) + Math.min(...ys)) / 2,
+  };
+
+  const ink = getInkCenterOffset(representativeText);
+  const measured = Boolean(ink.inkWidth && ink.inkHeight);
+  const inkWidth = measured ? ink.inkWidth : textBox.width;
+  const inkHeight = measured ? ink.inkHeight : textBox.height;
+  const inkX = textBox.x + textBox.width / 2 + (measured ? ink.x : 0);
+  const inkY = textBox.y + textBox.height / 2 + (measured ? ink.y : 0);
+  // The outline. Names: PATCH_NAME_OUTLINE patch units on every patch. Typed letters (a border layer
+  // under the letters' stroke): the proportions of their preview, the stroke PATCH_TYPED_STROKE of the
+  // letter size and the border keeping its proportion to it. The widest layer adds its full width
+  // around the ink, so the fit counts that one.
+  const layers = getOutlineLayers(target);
+  const typed = layers.widest > layers.thinnest;
+  let scale;
+  let stroke; // the thinnest layer, in the text's own units
+  if (typed) {
+    const fontSize = parseFloat(representativeText.getAttribute('font-size')) || parseFloat(window.getComputedStyle(representativeText).fontSize) || 0;
+    stroke = PATCH_TYPED_STROKE * fontSize;
+    const around = stroke * (layers.widest / layers.thinnest);
+    scale = Math.min((patch.width * PATCH_NAME_FILL) / (inkWidth + around), (patch.height * PATCH_NAME_FILL) / (inkHeight + around));
+  } else {
+    const outline = PATCH_NAME_OUTLINE * (patch.width / w);
+    scale = Math.min((patch.width * PATCH_NAME_FILL - outline) / inkWidth, (patch.height * PATCH_NAME_FILL - outline) / inkHeight);
+    stroke = outline / scale;
+  }
+  if (!Number.isFinite(scale) || scale <= 0 || !Number.isFinite(stroke) || stroke <= 0) return false;
+  setPatchOutline(layers, stroke);
+
+  target.setAttribute('transform', [
+    baseTransform,
+    `translate(${patch.centerX.toFixed(3)} ${patch.centerY.toFixed(3)})`,
+    `scale(${scale.toFixed(4)})`,
+    `translate(${(-inkX).toFixed(3)} ${(-inkY).toFixed(3)})`,
+  ].filter(Boolean).join(' '));
+  return true;
+};
+
+// An arched name (textPath) on a guide marked data-arc-fit (Back Bottom): its size comes from the dialog,
+// which left a long name small and low in the guide and a short one, whose letters are big and curve
+// deeply, sticking out above and below. It is scaled to at most ARC_FIT_WIDTH of the guide's width and
+// 96% of its height, and centred on it. The box measured is the letters' cells along the curve, a few %
+// larger than the letters themselves and centred on them, so a small margin remains.
+const ARC_FIT_WIDTH = 0.82;
+const ARC_FIT_HEIGHT = 0.96; // the ends of the curve reach the top: a little room keeps them off the guide line
+const fitArcInGuide = (target, guide, textBox, baseTransform) => {
+  const svg = guide.ownerSVGElement;
+  const toTarget = target.getScreenCTM()?.inverse();
+  const guideToScreen = guide.getScreenCTM();
+  if (!svg || !toTarget || !guideToScreen) return;
+  const x = guide.x.baseVal.value;
+  const y = guide.y.baseVal.value;
+  const w = guide.width.baseVal.value;
+  const h = guide.height.baseVal.value;
+  const corners = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]
+    .map(([px, py]) => getSvgPoint(svg, px, py, guideToScreen).matrixTransform(toTarget));
+  const xs = corners.map((p) => p.x);
+  const ys = corners.map((p) => p.y);
+  const width = Math.max(...xs) - Math.min(...xs);
+  const height = Math.max(...ys) - Math.min(...ys);
+  const scale = Math.min((width * ARC_FIT_WIDTH) / textBox.width, (height * ARC_FIT_HEIGHT) / textBox.height);
+  if (!Number.isFinite(scale) || scale <= 0) return;
+  const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+  const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+  target.setAttribute('transform', [
+    baseTransform,
+    `translate(${cx.toFixed(3)} ${cy.toFixed(3)})`,
+    `scale(${scale.toFixed(4)})`,
+    `translate(${(-(textBox.x + textBox.width / 2)).toFixed(3)} ${(-(textBox.y + textBox.height / 2)).toFixed(3)})`,
+  ].filter(Boolean).join(' '));
+};
+
 const fitTarget = (target) => {
   if (target.dataset.cjdAutoFitDone === 'true') return;
 
   const representativeText = getRepresentativeText(target);
-  if (!representativeText?.textContent?.trim() || representativeText.querySelector('textPath')) return;
+  if (!representativeText?.textContent?.trim()) return;
+  // an arched name is left as drawn, except on a guide marked data-arc-fit (fitArcInGuide, below)
+  const arched = Boolean(representativeText.querySelector('textPath'));
+  if (arched && !representativeText.ownerSVGElement?.querySelector('rect.cjd-guides[data-arc-fit]')) return;
 
   const svg = representativeText.ownerSVGElement;
   if (!svg) return;
@@ -272,6 +408,25 @@ const fitTarget = (target) => {
 
   const anchorScreenPoint = getAnchorScreenPoint(representativeText, svg);
   if (!anchorScreenPoint) return;
+
+  const nearest = findNearestGuideElement(svg, anchorScreenPoint);
+  if (arched) {
+    if (nearest?.guide.hasAttribute('data-arc-fit') && isNearGuide(nearest.box, anchorScreenPoint)) {
+      fitArcInGuide(target, nearest.guide, textBox, baseTransform);
+    }
+    target.dataset.cjdAutoFitDone = 'true';
+    return;
+  }
+
+  // a sleeve patch: fitted in the patch's own frame (fitInPatch)
+  if (
+    nearest?.guide.hasAttribute('data-patch') &&
+    isNearGuide(nearest.box, anchorScreenPoint) &&
+    fitInPatch(target, nearest.guide, representativeText, textBox, baseTransform)
+  ) {
+    target.dataset.cjdAutoFitDone = 'true';
+    return;
+  }
 
   const guideBox = findNearestGuide(svg, anchorScreenPoint);
   if (!guideBox || !isNearGuide(guideBox, anchorScreenPoint)) return;

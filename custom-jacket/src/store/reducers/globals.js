@@ -5,6 +5,7 @@ let initState = {
   3: 'body',
   activeJacket: 0,
   guides: false,
+  outlines: true, // the thin lines around each part of the jacket (toolbar switch)
   pose: 'front',
   fill: '#e00000',
   stroke: '#fffed0',

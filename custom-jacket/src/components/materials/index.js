@@ -12,7 +12,6 @@ import {
   selectMaterial,
   selectMaterialSleeves,
   selectStyle,
-  advanceOption,
 } from "../../store/actions/index.js";
 
 const MATERIAL_LABEL_OVERRIDES = {
@@ -52,11 +51,9 @@ const Materials = ({
   globals,
   materials,
   styles,
-  advance,
   updateMaterial,
   updateMaterialSleeves,
   updateStyle,
-  updateAdvanceOption,
   dispatch,
 }) => {
 
@@ -225,25 +222,6 @@ const Materials = ({
                 update={(value) => updateStyle("pocket", value)}
                 minCountForSearch={Infinity}
               ></Select2>
-              {globals.coach && (globals.productId === 6046 || globals.productId === "6046") && (
-                <div style={{ marginTop: "20px" }}>
-                  <label className="select-label">Add Extra Sleeve Patches</label>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <button
-                      className={`control-panel-btn ${advance.extraSleevePatches && "active"}`}
-                      onClick={() => updateAdvanceOption("extraSleevePatches", true)}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      className={`control-panel-btn ${!advance.extraSleevePatches && "active"}`}
-                      onClick={() => updateAdvanceOption("extraSleevePatches", false)}
-                    >
-                      No
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
 
@@ -475,7 +453,6 @@ const mapStateToProps = (state) => ({
   globals: state.globals,
   materials: state.materials,
   styles: state.styles,
-  advance: state.advance,
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
@@ -483,7 +460,6 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
   updateMaterialSleeves: (key, val) =>
     dispatch(selectMaterialSleeves(key, val)),
   updateStyle: (key, val) => dispatch(selectStyle(key, val)),
-  updateAdvanceOption: (key, val) => dispatch(advanceOption(key, val)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Materials);

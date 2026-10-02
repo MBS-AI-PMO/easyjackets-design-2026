@@ -351,9 +351,10 @@ $ease: .25s ease;
   // Uploads), so it jumped as the tabs changed. As wide as its column allows (up to 420px) and at
   // most 360px tall (260px on phones); the drawing fills it, as the design fills the guide. The
   // colour choices under it take the same width. App.scss sizes it per place and per breakpoint
-  // with !important, hence the !important here.
-  $preview-width: min(100%, 420px, calc(360px * var(--cjd-guide-ratio, 1)));
-  $preview-width-phone: min(100%, calc(300px * var(--cjd-guide-ratio, 1)));
+  // with !important, hence the !important here. --cjd-preview-size makes it smaller (popup.js: the
+  // sleeve patches, so their colour lists open without scrolling).
+  $preview-width: min(100%, 420px, calc(var(--cjd-preview-size, 360px) * var(--cjd-guide-ratio, 1)));
+  $preview-width-phone: min(100%, calc(var(--cjd-preview-size-phone, 300px) * var(--cjd-guide-ratio, 1)));
 
   .cjd-modal-half .cjd-mock-preview,
   .cjd-modal-half .cjd-mock-preview[data-square],
@@ -403,6 +404,85 @@ $ease: .25s ease;
     }
   }
 
+  // ---- uploads: the picture, an uploading state, a remove button ----------------------------------
+  .cjd-upload-preview {
+    position: relative;
+    display: grid !important;
+    place-items: center;
+
+    .cjd-upload-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: opacity .2s ease, filter .2s ease;
+    }
+
+    &.is-uploading .cjd-upload-image {
+      opacity: .45;
+      filter: grayscale(.3);
+    }
+
+    .cjd-upload-empty {
+      padding: 6px 10px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .85);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+  }
+
+  .cjd-upload-spinner {
+    position: absolute;
+    inset: 0;
+    width: 38px;
+    height: 38px;
+    margin: auto;
+    border: 3px solid rgba(255, 255, 255, .4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(20, 17, 15, .15);
+    animation: cjd-spin .8s linear infinite;
+  }
+
+  .cjd-remove-image {
+    display: grid;
+    place-items: center;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(20, 17, 15, .78); // App.scss had a tiny red icon here
+    color: #fff;
+    font-family: var(--body);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background $ease, transform .2s ease;
+
+    &:hover {
+      background: var(--ink);
+      transform: scale(1.06);
+    }
+  }
+
+  .cjd-btn[aria-disabled="true"] {
+    opacity: .65;
+    cursor: progress;
+  }
+
+  .cjd-upload-error {
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #b3261e;
+  }
+
   // the preview stays at the top of its column, whatever the form beside it holds
   .cjd-modal-form-wrapper .cjd-row {
     align-items: flex-start;
@@ -436,12 +516,21 @@ $ease: .25s ease;
   // the colour box under the preview, with the swatches. They fill its width in as many equal
   // columns as fit and never run past it (on phones App.scss set five 44px columns with 12px gaps in
   // a 234px box, which scrolled sideways).
+  // Compact: little room above the "Select … color" line and under it, and small swatches, so more of
+  // them show at once (App.scss had 30px above the line, a 36px line and 22px more before the swatches).
   .cjd-preview-colors-wrapper .cjd-color-box {
     overflow-x: hidden !important;
+    padding-top: 10px !important;
+    min-height: 0 !important; // App.scss kept it 184px tall, empty under a short list of colours
+
+    .cjd-colors-list {
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+    }
 
     .cjd-select-wrapper.cjd-single {
-      grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)) !important;
-      gap: 8px !important;
+      grid-template-columns: repeat(auto-fill, minmax(24px, 1fr)) !important;
+      gap: 6px !important;
       justify-content: stretch !important;
       justify-items: stretch !important;
       width: 100% !important;
@@ -449,8 +538,44 @@ $ease: .25s ease;
 
       .cjd-select-box.cjd-colors-box {
         width: 100% !important;
-        height: 30px !important;
+        height: 22px !important;
         margin: 0 !important;
+
+        // The colour name over a swatch, sized to the name (it was a fixed 90px box), centred on the
+        // swatch, its arrow pointing at it. The panel clips sideways, so near its left or right side
+        // the bubble is lined up with the swatch's outer edge instead: SelectBox marks those swatches
+        // (data-tip-align) on hover, whatever the number of columns. (App.scss lined up columns 1 and 6
+        // of a six-column grid, which matched the wrong swatches here and cut the names off.)
+        &:hover:before {
+          width: max-content !important;
+          max-width: 170px;
+          height: auto !important;
+          padding: 3px 8px !important;
+          left: 50% !important;
+          right: auto !important;
+          transform: translate(-50%, 0) !important;
+          line-height: 17px;
+          white-space: nowrap;
+          border-radius: 2px;
+        }
+
+        &:hover:after {
+          left: 50% !important;
+          right: auto !important;
+          transform: translateX(-50%) !important;
+        }
+
+        &[data-tip-align="start"]:hover:before {
+          left: 0 !important;
+          right: auto !important;
+          transform: none !important;
+        }
+
+        &[data-tip-align="end"]:hover:before {
+          left: auto !important;
+          right: 0 !important;
+          transform: none !important;
+        }
       }
     }
 
@@ -462,7 +587,10 @@ $ease: .25s ease;
     .cjd-note {
       display: flex;
       align-items: center;
-      margin-bottom: 4px;
+      height: auto !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      margin-bottom: 6px;
       font-size: 12px;
       font-weight: 600;
       letter-spacing: .12em;
@@ -593,6 +721,14 @@ $ease: .25s ease;
       padding: 18px;
     }
 
+    // the letter and symbol grids at their full height: the whole tab (App.scss .cjd-modal-tab-content)
+    // scrolls, not the grid in its own box (symbol.js sets 382px inline)
+    .cjd-alphabets-wrapper {
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
     .cjd-modal-footer {
       padding: 14px 18px 18px;
 
@@ -602,6 +738,252 @@ $ease: .25s ease;
         min-width: 0;
       }
     }
+  }
+}
+
+// ---- drawer: the sleeve patches (popup.js adds cjd-modal--drawer) -----------------------------------
+// A full-height panel from the right instead of the centred dialog (at 150% display scaling the dialog
+// left ~220px for its content). One column, the preview first (as the dialog does at ≤1024px), Remove /
+// Save kept at the bottom. Its sizes are fixed (500px wide, a 260px preview with Fill / Stroke as wide
+// as it), so it looks the same at every zoom: zooming only makes it larger or smaller, and when it is
+// taller than the screen the column scrolls, an opening colour list scrolling it along (popup.js).
+// Phones: a sheet from the bottom. Slides for MODAL_ANIM_MS (220ms) like the dialog's own open / close
+// (App.scss); higher selectors than App.scss's centring rules on purpose.
+.cjd-modal-overlay.cjd-modal-overlay--drawer {
+  top: 0;
+  background-color: rgba(20, 17, 15, .28) !important;
+  backdrop-filter: none !important;
+}
+
+.cjd-modal.cjd-modal-design.cjd-modal--drawer {
+  position: fixed;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  width: min(500px, 100vw) !important;
+  max-width: none !important;
+  max-height: none !important;
+  // zoomed to keep its look at 150% and other zoom / scaling levels (popup.js sets --cjd-drawer-zoom);
+  // its height is divided by the same factor so it still runs from the top of the window to the bottom
+  zoom: var(--cjd-drawer-zoom, 1);
+  height: calc(100vh / var(--cjd-drawer-zoom, 1)) !important;
+  height: calc(100dvh / var(--cjd-drawer-zoom, 1)) !important;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  box-shadow: -30px 0 60px -30px rgba(20, 17, 15, .45);
+  opacity: 1;
+  transform: translateX(100%);
+  transition: transform 220ms cubic-bezier(.2, .8, .2, 1);
+
+  &.cjd-modal--after-open {
+    opacity: 1;
+    transform: none;
+  }
+
+  &.cjd-modal--before-close {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+
+  .cjd-modal-header {
+    padding: 16px 20px 8px;
+
+    h4 {
+      font-size: 26px;
+    }
+
+    .cjd-modal-close {
+      width: 34px;
+      height: 34px;
+      font-size: 22px;
+    }
+  }
+
+  .cjd-modal-tabs {
+    gap: 20px;
+    padding: 0 20px;
+
+    .cjd-tab-option {
+      padding: 9px 0;
+      font-size: 15px;
+    }
+  }
+
+  // one column, the preview (the second half) on top. A normal column with the preview moved first, not
+  // column-reverse: a reversed column overflows upwards, which pushed the preview up under the tabs
+  // when an open colour list made the content taller than the drawer.
+  .cjd-modal-form-wrapper {
+    padding: 16px 20px;
+
+    .cjd-row {
+      flex-direction: column !important;
+      gap: 16px;
+      margin: 0;
+    }
+
+    .cjd-modal-half {
+      width: 100%;
+      padding: 0;
+
+      & + .cjd-modal-half {
+        order: -1;
+        margin: 0;
+      }
+    }
+  }
+
+  .cjd-modal-footer {
+    padding: 12px 20px 16px;
+
+    .cjd-dialog-btn,
+    .cjd-dialog-btn--ink {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  // a fixed preview (css var read by $preview-width above); a wide one (Front Center) takes the
+  // drawer's whole column instead of the dialog's 420px cap
+  --cjd-preview-size: 260px;
+  --cjd-preview-size-phone: 260px;
+
+  .cjd-modal-half .cjd-mock-preview,
+  .cjd-modal-half .cjd-mock-preview[data-square],
+  .cjd-modal-half .cjd-mock-preview[data-pocket],
+  .cjd-modal-half .cjd-mock-preview[data-wide] {
+    width: min(100%, calc(var(--cjd-preview-size) * var(--cjd-guide-ratio, 1))) !important;
+
+    @media (max-width: 680px) {
+      width: min(100%, calc(var(--cjd-preview-size-phone) * var(--cjd-guide-ratio, 1))) !important;
+    }
+  }
+
+  // Fill / Stroke / Border exactly as wide as the preview (the dialog keeps them at least 260px, wider
+  // than a small preview), with buttons compact enough for three in a small one
+  .cjd-modal-half .cjd-preview-colors-wrapper,
+  .cjd-modal-half .cjd-preview-colors-wrapper[data-square],
+  .cjd-modal-half .cjd-preview-colors-wrapper[data-pocket],
+  .cjd-modal-half .cjd-preview-colors-wrapper[data-wide] {
+    width: min(100%, calc(var(--cjd-preview-size) * var(--cjd-guide-ratio, 1))) !important;
+
+    @media (max-width: 680px) {
+      width: min(100%, calc(var(--cjd-preview-size-phone) * var(--cjd-guide-ratio, 1))) !important;
+    }
+  }
+
+  .cjd-preview-colors-wrapper .cjd-color-selector {
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 4px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+
+    .cjd-color-pointer {
+      flex: 0 0 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      margin-right: 0 !important;
+    }
+  }
+
+  // The letter and symbol grids take the room left under the preview and their buttons and scroll on
+  // their own (their own fixed 310px / 382px boxes ran past the bottom, the last row cut off against
+  // Remove / Save); the rest of the drawer stays put. On a screen too short for that the form keeps
+  // 240px and the drawer itself scrolls.
+  .cjd-modal-tab-content {
+    display: flex;
+    flex-direction: column;
+
+    > .react-tabs__tab-panel--selected {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+  }
+
+  .cjd-modal-form-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+
+    .cjd-row {
+      flex: 1;
+      min-height: 0;
+    }
+
+    // the form (first in the markup, shown under the preview)
+    .cjd-modal-half:first-child {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 240px;
+    }
+  }
+
+  .cjd-rtu-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .cjd-alphabets-wrapper {
+    flex: 1;
+    min-height: 0;
+    height: auto !important; // symbol.js sets 382px inline
+    max-height: none !important;
+    overflow-y: auto !important;
+    padding-bottom: 12px;
+  }
+
+  // phones: the whole screen, sliding up from the bottom (it was a sheet 92% tall, which left a strip
+  // of the page above it and less room for the letter and symbol grids)
+  @media (max-width: 680px) {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-width: 0;
+    border-radius: 0;
+    transform: translateY(100%);
+
+    &.cjd-modal--after-open {
+      transform: none;
+    }
+
+    &.cjd-modal--before-close {
+      transform: translateY(100%);
+    }
+
+    // one scroll for the whole tab (the tab content, App.scss), not one in the letter / symbol grid:
+    // everything under the tabs takes its own height again instead of sharing the room left
+    .cjd-modal-tab-content > .react-tabs__tab-panel--selected,
+    .cjd-modal-form-wrapper,
+    .cjd-modal-form-wrapper .cjd-row,
+    .cjd-modal-form-wrapper .cjd-modal-half:first-child,
+    .cjd-rtu-wrapper,
+    .cjd-alphabets-wrapper {
+      flex: none;
+      min-height: 0;
+    }
+
+    .cjd-alphabets-wrapper {
+      overflow: visible !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: .01ms;
+  }
+}
+
+@keyframes cjd-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

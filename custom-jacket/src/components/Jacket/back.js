@@ -686,6 +686,7 @@ const JacketBack = ({
               height={globals.productId == "4893" ? 140 : 190}
               fill="#e6e6e6"
               data-name="cjd-back-middle"
+              data-patch="true" // names fitted like a sleeve patch: as large as it fits, centred (utils/autoFitText.js)
               onClick={() => openModal("Back Middle")}
             />
 
@@ -1023,11 +1024,16 @@ const JacketBack = ({
                   </g>
                 )}
 
+                {/* Mascots and badges are drawn in the Back Middle guide (x 133 = 75 here, 245 wide, 190 tall;
+                    140 on the cropped jacket) and fill 94% of its height, centred: a fixed 400 x 190 box left
+                    them 2.5 off centre and ran 50 units past the cropped jacket's shorter guide. */}
                 {designs["Back Middle"]?.symbol.type === "Mascots" && (
                   <g transform="translate(0, 0)">
                     <svg
-                      width="400"
-                      height="190"
+                      x="75"
+                      y={(globals.productId == "4893" ? 140 : 190) * 0.03}
+                      width="245"
+                      height={(globals.productId == "4893" ? 140 : 190) * 0.94}
                       viewBox="0 0 72 72"
                       preserveAspectRatio="xMidYMid meet"
                     >
@@ -1043,8 +1049,10 @@ const JacketBack = ({
                 {designs["Back Middle"]?.symbol.type === "Badges" && (
                   <g transform="translate(0, 0)">
                     <svg
-                      width="400"
-                      height="190"
+                      x="75"
+                      y={(globals.productId == "4893" ? 140 : 190) * 0.03}
+                      width="245"
+                      height={(globals.productId == "4893" ? 140 : 190) * 0.94}
                       viewBox="0 0 72 72"
                       preserveAspectRatio="xMidYMid meet"
                     >
@@ -1059,12 +1067,16 @@ const JacketBack = ({
               </g>
             )}
 
+            {/* in the Back Middle guide (133, 175, 245 wide, 190 tall; 140 on the cropped jacket), 3% in from
+                each side: as large as it fits, centred (a fixed 230 x 190 box ran 50 units past the cropped
+                jacket's shorter guide) */}
             {designs["Back Middle"]?.done && designs["Back Middle"]?.upload && (
-              <g transform="translate(145, 175)">
+              <g transform={`translate(${133 + 245 * 0.03}, ${175 + (globals.productId == "4893" ? 140 : 190) * 0.03})`}>
                 <image
                   xlinkHref={designs["Back Middle"]?.upload.file}
-                  width="230"
-                  height="190"
+                  width={245 * 0.94}
+                  height={(globals.productId == "4893" ? 140 : 190) * 0.94}
+                  preserveAspectRatio="xMidYMid meet"
                 />
               </g>
             )}
@@ -1222,6 +1234,7 @@ const JacketBack = ({
                 height="45"
                 fill="#e6e6e6"
                 data-name="cjd-back-bottom"
+                data-arc-fit="true" // an arched name is fitted to this guide (utils/autoFitText.js fitArcInGuide)
                 onClick={() => openModal("Back Bottom")}
               />
 

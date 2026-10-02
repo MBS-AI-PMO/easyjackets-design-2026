@@ -122,6 +122,38 @@
     }
   }
 
+  // phones (where the workspace toolbar had it): Share next to +, in the same outlined box
+  .cjd-tab-share {
+    display: none;
+
+    @media (max-width: 768px) {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: none;
+      height: 44px;
+      padding: 0 12px;
+      box-sizing: border-box;
+      border: 2px solid var(--ink);
+      border-radius: 2px;
+      background: transparent;
+      color: var(--ink);
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--ink);
+        color: var(--cream);
+      }
+    }
+  }
+
   .cjd-add-more {
     display: grid;
     place-items: center;
@@ -434,6 +466,55 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+    }
+  }
+}
+
+// Phones: the jacket tab, + and Share share the row with the logo and the menu, so they are a little
+// smaller there (with Share added, the jacket tab was cut off). Below 380px Share keeps only its icon.
+@media (max-width: 768px) {
+  .cjd-jackets-tabs {
+    gap: 6px;
+
+    .cjd-jacket-tab-item {
+      gap: 4px;
+      height: 40px;
+      padding: 0 10px 0 4px;
+
+      h4 {
+        font-size: 15px;
+        letter-spacing: .04em;
+      }
+    }
+
+    .cjd-tab-span {
+      width: 22px;
+      height: 22px;
+    }
+
+    .cjd-add-more {
+      width: 40px;
+      height: 40px;
+    }
+
+    .cjd-tab-share {
+      height: 40px;
+      padding: 0 10px;
+      font-size: 14px;
+    }
+  }
+}
+
+@media (max-width: 380px) {
+  .cjd-jackets-tabs .cjd-tab-share {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0; // the word goes, the icon stays (the button keeps its aria-label)
+
+    svg {
+      width: 15px;
+      height: 15px;
     }
   }
 }

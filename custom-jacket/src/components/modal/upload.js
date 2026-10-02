@@ -3,78 +3,91 @@ import { connect } from 'react-redux';
 
 import { chooseName } from '../../store/actions';
 import fileInstance from '../../utils/axiosformData';
+import { uploadUrl } from '../../config/url';
 
+const SLEEVE_PLACES = [
+  'Right Sleeve', 'Left Sleeve', 'Right Sleeve End', 'Left Sleeve End',
+  'Right Mid Sleeve Upper', 'Left Mid Sleeve Upper', 'Right Mid Sleeve Lower', 'Left Mid Sleeve Lower',
+];
 
-const Upload = ({ globals, part, designs, colors, chooseName }) => {
-  // eslint-disable-next-line
+const readAsDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = () => reject(reader.error);
+  reader.readAsDataURL(file);
+});
+
+const Upload = ({ part, designs, colors, chooseName }) => {
+  // The preview shows the picture from the file itself (at once, and with no network): the stored copy's
+  // address points at the API's public domain, which a local or not-yet-live API does not serve, so the
+  // preview showed a broken image. The stored address is still saved with the design (`image`).
+  const [preview, setPreview] = useState(designs[part]?.upload?.file || uploadUrl(designs[part]?.upload?.image));
   const [uploading, setUploading] = useState(false);
-  const [url, setUrl] = useState(designs[part]?.upload?.file);
+  const [error, setError] = useState('');
   const fileInput = useRef(null);
 
   const fileUpload = () => {
-    fileInput.current.click();
+    if (!uploading) fileInput.current.click();
   };
 
   const onChange = async (e) => {
-    e.preventDefault();
+    const file = e.target.files?.[0];
+    e.target.value = ''; // so the same file can be picked again
+    if (!file) return;
+
+    const previous = preview;
+    setError('');
     setUploading(true);
+    try {
+      const dataUrl = await readAsDataUrl(file);
+      setPreview(dataUrl); // shown dimmed under the spinner while it uploads
 
-    let fileUrl;
-    let reader = new FileReader();
-    let file = e.target.files[0];
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fileInstance.post('/custom/save-images', form);
+      const fileUrl = res?.data?.url;
+      if (!fileUrl) throw new Error('no address for the stored picture');
 
-
-
-    reader.readAsDataURL(file);
-
-    let form_data = new FormData();
-
-    form_data.append('file', file);
-
-
-
-    const res = await fileInstance.post(`/custom/save-images`, form_data)
-    console.log(res)
-    fileUrl = await res.data.url;
-    setUrl(fileUrl);
-
-    chooseName('image', fileUrl, part);
-    chooseName('file', reader.result, part);
-
-    setUploading(false);
-
-
-    // reader.onloadend = () => {
-    //   setFile(file)
-    //   setUrl(reader.result)
-    //   console.log(fileUrl)
-
-    //   chooseName( 'file', reader.result, part )
-    //   chooseName( 'image', file, part )
-    // }
+      chooseName('image', fileUrl, part);
+      chooseName('file', dataUrl, part);
+    } catch {
+      setPreview(previous);
+      setError('The picture could not be uploaded. Check your connection and try again.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeImage = () => {
-    setUrl();
-
-    new FileReader();
+    setPreview(undefined);
+    setError('');
+    chooseName('file', undefined, part);
+    chooseName('image', undefined, part);
   };
 
   return (
     <div className="cjd-modal-form-wrapper">
       <div className="cjd-row">
         <div className="cjd-modal-half">
-          <div className="cjd-btn cjd-btn-lg" onClick={() => fileUpload()}>
-            Upload Image
+          <div
+            className="cjd-btn cjd-btn-lg"
+            role="button"
+            tabIndex={0}
+            aria-disabled={uploading}
+            onClick={fileUpload}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && fileUpload()}
+          >
+            {uploading ? 'Uploading…' : preview ? 'Replace image' : 'Upload image'}
           </div>
           <input
             name="file"
             type="file"
             ref={fileInput}
             accept="image/*"
-            onChange={(e) => onChange(e)}
+            onChange={onChange}
             style={{ display: 'none' }}
           />
+          {error && <p className="cjd-upload-error" role="alert">{error}</p>}
           <p className="cjd-note">
             Images are optimized and stored as WebP.{' '}
             {part === 'Right Chest Verticle' &&
@@ -85,49 +98,17 @@ const Upload = ({ globals, part, designs, colors, chooseName }) => {
 
         <div className="cjd-modal-half">
           <div
-            className="cjd-mock-preview"
-            style={{
-              background:
-                part === 'Right Sleeve' ||
-                  part === 'Left Sleeve' ||
-                  part === 'Right Sleeve End' ||
-                  part === 'Left Sleeve End' ||
-                  part === 'Right Mid Sleeve Upper' ||
-                  part === 'Left Mid Sleeve Upper' ||
-                  part === 'Right Mid Sleeve Lower' ||
-                  part === 'Left Mid Sleeve Lower'
-                  ? colors.sleeves
-                  : colors.body,
-            }}
+            className={`cjd-mock-preview cjd-upload-preview${uploading ? ' is-uploading' : ''}`}
+            aria-busy={uploading}
+            style={{ background: SLEEVE_PLACES.includes(part) ? colors.sleeves : colors.body }}
           >
-            {uploading ? (
-              <div className="lds-roller">
-                <div />
-                <div />
-                <div />
-                <div />
-                <div />
-                <div />
-                <div />
-                <div />
-              </div>
-            ) : (
-              <>
-                {url && (
-                  <div
-                    className="cjd-remove-image"
-                    onClick={() => removeImage()}
-                  ></div>
-                )}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="100%"
-                  height="100%"
-                  viewBox="0 0 324 200"
-                >
-                  <image xlinkHref={url} width="324" height="200" />
-                </svg>
-              </>
+            {preview && <img className="cjd-upload-image" src={preview} alt="" />}
+            {!preview && !uploading && <span className="cjd-upload-empty">No picture yet</span>}
+            {uploading && <span className="cjd-upload-spinner" role="status" aria-label="Uploading" />}
+            {preview && !uploading && (
+              <button type="button" className="cjd-remove-image" aria-label="Remove the picture" onClick={removeImage}>
+                ×
+              </button>
             )}
           </div>
         </div>
@@ -137,7 +118,6 @@ const Upload = ({ globals, part, designs, colors, chooseName }) => {
 };
 
 const mapStateToProps = (state) => ({
-  globals: state.globals,
   designs: state.designs,
   colors: state.colors,
 });
