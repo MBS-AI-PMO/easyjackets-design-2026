@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 
 import { modalState, activeSidebar, colorPicker } from "../../store/actions";
 import { getStaggeredElm } from "../../utils";
+import { pocketBoxTransform } from "../../config/pocketBoxes";
 
 // Collar
 import Simple from "./collar/simple";
@@ -627,13 +628,14 @@ const Jacket = ({
                       strokeWidth="0.75"
                     />
                   </g>
+                  {/* the mirror of the first strip about the front opening (x 257.13), so both pocket boxes have
+                      the same 10.3 units beside their strip (it was 6.5 further in, 1.9 lower and tilted) */}
                   <g id="Right-2" data-name="Right">
                     <rect
-                      x="218.63"
-                      y="3.1"
+                      x="223.89"
+                      y="1.58"
                       width="9.9"
                       height="79.1"
-                      transform="translate(-1.27 0.38) rotate(-0.23)"
                       fill={colors.pockets ? colors.pockets : "#e6e6e6"}
                       stroke={colors.body == "#000000" ? "#ffffff" : "#404041"}
                       strokeWidth="0.75"
@@ -1747,7 +1749,8 @@ const Jacket = ({
           )}
 
           {globals.catName !== 'Hoodies' && !laddiesJacket && (
-            <g id="right-pocket">
+            // moved in and made smaller with the pocket styles that reach into it (config/pocketBoxes.js)
+            <g id="right-pocket" transform={pocketBoxTransform(styles.pocket, "right")}>
               <rect
                 className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
                 x="161.13"
@@ -1976,7 +1979,7 @@ const Jacket = ({
           )}
 
           {globals.catName !== 'Hoodies' && !laddiesJacket && (
-            <g id="left-pocket">
+            <g id="left-pocket" transform={pocketBoxTransform(styles.pocket, "left")}>
               <rect
                 className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
                 x="285.13"
