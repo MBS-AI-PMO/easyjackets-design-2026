@@ -363,10 +363,13 @@ const Coach = ({
                 stroke="#404041"
                 strokeMiterlimit="10"
               />
+              {/* the snap ("Flap Pocket" on the coach): its ring is set inline, so it is a part of the
+                  drawing and not an outline (App.scss's outline colour and the Outlines switch leave it
+                  alone, App.js) */}
               <path
                 d="M326.78,425.92a4.75,4.75,0,1,1,1.2,6.61h0A4.77,4.77,0,0,1,326.78,425.92Z"
                 transform="translate(-1.48 -0.47)"
-                stroke="#9ca1a3"
+                style={{ stroke: "#9ca1a3" }}
                 strokeMiterlimit="10"
               />
             </g>
@@ -381,7 +384,7 @@ const Coach = ({
               <path
                 d="M129.92,426.92a4.75,4.75,0,1,0-1.2,6.61h0A4.76,4.76,0,0,0,129.92,426.92Z"
                 transform="translate(-1.48 -0.47)"
-                stroke="#9ca1a3"
+                style={{ stroke: "#9ca1a3" }}
                 strokeMiterlimit="10"
               />
             </g>

@@ -570,11 +570,13 @@ const Jacket = ({
                       strokeMiterlimit="10"
                       strokeWidth="1"
                     />
+                    {/* the snap: its ring is set inline, so it is a part of the drawing and not an outline
+                        (App.scss's outline colour and the Outlines switch leave it alone, App.js) */}
                     <path
                       d="M35.05,47.35a4.75,4.75,0,1,1,3.7-5.6A4.76,4.76,0,0,1,35.05,47.35Z"
                       transform="translate(-2.7 -2.2)"
                       fill={colors.pockets ? colors.pockets : "#e6e6e6"}
-                      stroke={colors.body == "#000000" ? "#ffffff" : "#9ca1a4"}
+                      style={{ stroke: colors.body == "#000000" ? "#ffffff" : "#9ca1a4" }}
                       strokeMiterlimit="10"
                     />
                   </g>
@@ -596,7 +598,7 @@ const Jacket = ({
                       d="M220.25,41.75a4.75,4.75,0,1,1,3.7,5.6A4.76,4.76,0,0,1,220.25,41.75Z"
                       transform="translate(-2.7 -2.2)"
                       fill={colors.pockets ? colors.pockets : "#e6e6e6"}
-                      stroke={colors.body == "#000000" ? "#ffffff" : "#9ca1a4"}
+                      style={{ stroke: colors.body == "#000000" ? "#ffffff" : "#9ca1a4" }}
                       strokeMiterlimit="10"
                     />
                   </g>

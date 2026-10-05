@@ -116,8 +116,27 @@ const App = ({
   // Outlines off (toolbar switch): each part is stroked in its own colour instead of the grey outline,
   // which closes the hairline gaps between neighbouring parts that the outline used to cover (a white
   // line showed along the top of the waistband). The gold hover outline still wins (it is !important).
+  // Only the strokes this switch sets are ever changed or removed (it notes each in data-cjd-outline-stroke):
+  // a stroke the drawing sets inline itself, like the knit border (Knit / Trim "... Border"), is left
+  // alone with the outlines on or off. (It used to remove every inline stroke when the outlines were on,
+  // which took the knit border away.)
   React.useEffect(() => {
     const frame = requestAnimationFrame(() => {
+      const setOutline = (el, value) => {
+        el.style.stroke = value;
+        el.dataset.cjdOutlineStroke = el.style.stroke;
+      };
+      const clearOutline = (el) => {
+        if (el.dataset.cjdOutlineStroke === undefined) return;
+        if (el.style.stroke === el.dataset.cjdOutlineStroke) el.style.removeProperty('stroke');
+        delete el.dataset.cjdOutlineStroke;
+      };
+      // the drawing's own stroke: set inline, and not by this switch
+      const hasOwnStroke = (el) => {
+        if (!el.style.stroke || el.style.stroke === el.dataset.cjdOutlineStroke) return false;
+        delete el.dataset.cjdOutlineStroke;
+        return true;
+      };
       // every shape of a colour part, not only paths (the coach's pocket strips are polygons with a
       // black stroke of their own)
       document
@@ -126,11 +145,12 @@ const App = ({
           ...['path', 'polygon', 'rect', 'circle', 'ellipse', 'polyline'].map((shape) => `.cjd-content-wrapper svg .cjd-color-hover ${shape}`),
         ].join(', '))
         .forEach((part) => {
+          if (hasOwnStroke(part)) return;
           if (globals.outlines === false) {
             // a group passes its stroke on to lines inside it that have none of their own (the line down
             // the front opening): groups get none, only the shapes themselves are stroked
             if (part.tagName.toLowerCase() === 'g') {
-              part.style.stroke = 'none';
+              setOutline(part, 'none');
               return;
             }
             const fill = window.getComputedStyle(part).fill;
@@ -142,15 +162,16 @@ const App = ({
             } catch {
               thin = false;
             }
-            part.style.stroke = fill && fill !== 'none' && !thin ? fill : 'none';
+            setOutline(part, fill && fill !== 'none' && !thin ? fill : 'none');
           } else {
-            part.style.removeProperty('stroke');
+            clearOutline(part);
           }
         });
       // the black line down the front opening stays (it has no stroke of its own: it took the outline's)
       document.querySelectorAll('.cjd-content-wrapper #jacketFront .cjd-color-hover line').forEach((line) => {
-        if (globals.outlines === false) line.style.stroke = line.getAttribute('stroke') || '#000';
-        else line.style.removeProperty('stroke');
+        if (hasOwnStroke(line)) return;
+        if (globals.outlines === false) setOutline(line, line.getAttribute('stroke') || '#000');
+        else clearOutline(line);
       });
     });
     return () => cancelAnimationFrame(frame);
