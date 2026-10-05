@@ -167,6 +167,7 @@ const navGroups = [
     label: 'Settings',
     icon: <SettingsIcon />,
     items: [
+      { name: 'Site Status', link: '/site-status' },
       { name: 'Email Configuration', link: '/email-configuration' },
       { name: 'Payment Configuration', link: '/payment-configuration' },
       { name: 'Change Password', link: '/change-password' },

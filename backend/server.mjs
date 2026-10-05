@@ -36,6 +36,8 @@ import sitemapRoutes from './routes/sitemapRoutes.js'
 import seoHealthRoutes from './routes/seoHealthRoutes.js'
 import seoRenderRoutes from './routes/seoRenderRoutes.js'
 import visitorAnalyticsRoutes from './routes/visitorAnalyticsRoutes.js'
+import siteStatusRoutes from './routes/siteStatusRoutes.js'
+import { renderHoldingPage, siteUnderConstruction } from './helpers/holdingPage.js'
 import { UPLOADS_ROOT, ensureUploadsRoot } from './helpers/localUploadStorage.js'
 import { resizedImageHandler } from './helpers/imageResize.js'
 import { uploadMirror } from './helpers/uploadMirror.js'
@@ -117,10 +119,22 @@ app.use('/api/v1/payment-config', paymentConfigRoutes)
 app.use('/api/v1/shipping-rates', shippingRateRoutes)
 app.use('/api/v1/seo-health', seoHealthRoutes)
 app.use('/api/v1/visitor-analytics', visitorAnalyticsRoutes)
+app.use('/api/v1/site-status', siteStatusRoutes)
 
 // api / v1 / product / braintree / payment;
 
-app.get("/", (req, res) => {
+// The API's own address: the "under construction" page while the site is (helpers/holdingPage.js),
+// else the usual greeting. Only this address; every other route keeps working.
+app.get("/", async (req, res) => {
+  try {
+    const status = await siteUnderConstruction();
+    if (status.on) {
+      res.set('Cache-Control', 'no-store');
+      return res.type('html').send(await renderHoldingPage(status.message));
+    }
+  } catch (error) {
+    console.error('Holding page:', error.message);
+  }
   res.send({
     message: "welcome to the e-commerce websites",
   });

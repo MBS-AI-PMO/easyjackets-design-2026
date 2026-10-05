@@ -1,0 +1,290 @@
+/* The "under construction" holding page. ONE design for all four apps: this file is copied as is to
+     frontend/src/pages/UnderConstruction.css            (storefront)
+     custom-jacket/src/components/UnderConstruction/holding.css  (jacket builder)
+     admin/src/Components/UnderConstruction.css          (admin, before sign-in)
+     backend/helpers/holdingPage.css                    (the API's own address, helpers/holdingPage.js)
+   Change all four together.
+   Self-contained: its own colours (the storefront's ink, cream and gold), fonts and animations. Comes in
+   step by step; the thread under the text keeps sewing itself across; with reduced motion it all just shows. */
+.ez-uc {
+  --uc-ink: #14110f;
+  --uc-cream: #f4efe6;
+  --uc-cream-2: #e9e1d2;
+  --uc-gold: #c9a227;
+  --uc-gold-2: #a8861c;
+  --uc-muted: #6b635a;
+  --uc-display: "Big Shoulders Display", "Big Shoulders", Impact, sans-serif;
+  --uc-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 48px 16px;
+  background: var(--uc-cream);
+  color: var(--uc-ink);
+  font-family: var(--uc-body);
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  animation: ez-uc-fade 0.5s ease-out both;
+}
+.ez-uc *, .ez-uc *::before, .ez-uc *::after { box-sizing: border-box; }
+
+/* the site opening: the page lifts away */
+.ez-uc--leaving {
+  animation: ez-uc-leave 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* a soft gold light drifting slowly behind everything */
+.ez-uc-glow {
+  position: absolute;
+  inset: -25%;
+  background:
+    radial-gradient(circle at 30% 35%, rgba(201, 162, 39, 0.22), transparent 42%),
+    radial-gradient(circle at 72% 68%, rgba(168, 134, 28, 0.14), transparent 46%);
+  animation: ez-uc-drift 16s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.ez-uc-inner {
+  position: relative;
+  width: min(720px, 100%);
+}
+
+/* one after the other (each element's delay is set inline) */
+.ez-uc-in {
+  animation: ez-uc-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ez-uc-logo {
+  display: block;
+  height: 72px;
+  width: auto;
+  max-width: 70vw;
+  margin: 0 auto 36px;
+  object-fit: contain;
+}
+/* a light logo file (the builder's header logo) shown in ink */
+.ez-uc-logo--ink { filter: brightness(0); }
+
+.ez-uc-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border: 1px solid var(--uc-gold);
+  color: var(--uc-gold-2);
+  font-family: var(--uc-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* a live dot with a ring going out from it */
+.ez-uc-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--uc-gold);
+}
+.ez-uc-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--uc-gold);
+  animation: ez-uc-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.ez-uc-title {
+  margin: 22px 0 0;
+  color: var(--uc-ink);
+  font-family: var(--uc-display);
+  font-size: clamp(44px, 9vw, 96px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+/* each word slides up out of its own line */
+.ez-uc-word {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0.04em 0.12em 0.08em;
+  margin: 0 -0.02em;
+  vertical-align: top;
+}
+.ez-uc-word > span {
+  display: inline-block;
+  animation: ez-uc-word-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ez-uc-text {
+  width: min(520px, 100%);
+  margin: 22px auto 0;
+  color: var(--uc-muted);
+  font-size: clamp(15px, 2vw, 18px);
+  line-height: 1.65;
+}
+
+/* the seam: a faint line, the gold stitches sewn along it behind the needle, over and over */
+.ez-uc-seam {
+  display: block;
+  width: min(320px, 80%);
+  height: auto;
+  margin: 34px auto 0;
+  overflow: visible;
+}
+.ez-uc-seam-line {
+  stroke: var(--uc-cream-2);
+  stroke-width: 2;
+}
+.ez-uc-thread line {
+  stroke: var(--uc-gold);
+  stroke-width: 3;
+  stroke-dasharray: 9 7;
+  stroke-linecap: round;
+}
+.ez-uc-thread {
+  animation: ez-uc-thread 4.2s ease-in-out infinite;
+}
+.ez-uc-sewn {
+  animation: ez-uc-sew 4.2s ease-in-out infinite;
+}
+.ez-uc-needle {
+  animation: ez-uc-needle 4.2s ease-in-out infinite;
+}
+.ez-uc-needle-bob {
+  animation: ez-uc-bob 0.32s ease-in-out infinite alternate;
+}
+.ez-uc-needle path {
+  stroke: var(--uc-ink);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  fill: none;
+}
+.ez-uc-needle circle {
+  fill: var(--uc-cream);
+  stroke: var(--uc-ink);
+  stroke-width: 1;
+}
+
+.ez-uc-contact {
+  margin: 28px 0 0;
+  color: var(--uc-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.ez-uc-contact a {
+  color: var(--uc-ink);
+  font-weight: 600;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+.ez-uc-contact a:hover {
+  color: var(--uc-gold-2);
+}
+.ez-uc-sep {
+  color: var(--uc-cream-2);
+}
+
+/* the admin's way in for the team (admin only) */
+.ez-uc-team {
+  margin-top: 30px;
+  padding: 6px 2px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  color: var(--uc-muted);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.ez-uc-team:hover, .ez-uc-team:focus-visible {
+  color: var(--uc-ink);
+  border-bottom-color: var(--uc-gold);
+  outline: none;
+}
+
+/* the site fading in after the holding page has gone; opacity only, so the sticky navbar and fixed
+   elements are not affected */
+.ez-site-reveal {
+  animation: ez-uc-fade 0.6s ease-out both;
+}
+
+/* the team's preview reminder (storefront) */
+.ez-preview-pill {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  padding: 8px 14px;
+  background: #14110f;
+  color: #f4efe6;
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  box-shadow: 0 8px 24px -8px rgba(20, 17, 15, 0.5);
+  animation: ez-uc-rise 0.5s ease-out both;
+}
+
+@keyframes ez-uc-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ez-uc-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ez-uc-leave {
+  to { opacity: 0; transform: scale(1.03); filter: blur(4px); }
+}
+@keyframes ez-uc-drift {
+  from { transform: translate3d(-4%, -3%, 0) rotate(0deg); }
+  to { transform: translate3d(4%, 3%, 0) rotate(8deg); }
+}
+@keyframes ez-uc-ping {
+  75%, 100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes ez-uc-word-up {
+  from { transform: translateY(110%); }
+  to { transform: none; }
+}
+/* sewing: 0-70% the needle runs across uncovering the stitches, then they rest and fade for the next pass */
+@keyframes ez-uc-sew {
+  0% { transform: translateX(-314px); }
+  70%, 100% { transform: translateX(0); }
+}
+@keyframes ez-uc-needle {
+  0% { transform: translateX(6px); opacity: 1; }
+  70% { transform: translateX(314px); opacity: 1; }
+  80%, 100% { transform: translateX(314px); opacity: 0; }
+}
+@keyframes ez-uc-thread {
+  0%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes ez-uc-bob {
+  from { transform: translateY(-3px); }
+  to { transform: translateY(2px); }
+}
+
+/* reduced motion: everything in place, the thread sewn, no needle */
+@media (prefers-reduced-motion: reduce) {
+  .ez-uc, .ez-uc *, .ez-uc *::before, .ez-uc *::after, .ez-site-reveal, .ez-preview-pill {
+    animation: none !important;
+    transition: none !important;
+  }
+  .ez-uc-needle { display: none; }
+  .ez-uc--leaving { opacity: 0; }
+}

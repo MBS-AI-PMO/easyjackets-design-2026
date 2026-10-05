@@ -44,6 +44,8 @@ import TopBar from './Components/TopBar';
 import SeoHealth from './Components/SeoHealth';
 import IndexControl from './Components/IndexControl';
 import VisitorAnalytics from './Components/VisitorAnalytics';
+import SiteStatus from './Components/SiteStatus';
+import AdminGate from './Components/UnderConstruction';
 
 import { applyFavicons } from './utils/favicon';
 const getStoredAuthToken = () => {
@@ -133,9 +135,11 @@ export default function App() {
                   <Route path="/patches" element={<PatchPhotos />} />
                   <Route path="/fabric-colors" element={<FabricColors />} />
                   <Route path="/change-password" element={<ChangePassword />} />
+                  <Route path="/site-status" element={<SiteStatus />} />
                </Route> :
                <>
-                  <Route path="/" element={<Auth />} />
+                  {/* the holding page first while the site is under construction ("Team sign in" leads on) */}
+                  <Route path="/" element={<AdminGate><Auth /></AdminGate>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                </>
             }

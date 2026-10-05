@@ -1,6 +1,7 @@
 // Catalogue data: categories, materials, colours, products, reviews — fetched
 // from the API and normalised into the shape the pages render.
 import { api, uploadUrl } from './api';
+import { getPreviewKey } from './siteStatus';
 
 /** The current storefront still hosts the jacket customiser. */
 export const LEGACY_SITE = (import.meta.env.VITE_LEGACY_SITE_URL || 'https://easyjackets.com').replace(/\/$/, '');
@@ -136,6 +137,9 @@ export const builderUrl = ({ code, design, designedit } = {}) => {
   if (code) url.searchParams.set('id', code);
   if (design) url.searchParams.set('design', design);
   if (designedit) url.searchParams.set('designedit', designedit);
+  // the team's preview of a site under construction continues into the builder (lib/siteStatus.js)
+  const preview = getPreviewKey();
+  if (preview) url.searchParams.set('preview', preview);
   return url.toString();
 };
 /** The builder opened on this product's own design. */
