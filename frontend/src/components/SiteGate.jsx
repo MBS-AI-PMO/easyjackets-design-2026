@@ -7,24 +7,21 @@ import {
   isTransactionPage,
   lastSiteStatus,
   startTransaction,
-  takePreviewParam,
   transactionInProgress,
 } from '../lib/siteStatus';
 
-// The whole storefront, or the holding page while the site is under construction (lib/siteStatus.js).
-// Checked on load and every 30 seconds, so switching it off in the admin opens the site without a
-// reload: the holding page lifts away (LEAVE_MS) and the site fades in. A first visit waits for the
-// answer (a blank page for that moment) rather than flash the site; if the API cannot be reached then,
-// the holding page shows, as the site could not work anyway.
+// The whole storefront, or the "under construction" screen while one of the four apps is being deployed
+// (lib/siteStatus.js). Checked on load and every 15 seconds, so when the deployment is over the screen
+// lifts away (LEAVE_MS) and the site fades in, without a reload. A first visit waits for the answer (a
+// blank page for that moment) rather than flash the site; if the API cannot be reached then (the backend
+// itself being deployed), the screen shows, as the site could not work anyway.
 // A purchase in progress is never interrupted: checkout, the pages after paying and the cart reached
 // from the builder stay open, and so does the rest of the site for that visitor for an hour.
-// On localhost (development) the site always shows; ?uc=1 shows the holding page there.
+// On localhost (development) the site always shows; ?uc=1 shows the screen there.
 const onLocalhost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const showOnLocalhost = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('uc');
-const CHECK_EVERY_MS = 30 * 1000;
+const CHECK_EVERY_MS = 15 * 1000;
 const LEAVE_MS = 600; // .ez-uc--leaving in pages/UnderConstruction.css
-
-takePreviewParam();
 
 export default function SiteGate({ children }) {
   const { pathname, search } = useLocation();
@@ -35,6 +32,7 @@ export default function SiteGate({ children }) {
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
+    if (onLocalhost) return undefined;
     let alive = true;
     const check = () => fetchSiteStatus()
       .then((next) => { if (alive) { setStatus(next); setUnreachable(false); } })
@@ -53,11 +51,11 @@ export default function SiteGate({ children }) {
     : inTransaction
       ? false
       : status
-        ? status.underConstruction && !status.preview
+        ? status.underConstruction
         : unreachable;
   const waiting = !onLocalhost && !inTransaction && !status && !unreachable;
 
-  // the site opening while the holding page shows: let it lift away, then fade the site in
+  // the deployment over while the screen shows: let it lift away, then fade the site in
   const wasBlocked = useRef(blocked);
   useEffect(() => {
     const opened = wasBlocked.current && !blocked;
@@ -71,15 +69,5 @@ export default function SiteGate({ children }) {
   if (waiting) return <div style={{ minHeight: '100vh' }} />;
   if (blocked || leaving) return <UnderConstruction message={status?.message} leaving={leaving && !blocked} />;
 
-  return (
-    <div className={revealed ? 'ez-site-reveal' : undefined}>
-      {children}
-      {status?.underConstruction && status?.preview && (
-        // the team's preview: a reminder that visitors still see the holding page
-        <div className="ez-preview-pill" role="status">
-          Preview · visitors see “under construction”
-        </div>
-      )}
-    </div>
-  );
+  return <div className={revealed ? 'ez-site-reveal' : undefined}>{children}</div>;
 }

@@ -1,11 +1,12 @@
-/* The "under construction" holding page. ONE design for all four apps: this file is copied as is to
-     frontend/src/pages/UnderConstruction.css            (storefront)
+/* The "under construction" holding page. ONE design for the public apps: this file is copied as is to
+     frontend/src/pages/UnderConstruction.css                    (storefront)
      custom-jacket/src/components/UnderConstruction/holding.css  (jacket builder)
-     admin/src/Components/UnderConstruction.css          (admin, before sign-in)
-     backend/helpers/holdingPage.css                    (the API's own address, helpers/holdingPage.js)
-   Change all four together.
+     backend/helpers/holdingPage.css                             (the API's own address, helpers/holdingPage.js)
+   Change all three together. (The admin has no holding page: it always shows its sign-in.)
    Self-contained: its own colours (the storefront's ink, cream and gold), fonts and animations. Comes in
-   step by step; the thread under the text keeps sewing itself across; with reduced motion it all just shows. */
+   step by step; the thread under the text keeps sewing itself across; with reduced motion it all just shows.
+   Pinned to the screen, so the page under it (its margins, its height) can never make it scroll; it only
+   scrolls itself on a screen too short for it. */
 .ez-uc {
   --uc-ink: #14110f;
   --uc-cream: #f4efe6;
@@ -15,12 +16,12 @@
   --uc-muted: #6b635a;
   --uc-display: "Big Shoulders Display", "Big Shoulders", Impact, sans-serif;
   --uc-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  position: relative;
-  overflow: hidden;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
   box-sizing: border-box;
   padding: 48px 16px;
   background: var(--uc-cream);
@@ -34,12 +35,13 @@
 
 /* the site opening: the page lifts away */
 .ez-uc--leaving {
+  overflow: hidden;
   animation: ez-uc-leave 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* a soft gold light drifting slowly behind everything */
+/* a soft gold light drifting slowly behind everything (pinned too, so it adds no room to scroll) */
 .ez-uc-glow {
-  position: absolute;
+  position: fixed;
   inset: -25%;
   background:
     radial-gradient(circle at 30% 35%, rgba(201, 162, 39, 0.22), transparent 42%),
@@ -48,9 +50,11 @@
   pointer-events: none;
 }
 
+/* centred both ways; on a screen too short for it, it starts at the top instead of being cut off */
 .ez-uc-inner {
   position: relative;
   width: min(720px, 100%);
+  margin: auto;
 }
 
 /* one after the other (each element's delay is set inline) */
@@ -192,26 +196,6 @@
 }
 .ez-uc-sep {
   color: var(--uc-cream-2);
-}
-
-/* the admin's way in for the team (admin only) */
-.ez-uc-team {
-  margin-top: 30px;
-  padding: 6px 2px;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  background: none;
-  color: var(--uc-muted);
-  font: inherit;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-}
-.ez-uc-team:hover, .ez-uc-team:focus-visible {
-  color: var(--uc-ink);
-  border-bottom-color: var(--uc-gold);
-  outline: none;
 }
 
 /* the site fading in after the holding page has gone; opacity only, so the sticky navbar and fixed

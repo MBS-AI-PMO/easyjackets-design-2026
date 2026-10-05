@@ -52,6 +52,13 @@ ENV AUTO_REMOVE_BG=true
 RUN mkdir -p /app/uploads/products /app/uploads/site
 VOLUME ["/app/uploads"]
 
+# `deploy-status start|finish`: Coolify's pre- and post-deployment commands report this deployment, so the
+# sites show their "under construction" screen meanwhile (deploy-status.sh; this backend itself, locally)
+RUN cp deploy-status.sh /usr/local/bin/deploy-status && sed -i 's/\r$//' /usr/local/bin/deploy-status \
+  && chmod +x /usr/local/bin/deploy-status
+ENV DEPLOY_SERVICE=node-backend
+ENV DEPLOY_STATUS_API=http://127.0.0.1:8080
+
 EXPOSE 8080
 
 CMD ["node", "server.mjs"]

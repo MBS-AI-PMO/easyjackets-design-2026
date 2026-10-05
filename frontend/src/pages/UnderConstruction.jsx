@@ -3,10 +3,10 @@ import { FALLBACK_NAV_LOGO, useSiteIdentity } from '../lib/siteIdentity';
 import { fetchWebsiteDetails, telHref } from '../lib/site';
 import './UnderConstruction.css';
 
-// The holding page while the site is under construction (components/SiteGate.jsx). The headline is the
-// admin's message (Settings → Site Status) when one is set. Everything comes in one after the other,
-// the headline word by word, and a gold thread keeps sewing itself across under the text. `leaving`
-// fades the page away when the site opens. Kept out of search results while it shows.
+// The "under construction" screen while one of the apps is being deployed (components/SiteGate.jsx). The
+// headline is the admin's text (Settings → Site Status) when one is set. Everything comes in one after the
+// other, the headline word by word, and a gold thread keeps sewing itself across under the text. `leaving`
+// fades the page away when the site is back. Kept out of search results while it shows.
 export default function UnderConstruction({ message, leaving = false }) {
   const identity = useSiteIdentity();
   const [contact, setContact] = useState(null);
@@ -60,8 +60,7 @@ export default function UnderConstruction({ message, leaving = false }) {
           ))}
         </h1>
         <p className="ez-uc-text ez-uc-in" style={after(textStep)}>
-          We're building the new Easy Jackets: custom letterman jackets, designed by you and made by hand.
-          The site will be back very soon.
+          We're updating Easy Jackets right now. The site will be back in a few minutes, all by itself.
         </p>
 
         {/* the thread being sewn: a faint seam line, the gold stitches revealed behind a moving needle */}

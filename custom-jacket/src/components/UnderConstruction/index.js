@@ -3,28 +3,19 @@ import logo from "../../assets/images/Header-logo.webp";
 import axiosInstance from "../../utils/axiosConfig";
 import "./holding.css";
 
-// The holding page (components/MaintenanceGate): the same page as the storefront's
-// (frontend/src/pages/UnderConstruction.jsx, holding.css is a copy of its stylesheet).
-//   mode "site":   the site is under construction (admin: Settings → Site Status); the headline is the
-//                  admin's message when one is set
-//   mode "deploy": a deployment is running (backend /features/deployment-status); back by itself after it
-// `leaving` fades it away when the designer opens.
+// The "under construction" screen while one of the apps is being deployed (components/MaintenanceGate):
+// the same page as the storefront's (frontend/src/pages/UnderConstruction.jsx, holding.css is a copy of its
+// stylesheet). The headline is the admin's text (Settings → Site Status) when one is set. `leaving` fades
+// it away when the designer is back.
 const COPY = {
-  site: {
-    label: "Under construction",
-    headline: "Something new is being stitched",
-    text: "We're building the new Easy Jackets: custom letterman jackets, designed by you and made by hand. The site will be back very soon.",
-  },
-  deploy: {
-    label: "Updating Easy Jackets",
-    headline: "The site is under construction",
-    text: "We are applying a site update right now. The designer will return automatically when deployment is complete.",
-  },
+  label: "Under construction",
+  headline: "Something new is being stitched",
+  text: "We're updating Easy Jackets right now. The site will be back in a few minutes, all by itself.",
 };
 
-const UnderConstruction = ({ mode = "site", message, leaving = false }) => {
+const UnderConstruction = ({ message, leaving = false }) => {
   const [contact, setContact] = React.useState(null);
-  const copy = COPY[mode] || COPY.site;
+  const copy = COPY;
 
   React.useEffect(() => {
     const previousTitle = document.title;

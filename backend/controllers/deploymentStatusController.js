@@ -107,6 +107,12 @@ const readStatus = async () => {
   return status;
 };
 
+/** Is any of the four apps being deployed right now? (controllers/siteStatusController.js, helpers/holdingPage.js) */
+export const isDeploying = async () => {
+  const status = await readStatus();
+  return (status.activeDeployments || []).length > 0;
+};
+
 export const getDeploymentStatusController = async (req, res) => {
   try {
     const status = await readStatus();

@@ -22,5 +22,12 @@ RUN npm run build
 FROM nginx:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/build /usr/share/nginx/html
+# `deploy-status start|finish`: Coolify's pre- and post-deployment commands report this deployment, so the
+# sites show their "under construction" screen meanwhile (deploy-status.sh; DEPLOY_STATUS_API = the backend)
+RUN apk add --no-cache curl
+COPY deploy-status.sh /usr/local/bin/deploy-status
+RUN sed -i 's/\r$//' /usr/local/bin/deploy-status && chmod +x /usr/local/bin/deploy-status
+ENV DEPLOY_SERVICE=custom-jacket
+ENV DEPLOY_STATUS_API=https://rpgwwda661mpz7dpxm7hst69.145.223.75.247.sslip.io
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

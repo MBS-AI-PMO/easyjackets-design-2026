@@ -1,31 +1,9 @@
-// "Under construction" (admin: Settings → Site Status; backend controllers/siteStatusController.js).
-// While it is on, the whole storefront shows the holding page (pages/UnderConstruction.jsx), except in a
-// browser that opened the private preview link (any address with ?preview=<key>): the key is kept here
-// and sent with every check, and the API answers whether it is right (the key is never sent back).
-// ?preview=off forgets it. The builder links carry the key along (lib/catalog.js builderUrl), so a
-// preview continues into the jacket builder.
+// The "under construction" screen (components/SiteGate.jsx): shown while any of the four apps is being
+// deployed (backend controllers/siteStatusController.js; each app's Coolify pre- and post-deployment
+// commands report the start and the end). The headline comes from the admin (Settings → Site Status).
 import { api } from './api';
 
-const PREVIEW_KEY = 'ej-preview';
 const LAST_KEY = 'ej-site-status';
-
-export const getPreviewKey = () => {
-  try { return localStorage.getItem(PREVIEW_KEY) || ''; } catch { return ''; }
-};
-
-/** Keeps (or with "off", forgets) ?preview=<key> from the address, then removes it from the address bar. */
-export const takePreviewParam = () => {
-  if (typeof window === 'undefined') return;
-  const url = new URL(window.location.href);
-  const value = url.searchParams.get('preview');
-  if (value === null) return;
-  try {
-    if (value && value !== 'off') localStorage.setItem(PREVIEW_KEY, value);
-    else localStorage.removeItem(PREVIEW_KEY);
-  } catch { /* storage blocked: the preview lasts for this page only */ }
-  url.searchParams.delete('preview');
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
-};
 
 // A purchase in progress is never interrupted (components/SiteGate.jsx): a visitor who reached checkout
 // with something in the cart, came back from paying, or arrived at the cart from the builder's Add to
@@ -60,12 +38,8 @@ export const lastSiteStatus = () => {
 };
 
 export const fetchSiteStatus = async () => {
-  const data = await api.get('/site-status', { auth: false, params: { preview: getPreviewKey() } });
-  const status = {
-    underConstruction: Boolean(data?.underConstruction),
-    message: String(data?.message || ''),
-    preview: Boolean(data?.preview),
-  };
+  const data = await api.get('/site-status', { auth: false });
+  const status = { underConstruction: Boolean(data?.underConstruction), message: String(data?.message || '') };
   try { localStorage.setItem(LAST_KEY, JSON.stringify(status)); } catch { /* storage blocked */ }
   return status;
 };

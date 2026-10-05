@@ -4,12 +4,13 @@ import { fileURLToPath } from 'url';
 import SiteStatus from '../models/siteStatus.js';
 import Metadata from '../models/metaData.js';
 import website from '../models/websiteModal.js';
+import { isDeploying } from '../controllers/deploymentStatusController.js';
 
-// The "under construction" holding page at the API's own address (GET /, server.mjs) while the site is
-// under construction (models/siteStatus.js): the same page as the storefront's, builder's and admin's
-// (holdingPage.css is a copy of frontend/src/pages/UnderConstruction.css). Only the address itself:
-// every /api route, /uploads and the payment webhooks keep working. Sent with 200, as a health check
-// may call this address.
+// The "under construction" holding page at the API's own address (GET /, server.mjs) while any of the four
+// apps is being deployed (controllers/siteStatusController.js): the same page as the storefront's and the
+// builder's (holdingPage.css is a copy of frontend/src/pages/UnderConstruction.css), refreshing itself
+// every 30 seconds until the deployment is over. Only the address itself: every /api route, /uploads and
+// the payment webhooks keep working. Sent with 200, as a health check may call this address.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CSS = fs.readFileSync(path.join(__dirname, 'holdingPage.css'), 'utf8');
 const FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Instrument+Sans:wght@400;600;700&display=swap';
@@ -32,10 +33,10 @@ const logoUrl = (stored) => {
   return '';
 };
 
-/** Under construction now? A database without the record yet starts so (models/siteStatus.js). */
+/** Is an app being deployed right now, and the admin's headline (models/siteStatus.js). */
 export const siteUnderConstruction = async () => {
-  const status = await SiteStatus.findOne({ key: 'global' }).lean();
-  return status ? { on: Boolean(status.underConstruction), message: status.message || '' } : { on: true, message: '' };
+  const [on, status] = await Promise.all([isDeploying(), SiteStatus.findOne({ key: 'global' }).lean()]);
+  return { on, message: status?.message || '' };
 };
 
 export const renderHoldingPage = async (message) => {
@@ -65,6 +66,7 @@ export const renderHoldingPage = async (message) => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta http-equiv="refresh" content="30">
 <title>Under construction | Easy Jackets</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,7 +82,7 @@ export const renderHoldingPage = async (message) => {
     <h1 id="ez-uc-title" class="ez-uc-title" aria-label="${escapeHtml(headline)}">${words
       .map((word, i) => `<span class="ez-uc-word" aria-hidden="true"><span style="${after(2 + i * 0.6)}">${escapeHtml(word)}</span></span>`)
       .join('')}</h1>
-    <p class="ez-uc-text ez-uc-in" style="${after(textStep)}">We're building the new Easy Jackets: custom letterman jackets, designed by you and made by hand. The site will be back very soon.</p>
+    <p class="ez-uc-text ez-uc-in" style="${after(textStep)}">We're updating Easy Jackets right now. The site will be back in a few minutes, all by itself.</p>
     <svg class="ez-uc-seam ez-uc-in" style="${after(textStep + 1)}" viewBox="0 0 320 28" aria-hidden="true">
       <defs><clipPath id="ez-uc-sewn"><rect class="ez-uc-sewn" x="0" y="0" width="320" height="28"></rect></clipPath></defs>
       <line class="ez-uc-seam-line" x1="6" y1="16" x2="314" y2="16"></line>
