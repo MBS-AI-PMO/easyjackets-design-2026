@@ -137,57 +137,56 @@ const EntryRow = ({ entry, open, onToggle, flagged }) => {
     );
 };
 
-const AdminCard = ({ admin, selected, onClick }) => (
-    <Paper
-        onClick={onClick}
-        sx={{
-            p: 2,
-            borderRadius: 3,
-            cursor: 'pointer',
-            border: selected ? '2px solid #37a6ff' : '2px solid transparent',
-            bgcolor: selected ? '#f0f8ff' : '#fff',
-            boxShadow: '0 2px 12px rgba(0,0,0,.05)',
-            transition: 'all .15s ease',
-            '&:hover': { boxShadow: '0 4px 16px rgba(55,166,255,.18)', transform: 'translateY(-1px)' },
-            opacity: admin.isAdmin ? 1 : 0.85,
-        }}
-    >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-            <Box sx={{
-                width: 40, height: 40, flexShrink: 0, borderRadius: '10px', bgcolor: 'rgba(55, 166, 255, 0.1)', color: '#37a6ff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold',
-            }}>
-                {(admin.name || admin.email || '?').charAt(0).toUpperCase()}
+// One compact chip per admin, all in a single row above the log: the name and how many actions, click to see
+// only that admin's activity (click again, or "All", for everyone). The email, when they were last active,
+// wrong passwords and whether they are still an admin are in the chip's tooltip.
+const chipSx = (selected, muted) => ({
+    display: 'inline-flex', alignItems: 'center', gap: 0.75, height: 32, pl: 0.5, pr: 1, borderRadius: '16px',
+    border: `1px solid ${selected ? '#37a6ff' : '#e4e7ec'}`, bgcolor: selected ? '#eaf5ff' : '#fff',
+    color: muted ? '#98a2b3' : '#344054', font: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+    whiteSpace: 'nowrap', transition: 'border-color .15s ease, background-color .15s ease',
+    '&:hover': { borderColor: '#37a6ff' },
+    '&:focus-visible': { outline: '2px solid #37a6ff', outlineOffset: 2 },
+});
+const countSx = (selected) => ({
+    minWidth: 20, height: 20, px: 0.75, borderRadius: '10px', display: 'inline-flex', alignItems: 'center',
+    justifyContent: 'center', fontSize: 11.5, fontWeight: 700,
+    bgcolor: selected ? '#37a6ff' : '#f2f4f7', color: selected ? '#fff' : '#475467',
+});
+
+const AdminChip = ({ admin, selected, onClick }) => {
+    const idle = !admin.total;
+    const tip = [
+        admin.email,
+        admin.lastAt ? `Last active ${moment(admin.lastAt).format('MMM D, YYYY · h:mm:ss a')} (${moment(admin.lastAt).fromNow()})` : 'No activity yet',
+        admin.failedSignIns > 0 ? `${admin.failedSignIns} wrong password${admin.failedSignIns === 1 ? '' : 's'} in the last 30 days` : '',
+        admin.isAdmin ? '' : 'No longer an admin (deleted or demoted); their entries stay in the log',
+    ].filter(Boolean).join(' · ');
+    return (
+        <Tooltip title={tip}>
+            <Box component="button" type="button" onClick={onClick} aria-pressed={selected} sx={chipSx(selected, idle || !admin.isAdmin)}>
+                <Box component="span" aria-hidden="true" sx={{
+                    width: 24, height: 24, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, fontWeight: 700, bgcolor: idle ? '#f2f4f7' : 'rgba(55, 166, 255, 0.12)', color: idle ? '#98a2b3' : '#37a6ff',
+                }}>
+                    {(admin.name || admin.email || '?').charAt(0).toUpperCase()}
+                </Box>
+                <Box component="span" sx={{ textDecoration: admin.isAdmin ? 'none' : 'line-through' }}>{admin.name || admin.email}</Box>
+                {admin.failedSignIns > 0 && (
+                    <Box component="span" sx={{ ...countSx(false), bgcolor: '#fdecea', color: '#c62828' }}>{admin.failedSignIns} failed</Box>
+                )}
+                <Box component="span" sx={countSx(selected)}>{admin.total}</Box>
             </Box>
-            <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="body2" noWrap sx={{ fontWeight: 700, color: '#333' }}>{admin.name || '—'}</Typography>
-                <Typography variant="caption" noWrap display="block" sx={{ color: '#667085' }}>{admin.email}</Typography>
-            </Box>
-            {!admin.isAdmin && (
-                <Tooltip title="No longer an admin (deleted or demoted). Their entries stay in the log.">
-                    <Chip size="small" label="Removed" variant="outlined" sx={{ color: '#667085', borderColor: '#d0d5dd' }} />
-                </Tooltip>
-            )}
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5, flexWrap: 'wrap' }}>
-            <Typography variant="caption" sx={{ color: '#344054', fontWeight: 700 }}>
-                {admin.total} action{admin.total === 1 ? '' : 's'}
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#98a2b3' }}>·</Typography>
-            <Tooltip title={admin.lastAt ? moment(admin.lastAt).format('MMM D, YYYY · h:mm:ss a') : ''}>
-                <Typography variant="caption" sx={{ color: '#667085' }}>
-                    {admin.lastAt ? `active ${moment(admin.lastAt).fromNow()}` : 'no activity yet'}
-                </Typography>
-            </Tooltip>
-            {admin.failedSignIns > 0 && (
-                <Tooltip title="Wrong passwords for this account in the last 30 days">
-                    <Chip size="small" label={`${admin.failedSignIns} failed sign-in${admin.failedSignIns === 1 ? '' : 's'}`}
-                        sx={{ bgcolor: '#fdecea', color: '#c62828', fontWeight: 700, height: 22 }} />
-                </Tooltip>
-            )}
-        </Box>
-    </Paper>
-);
+        </Tooltip>
+    );
+};
+
+// busiest first (most recent activity), then admins with nothing logged yet, by name
+const byActivity = (a, b) => {
+    if (Boolean(a.total) !== Boolean(b.total)) return a.total ? -1 : 1;
+    if (a.total) return new Date(b.lastAt || 0) - new Date(a.lastAt || 0);
+    return String(a.name || a.email).localeCompare(String(b.name || b.email));
+};
 
 // The header's "Ledger check": the result of walking the whole hash chain on the server.
 const LedgerBadge = ({ check, onRecheck }) => {
@@ -360,11 +359,19 @@ const ActivityLog = () => {
                 </Alert>
             )}
 
-            {/* one card per admin: click to see only their activity */}
+            {/* one chip per admin: click to see only their activity */}
             {admins.length > 0 && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 2, mb: 3 }}>
-                    {admins.map((admin) => (
-                        <AdminCard
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 2.5 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '.06em', mr: 0.5 }}>
+                        Admins
+                    </Typography>
+                    <Box component="button" type="button" onClick={() => setFilter('admin', '')} aria-pressed={!filters.admin}
+                        sx={{ ...chipSx(!filters.admin, false), pl: 1.25 }}>
+                        All
+                        <Box component="span" sx={countSx(!filters.admin)}>{admins.reduce((sum, a) => sum + (a.total || 0), 0)}</Box>
+                    </Box>
+                    {[...admins].sort(byActivity).map((admin) => (
+                        <AdminChip
                             key={admin._id}
                             admin={admin}
                             selected={filters.admin === admin._id}
