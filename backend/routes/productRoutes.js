@@ -2,8 +2,6 @@ import express from "express";
 import {
   activateAndDeactivateProduct,
   backgroundRemovalStatusController,
-  brainTreePaymentController,
-  braintreeTokenController,
   createDraftProduct,
   createProductController,
   backfillProductSeoController,
@@ -106,10 +104,8 @@ router.get("/related-product/:pid/:cid", realtedProductController);
 //category wise product
 router.get("/product-category/:slug", productCategoryController);
 
-router.get("/braintree/token", braintreeTokenController);
-
-//payments
-router.post("/braintree/payment", requireSignin, brainTreePaymentController);
+// (braintree/token and braintree/payment were removed: checkout runs on Stripe and cash on delivery,
+// nothing used them, and the payment one trusted the browser's prices)
 
 // --- PRODUCT ANALYTICS ---
 router.post("/interaction/:id/view", recordProductView);

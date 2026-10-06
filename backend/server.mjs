@@ -182,8 +182,6 @@ app.use('/api/v1/seo-health', seoHealthRoutes)
 app.use('/api/v1/visitor-analytics', visitorAnalyticsRoutes)
 app.use('/api/v1/site-status', siteStatusRoutes)
 
-// api / v1 / product / braintree / payment;
-
 // The API's own address: the "under construction" page while the site is (helpers/holdingPage.js),
 // else the usual greeting. Only this address; every other route keeps working.
 app.get("/", async (req, res) => {

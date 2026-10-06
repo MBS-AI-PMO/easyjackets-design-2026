@@ -6,14 +6,12 @@ import CategoryModel from "../models/CategoryModel.js";
 import ColorModel from "../models/color.js";
 import fs from "fs";
 import slugify from "slugify";
-import orderModel from "../models/orderModel.js";
 import Design from "../models/design.js";
 import randomString from 'randomstring'
 import formidable from "formidable";
 import uploadToS3 from "../helpers/fileUpload.js";
 import addWatermark from "../helpers/watermark.js";
 import { backgroundRemovalStatus, queueProductCutout } from "../helpers/backgroundRemoval.js";
-import gateway from "../config/braintree.js";
 
 const escapeRegex = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const isObjectId = (value = "") => /^[0-9a-fA-F]{24}$/.test(value);
@@ -1053,58 +1051,6 @@ export const productCategoryController = async (req, res) => {
       error,
       message: "Error While Getting products",
     });
-  }
-};
-
-const braintreeOff = (res) => res.status(503).send({ success: false, message: "Braintree payments are not configured" });
-
-export const braintreeTokenController = async (req, res) => {
-  if (!gateway) return braintreeOff(res);
-  try {
-    gateway.clientToken.generate({}, function (err, response) {
-      if (err) {
-        res.status(500).send(err);
-      } else {
-        res.send(response);
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-//payment
-export const brainTreePaymentController = async (req, res) => {
-  if (!gateway) return braintreeOff(res);
-  try {
-    const { nonce, cart } = req.body;
-    let total = 0;
-    cart.map((i) => {
-      total += i.price;
-    });
-    let newTransaction = gateway.transaction.sale(
-      {
-        amount: total,
-        paymentMethodNonce: nonce,
-        options: {
-          submitForSettlement: true,
-        },
-      },
-      function (error, result) {
-        if (result) {
-          const order = new orderModel({
-            products: cart,
-            payment: result,
-            buyer: req.user._id,
-          }).save();
-          res.json({ ok: true });
-        } else {
-          res.status(500).send(error);
-        }
-      }
-    );
-  } catch (error) {
-    console.log(error);
   }
 };
 
