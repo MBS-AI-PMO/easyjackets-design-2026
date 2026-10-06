@@ -45,6 +45,7 @@ import SeoHealth from './Components/SeoHealth';
 import IndexControl from './Components/IndexControl';
 import VisitorAnalytics from './Components/VisitorAnalytics';
 import SiteStatus from './Components/SiteStatus';
+import ActivityLog from './Components/ActivityLog';
 
 import { applyFavicons } from './utils/favicon';
 const getStoredAuthToken = () => {
@@ -99,6 +100,7 @@ export default function App() {
                   <Route path="/users" element={<UserTable />} />
                   <Route path="/subscribers" element={<Subscribers />} />
                   <Route path="/admin" element={<AdminTable />} />
+                  <Route path="/activity-log" element={<ActivityLog />} />
                   <Route path="/insights" element={<AnalyticsDashboard />} />
                   <Route path="/analytics-configuration" element={<EngineConfiguration />} />
                   <Route path="/email-configuration" element={<EmailConfiguration />} />

@@ -143,6 +143,7 @@ const navGroups = [
     items: [
       { name: 'Customer', link: '/users' },
       { name: 'Admin', link: '/admin' },
+      { name: 'Activity Log', link: '/activity-log' },
       { name: 'Subscribers', link: '/subscribers' },
     ],
   },

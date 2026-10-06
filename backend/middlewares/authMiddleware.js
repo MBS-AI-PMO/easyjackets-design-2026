@@ -1,6 +1,7 @@
 import JWT from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import RevokedToken from "../models/revokedToken.js";
+import { watchAdminRequest } from "../helpers/adminLedger.js";
 
 // The sign-in token of a request, decoded, or null. A sign-in token carries the user's _id; other tokens
 // signed with the same secret (e.g. /auth/encrypt's { userId }, design tickets) are not logins.
@@ -67,6 +68,10 @@ export const isAdmin = async (req, res, next) => {
         message: "Unauthorized access",
       });
     } else {
+      // the admin activity ledger: who is acting, and an entry for this request once it is answered
+      // (helpers/adminLedger.js; never throws, never waits)
+      req.adminUser = user;
+      watchAdminRequest(req, res);
       next();
     }
   } catch (err) {

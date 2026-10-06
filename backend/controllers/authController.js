@@ -6,6 +6,8 @@ import { storefrontUrl } from "../helpers/customJacketUrl.js";
 import crypto from "crypto";
 import JWT from "jsonwebtoken";
 import RevokedToken from "../models/revokedToken.js";
+// the admin activity ledger: sign-ins, sign-outs and password changes of admin accounts (does nothing for others)
+import { recordAdminEvent } from "../helpers/adminLedger.js";
 // import { compare } from "bcrypt";
 const serializeUser = (user) => ({
   _id: user._id,
@@ -165,6 +167,7 @@ export const logoutController = async (req, res) => {
         { upsert: true }
       );
     }
+    recordAdminEvent({ userId: req.user?._id, area: "Sign-in", action: "Signed out", req, status: 200 });
     return res.status(200).send({ success: true, message: "Signed out" });
   } catch (err) {
     console.log(err);
@@ -184,6 +187,7 @@ export const loginController = async (req, res) => {
     }
     const lockKey = email.trim().toLowerCase();
     if (isLockedOut(lockKey)) {
+      recordAdminEvent({ email, area: "Sign-in", action: "Failed sign-in", req, status: 429, details: { reason: "Locked out after too many wrong passwords" } });
       return res.status(429).send({ success: false, message: LOCKED_MESSAGE });
     }
 
@@ -195,6 +199,7 @@ export const loginController = async (req, res) => {
     const match = user ? await comparePassword(password, user.password) : false;
     if (!user || !match) {
       noteFailedLogin(lockKey);
+      recordAdminEvent({ user, area: "Sign-in", action: "Failed sign-in", req, status: 200, ok: false, details: { reason: "Wrong password" } });
       return res.status(200).send({
         success: false,
         message: "Invalid email or password",
@@ -203,6 +208,7 @@ export const loginController = async (req, res) => {
     clearFailedLogins(lockKey);
 
     const token = signLoginToken(user);
+    recordAdminEvent({ user, area: "Sign-in", action: "Signed in", req, status: 200 });
     res.status(200).send({
       success: true,
       message: "Login Successfully",
@@ -272,6 +278,7 @@ export const resetPasswordController = async (req, res) => {
       { password: await hashPassword(newPassword), resetPasswordHash: null, resetPasswordExpires: null, $inc: { tokenVersion: 1 } }
     );
     clearFailedLogins(String(user.email || "").trim().toLowerCase());
+    recordAdminEvent({ user, area: "Account", action: "Reset password", req, status: 200, details: { via: "Emailed reset link" } });
     return res.status(200).send({ success: true, message: "Password changed. Sign in with your new password." });
   } catch (err) {
     console.log(err);
@@ -400,6 +407,7 @@ export const updateProfileController = async (req, res) => {
       },
       { new: true }
     );
+    recordAdminEvent({ user: updatedUser, area: "Account", action: hashedPassword ? "Changed password" : "Updated profile", req, status: 200, details: req.body });
     res.status(200).send({
       success: true,
       message: "Profile Updated SUccessfully",
@@ -672,6 +680,7 @@ export const changePasswordController = async (req, res) => {
       { new: true }
     );
 
+    recordAdminEvent({ user: updated, area: "Account", action: "Changed password", req, status: 200 });
     res.status(200).send({
       success: true,
       token: signLoginToken(updated),

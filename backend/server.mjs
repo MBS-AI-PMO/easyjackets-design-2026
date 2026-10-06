@@ -35,6 +35,7 @@ import seoHealthRoutes from './routes/seoHealthRoutes.js'
 import seoRenderRoutes from './routes/seoRenderRoutes.js'
 import visitorAnalyticsRoutes from './routes/visitorAnalyticsRoutes.js'
 import siteStatusRoutes from './routes/siteStatusRoutes.js'
+import adminLogRoutes from './routes/adminLogRoutes.js'
 import { renderHoldingPage, siteUnderConstruction } from './helpers/holdingPage.js'
 import { sanitizeInput } from './middlewares/sanitizeInput.js'
 import { UPLOADS_ROOT, ensureUploadsRoot } from './helpers/localUploadStorage.js'
@@ -181,6 +182,8 @@ app.use('/api/v1/shipping-rates', shippingRateRoutes)
 app.use('/api/v1/seo-health', seoHealthRoutes)
 app.use('/api/v1/visitor-analytics', visitorAnalyticsRoutes)
 app.use('/api/v1/site-status', siteStatusRoutes)
+// the admin activity ledger, read only (Admin → Activity Log; written by helpers/adminLedger.js)
+app.use('/api/v1/admin-logs', adminLogRoutes)
 
 // The API's own address: the "under construction" page while the site is (helpers/holdingPage.js),
 // else the usual greeting. Only this address; every other route keeps working.
