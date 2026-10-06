@@ -1,12 +1,15 @@
 // Guest order tracking: order number + the email the order was placed with,
 // looked up through GET /order/track (added to the new backend for this page).
+// It shows the stages, the courier and tracking number the admin entered
+// (Orders → Status & Shipping) with a link to the courier's tracking page, the
+// status updates and the items. The status emails link here with both filled in.
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
-import { ORDER_STAGES, money, trackOrder } from '../lib/orders';
+import { ORDER_STAGES, trackOrder } from '../lib/orders';
 import { usePageTitle } from '../lib/usePageTitle';
 
 export default function TrackOrder() {
@@ -32,6 +35,9 @@ export default function TrackOrder() {
   const { order, loading, error } = state;
   const cur = order ? order.step : -1;
   const cancelled = order && order.step < 0;
+  const stageDates = order ? [order.dateLabel, '', order.shippedLabel, order.deliveredLabel] : [];
+  // the courier panel: once the admin has entered a courier, tracking number or note (a cancelled order's note sits with the notice)
+  const shipped = order && (order.courier || order.trackingNumber || (order.shippingNote && !cancelled));
 
   return (
     <div className="pg-track-order">
@@ -84,11 +90,11 @@ export default function TrackOrder() {
               </span>
             </div>
             <p style={{ margin: '12px 0 0', color: 'var(--muted)', fontSize: '15px' }}>
-              Placed {order.dateLabel} · {order.isCod ? 'Cash on delivery' : 'Paid by card'} · {money(order.total, order.currency)}
+              Placed {order.dateLabel}
               {order.trackingNumber ? <> · Tracking <strong style={{ color: 'var(--ink)' }}>{order.trackingNumber}</strong>{order.courier ? ` (${order.courier})` : ''}</> : null}
             </p>
             {cancelled ? (
-              <p style={{ margin: '24px 0 0', color: 'var(--ink-2)', lineHeight: '1.6' }}>This order was cancelled. If that is unexpected, <A href="/contact-us" style={{ color: 'inherit', fontWeight: '600' }}>contact us</A> and we will sort it out.</p>
+              <p style={{ margin: '24px 0 0', color: 'var(--ink-2)', lineHeight: '1.6' }}>This order was cancelled.{order.shippingNote ? ` ${order.shippingNote}` : ''} If that is unexpected, <A href="/contact-us" style={{ color: 'inherit', fontWeight: '600' }}>contact us</A> and we will sort it out.</p>
             ) : (
               <div style={{ display: 'grid', gap: '0', marginTop: '36px' }}>
                 {ORDER_STAGES.map(([title, desc], i) => {
@@ -104,7 +110,7 @@ export default function TrackOrder() {
                       <div style={{ paddingBottom: '28px' }}>
                         <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', lineHeight: '1', textTransform: 'uppercase', color: i <= cur ? 'var(--ink)' : 'var(--muted)' }}>{title}</div>
                         <div style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '6px', lineHeight: '1.5' }}>{desc}</div>
-                        {i === 0 ? <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>{order.dateLabel}</div> : null}
+                        {i <= cur && stageDates[i] ? <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>{stageDates[i]}</div> : null}
                         {now && i > 0 ? <div style={{ fontSize: '12px', color: 'var(--gold-2)', fontWeight: '600', marginTop: '4px' }}>Current stage</div> : null}
                       </div>
                     </div>
@@ -112,8 +118,41 @@ export default function TrackOrder() {
                 })}
               </div>
             )}
+            {order.history.length ? (
+              <div style={{ marginTop: cancelled ? '32px' : '8px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>Updates</div>
+                {order.history.map((h) => (
+                  <div key={h.key} style={{ display: 'grid', gridTemplateColumns: 'minmax(110px,160px) minmax(0,1fr)', gap: '14px', padding: '12px 0', borderTop: '1px solid var(--cream-2)', fontSize: '14px', lineHeight: '1.5' }}>
+                    <span style={{ color: 'var(--muted)', fontSize: '13px' }}>{h.when}</span>
+                    <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                      <strong>{h.label}</strong>{h.courier ? ` · ${h.courier}` : ''}{h.trackingNumber ? ` · ${h.trackingNumber}` : ''}
+                      {h.note ? <span style={{ display: 'block', color: 'var(--muted)', fontSize: '13px', marginTop: '2px' }}>{h.note}</span> : null}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div style={{ display: 'grid', gap: '20px' }}>
+            {shipped ? (
+              <div style={{ background: '#fbf8f2', border: '1px solid var(--cream-2)', borderLeft: '4px solid var(--gold)', borderRadius: '4px', padding: 'clamp(22px,3vw,32px)', display: 'grid', gap: '16px' }}>
+                <h3 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '26px', lineHeight: '0.9', textTransform: 'uppercase', margin: '0' }}>
+                  Shipping
+                </h3>
+                <dl style={{ margin: '0', display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr)', gap: '8px 18px', fontSize: '14px', lineHeight: '1.5' }}>
+                  {order.courier ? <><dt style={{ color: 'var(--muted)' }}>Courier</dt><dd style={{ margin: '0', fontWeight: '600' }}>{order.courier}</dd></> : null}
+                  {order.trackingNumber ? <><dt style={{ color: 'var(--muted)' }}>Tracking number</dt><dd style={{ margin: '0', fontWeight: '700', letterSpacing: '0.04em', overflowWrap: 'anywhere' }}>{order.trackingNumber}</dd></> : null}
+                  {order.shippedLabel ? <><dt style={{ color: 'var(--muted)' }}>Shipped on</dt><dd style={{ margin: '0' }}>{order.shippedLabel}</dd></> : null}
+                  {order.deliveredLabel ? <><dt style={{ color: 'var(--muted)' }}>Delivered on</dt><dd style={{ margin: '0' }}>{order.deliveredLabel}</dd></> : null}
+                  {order.shippingNote && !cancelled ? <><dt style={{ color: 'var(--muted)' }}>Note</dt><dd style={{ margin: '0', overflowWrap: 'anywhere' }}>{order.shippingNote}</dd></> : null}
+                </dl>
+                {order.trackingUrl ? (
+                  <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="ez-btn ez-btn-ink" style={{ justifySelf: 'start', minHeight: '44px', fontSize: '17px' }}>
+                    Track with {order.courier} ↗
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
             <div style={{ background: '#fbf8f2', border: '1px solid var(--cream-2)', borderRadius: '4px', padding: 'clamp(22px,3vw,32px)', display: 'grid', gap: '16px' }}>
               <h3 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '26px', lineHeight: '0.9', textTransform: 'uppercase', margin: '0' }}>
                 Items
@@ -129,24 +168,12 @@ export default function TrackOrder() {
                   </div>
                 </div>
               ))}
-              <div style={{ borderTop: '1px solid var(--ink)', paddingTop: '14px', display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '16px', fontSize: '13px', lineHeight: '1.5' }}>
-                <div>
-                  <div style={{ fontWeight: '600' }}>Ships to</div>
-                  <div style={{ color: 'var(--muted)' }}>
-                    {order.shipTo?.name}
-                    <br />
-                    {[order.shipTo?.city, order.shipTo?.state, order.shipTo?.country].filter(Boolean).join(', ')}
-                  </div>
-                </div>
-                <div>
+              {!shipped && !cancelled ? (
+                <div style={{ borderTop: '1px solid var(--ink)', paddingTop: '14px', fontSize: '13px', lineHeight: '1.5' }}>
                   <div style={{ fontWeight: '600' }}>Carrier</div>
-                  <div style={{ color: 'var(--muted)' }}>
-                    {order.courier || 'Tracked courier'}
-                    <br />
-                    {order.trackingNumber || 'Tracking number when shipped'}
-                  </div>
+                  <div style={{ color: 'var(--muted)' }}>Tracked courier. The tracking number shows here once your order ships.</div>
                 </div>
-              </div>
+              ) : null}
             </div>
             <div style={{ background: 'var(--ink)', color: 'var(--cream)', borderRadius: '4px', padding: '24px', display: 'grid', gap: '12px' }}>
               <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)' }}>

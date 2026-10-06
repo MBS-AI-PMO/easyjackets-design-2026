@@ -233,7 +233,7 @@ export default function Dashboard() {
                   <div>
                     <h2 style={{ ...h2, fontSize: 'clamp(44px,5.5vw,72px)' }}>Order #{order.orderId}</h2>
                     <div style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '8px' }}>
-                      Placed {order.dateLabel} · {order.isCod ? 'Cash on delivery' : order.cardLast4 ? `Card ending ${order.cardLast4}` : 'Paid by card'}{order.trackingNumber ? ` · Tracking ${order.trackingNumber}` : ''}
+                      Placed {order.dateLabel} · {order.isCod ? 'Cash on delivery' : order.cardLast4 ? `Card ending ${order.cardLast4}` : 'Paid by card'}{order.trackingNumber ? ` · Tracking ${order.trackingNumber}${order.courier ? ` (${order.courier})` : ''}` : order.courier ? ` · Ships with ${order.courier}` : ''}
                     </div>
                   </div>
                   <span className="ez-pill" style={{ background: pillFor(order)[0], color: pillFor(order)[1], fontSize: '14px', padding: '8px 16px' }}><i />{order.statusLabel}</span>
@@ -263,6 +263,8 @@ export default function Dashboard() {
                   </div>
                 )}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
+                  {/* the courier's own tracking page (lib/orders.js builds it from a fixed list) */}
+                  {order.trackingUrl ? <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="ez-btn ez-btn-ink" style={{ minHeight: '44px', fontSize: '17px' }}>Track with {order.courier} ↗</a> : null}
                   <A href="/contact-us" className="ez-btn" style={{ minHeight: '44px', fontSize: '17px' }}>Ask about this order</A>
                   <button type="button" className="ez-chip" onClick={() => removeOrder(order)}>Remove from my list</button>
                 </div>

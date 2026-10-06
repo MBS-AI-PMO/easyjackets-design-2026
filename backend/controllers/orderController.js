@@ -1,5 +1,10 @@
 import orderModel from "../models/orderModel.js";
+import userModel from "../models/userModel.js";
 import axios from "axios";
+import { sendEmailInBackground } from "../helpers/email.js";
+import { getAdminEmail } from "../helpers/emailSettings.js";
+import { isOneEmail } from "../helpers/emailAddress.js";
+import { STATUSES, normalizeCarrier, normalizeStatus, publicTracking, trackingUrlFor } from "../helpers/orderShipping.js";
 
 // The admin's order PDF loads design images through here (a plain <img>, so no login can be sent). It only
 // ever fetches an image from an exact list of image hosts: https, no redirects, image types only, at most
@@ -64,6 +69,7 @@ export const proxyImage = async (req, res) => {
 export const getOrder = async (req, res) => {
   try {
     const getOrders = await orderModel.findOne({ _id: req.params.id })
+      .select('+statusHistory') // the admin's Status & Shipping panel lists it (models/orderModel.js)
       .populate({
         path: 'cartData.id',
         model: 'Products'
@@ -237,22 +243,131 @@ export const getDeletedOrderlist = async (req, res) => {
   }
 };
 
+// Text an admin typed, as stored: control characters (line breaks too, unless keepLines) removed, trimmed, capped.
+const cleanText = (value, max, keepLines = false) => String(value ?? '')
+  .replace(keepLines ? /[\u0000-\u0009\u000b-\u001f\u007f]/g : /[\u0000-\u001f\u007f]+/g, keepLines ? '' : ' ')
+  .trim()
+  .slice(0, max);
+
+/**
+ * Admin: status and shipping for one order. Body: { status, carrier, carrierName, trackingNumber, note,
+ * notifyCustomer }. Every change is added to the order's statusHistory; the customer gets an email for the
+ * change (unless notifyCustomer is false) and the owner always does. The tracking link is always built from
+ * the courier's own tracking page (helpers/orderShipping.js), never taken from the request.
+ */
 export const updateOrder = async (req, res) => {
   try {
-    const { status } = req.body
+    const id = String(req.params.id || '');
+    if (!/^[0-9a-f]{24}$/i.test(id)) return res.status(404).json({ success: false, message: 'Order not found' });
+    const order = await orderModel.findById(id).select('+statusHistory').lean();
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
-    await orderModel.findOneAndUpdate({ _id: req.params.id }, { status })
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const status = body.status !== undefined ? normalizeStatus(body.status) : normalizeStatus(order.status) || 'pending';
+    if (body.status !== undefined && !status) {
+      return res.status(400).json({ success: false, message: 'Unknown order status' });
+    }
+
+    const before = { ...(order.shipping || {}) };
+    const shipping = { ...before };
+    if (body.carrier !== undefined) shipping.carrier = normalizeCarrier(body.carrier);
+    if (body.carrierName !== undefined) shipping.carrierName = cleanText(body.carrierName, 60);
+    if (body.trackingNumber !== undefined) shipping.trackingNumber = cleanText(body.trackingNumber, 80);
+    if (body.note !== undefined) shipping.note = cleanText(body.note, 300, true);
+    shipping.trackingUrl = trackingUrlFor(shipping.carrier, shipping.trackingNumber); // '' for an Other courier
+    const now = new Date();
+    if (status === 'Shipped' && !shipping.shippedAt) shipping.shippedAt = now;
+    if (status === 'delivered' && !shipping.deliveredAt) shipping.deliveredAt = now;
+
+    const previousStatus = normalizeStatus(order.status) || 'pending';
+    const statusChanged = status !== previousStatus;
+    const shippingChanged = ['carrier', 'carrierName', 'trackingNumber', 'note']
+      .some((k) => String(shipping[k] || '') !== String(before[k] || ''));
+    if (!statusChanged && !shippingChanged) {
+      return res.status(200).json({ success: true, message: 'Nothing changed', order });
+    }
+
+    const notifyCustomer = body.notifyCustomer !== false && body.notifyCustomer !== 'false';
+    const customerEmail = [order.billing_Details?.[0]?.email, order.shipping_details?.[0]?.email]
+      .map((e) => String(e || '').trim())
+      .find((e) => isOneEmail(e)) || '';
+    const canEmailCustomer = notifyCustomer && Boolean(customerEmail);
+    const admin = await userModel.findById(req.user?._id).select('name email').lean();
+    const by = cleanText(admin?.name || admin?.email || 'admin', 80);
+
+    // Only these paths are written, not the whole order: an older order that no longer passes every rule of
+    // today's schema can still be updated (a full save() validates every field).
+    const updated = await orderModel.findByIdAndUpdate(
+      order._id,
+      {
+        $set: { status, shipping },
+        $push: {
+          statusHistory: {
+            status,
+            note: shipping.note || '',
+            carrier: shipping.carrier === 'Other' ? shipping.carrierName : shipping.carrier,
+            trackingNumber: shipping.trackingNumber || '',
+            at: now,
+            by,
+            customerNotified: canEmailCustomer,
+          },
+        },
+      },
+      { new: true, runValidators: true },
+    ).select('+statusHistory');
+    if (!updated) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    // Emails go out in the background: a failure is logged by sendEmail and never fails the update. The
+    // template (views/orderStatus.ejs) tells the two copies apart by teamCopy: sendEmail resets forAdmin
+    // from the subject for every email with a cart (helpers/orderEmailData.js).
+    const plain = updated.toObject();
+    const payload = {
+      orderId: plain.orderId,
+      createdAt: plain.createdAt,
+      cartData: plain.cartData, // pictures inlined, builder designs summarised (helpers/email.js)
+      shipping_details: plain.shipping_details,
+      billing_Details: plain.billing_Details,
+      tracking: publicTracking(plain),
+      customerEmail,
+    };
+    const subjectStatus = STATUSES[status].subject;
+    if (canEmailCustomer) {
+      sendEmailInBackground(`Your order #${plain.orderId} ${subjectStatus}`, customerEmail, { ...payload, teamCopy: false }, '/views/orderStatus.ejs');
+    }
+    const teamCopy = {
+      ...payload,
+      teamCopy: true,
+      changedBy: by,
+      statusChanged,
+      previousStatusLabel: STATUSES[previousStatus].label,
+      customerNotified: canEmailCustomer,
+      // the full history, with who made each change: the team's copy only
+      teamHistory: (plain.statusHistory || []).map((h) => ({
+        at: h.at,
+        statusLabel: STATUSES[normalizeStatus(h.status) || 'pending'].label,
+        carrier: h.carrier || '',
+        trackingNumber: h.trackingNumber || '',
+        note: h.note || '',
+        by: h.by || '',
+        customerNotified: Boolean(h.customerNotified),
+      })),
+    };
+    getAdminEmail()
+      .then((adminEmail) => adminEmail && sendEmailInBackground(`Order #${plain.orderId} ${subjectStatus} (updated by ${by})`, adminEmail, teamCopy, '/views/orderStatus.ejs'))
+      .catch(() => {});
 
     res.status(200).json({
       success: true,
-      message: 'update order details'
-    })
-
+      message: statusChanged ? `Status changed to ${STATUSES[status].label}` : 'Shipping details saved',
+      order: updated,
+      customerNotified: canEmailCustomer,
+    });
   } catch (error) {
+    console.error('updateOrder failed:', error);
     res.status(500).send({
       success: false,
       message: "failed to update order detail by id",
-      error,
+      error: error?.message,
     });
   }
 }

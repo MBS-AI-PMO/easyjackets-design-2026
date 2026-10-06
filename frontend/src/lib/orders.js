@@ -129,6 +129,22 @@ export const ORDER_STAGES = [
 ];
 
 const dateLabel = (d) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '');
+const timeLabel = (d) => (d ? new Date(d).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '');
+
+// The couriers' own tracking pages, as the backend builds them (backend/helpers/orderShipping.js). A
+// tracking link is only ever made from this list, never read from the order, so it can only open the
+// courier's site. Other couriers show their name and number without a link.
+const COURIER_TRACKING = {
+  UPS: (n) => `https://www.ups.com/track?loc=en_US&tracknum=${encodeURIComponent(n)}`,
+  DHL: (n) => `https://www.dhl.com/global-en/home/tracking.html?tracking-id=${encodeURIComponent(n)}`,
+  FedEx: (n) => `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(n)}`,
+};
+// the tracking lookup sends `courier` (a name); the buyer's own orders carry the admin's `shipping`
+const courierOf = (o) => {
+  if (o.courier) return String(o.courier);
+  const s = o.shipping || {};
+  return s.carrier === 'Other' ? String(s.carrierName || 'Courier') : String(s.carrier || '');
+};
 
 /** One order, in the shape the pages render (works for the buyer's list, the confirmation and tracking). */
 export function normalizeOrder(o) {
@@ -136,7 +152,8 @@ export function normalizeOrder(o) {
   const ship = Array.isArray(o.shipping_details) ? o.shipping_details[0] : o.shipTo || null;
   const items = (o.cartData || o.items || []).map((i, n) => ({
     key: `${i.id || i.designId || i.name}-${n}`,
-    custom: !i.id && Boolean(i.designId), // designed in the builder (its render carries a white ground)
+    // designed in the builder (its render carries a white ground); the tracking lookup says so itself
+    custom: typeof i.custom === 'boolean' ? i.custom : !i.id && Boolean(i.designId),
     name: i.name,
     quantity: i.quantity || 1,
     price: Number(i.price) || 0,
@@ -147,6 +164,10 @@ export function normalizeOrder(o) {
     spec: [i.color, i.size ? `Size ${i.size}` : ''].filter(Boolean).join(' · '),
   }));
   const status = orderStatus(o.status);
+  const courier = courierOf(o);
+  const trackingNumber = String(o.trackingNumber || o.shipping?.trackingNumber || '').trim();
+  const shippedAt = o.shippedAt || o.shipping?.shippedAt || null;
+  const deliveredAt = o.deliveredAt || o.shipping?.deliveredAt || null;
   return {
     id: o._id,
     orderId: o.orderId,
@@ -173,8 +194,22 @@ export function normalizeOrder(o) {
       zip: ship.address?.postal_code || '',
       country: ship.address?.country || ship.country || '',
     } : null,
-    trackingNumber: o.trackingNumber || null,
-    courier: o.courier || null,
+    // shipping, as the admin entered it (Orders → Status & Shipping)
+    trackingNumber: trackingNumber || null,
+    courier: courier || null,
+    trackingUrl: COURIER_TRACKING[courier] && trackingNumber ? COURIER_TRACKING[courier](trackingNumber) : '',
+    shippingNote: String(o.note || o.shipping?.note || ''),
+    shippedLabel: dateLabel(shippedAt),
+    deliveredLabel: dateLabel(deliveredAt),
+    // status updates, newest first (the tracking lookup only)
+    history: (Array.isArray(o.history) ? o.history : []).map((h, n) => ({
+      key: `${h.at || ''}-${n}`,
+      label: h.statusLabel || orderStatus(h.status).label,
+      when: timeLabel(h.at),
+      courier: h.carrier || '',
+      trackingNumber: h.trackingNumber || '',
+      note: h.note || '',
+    })).reverse(),
   };
 }
 

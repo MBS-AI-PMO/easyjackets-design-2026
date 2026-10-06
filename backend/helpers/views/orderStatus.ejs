@@ -1,0 +1,202 @@
+<%
+  // Order status / shipping update (controllers/orderController.js updateOrder). Sent to the customer and,
+  // as a record, to the team (data.teamCopy) every time the admin saves a status or tracking change. Same
+  // design as the order confirmation (orderInvoice.ejs): table layout + inline styles so it holds together
+  // in Gmail, Outlook and phone mail apps; the storefront's ink, cream and gold. Everything that comes from
+  // the order or the admin is written with the escaping output tag (never the raw one), and the tracking
+  // link only ever comes from the fixed courier list (helpers/orderShipping.js).
+  var team = data.teamCopy === true;
+  var t = data.tracking || {};
+  var status = t.status || 'pending';
+  var isCancelled = status === 'cancel';
+  var items = Array.isArray(data.cartData) ? data.cartData : [];
+  var customer = (data.billing_Details && data.billing_Details[0]) || {};
+  var ship = (data.shipping_details && data.shipping_details[0]) || {};
+  var first = String(customer.name || ship.name || '').trim().split(/\s+/)[0] || 'there';
+  var fmt = function (d) { return d ? new Date(d).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : ''; };
+  var fmtDay = function (d) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; };
+  var headline = {
+    pending: 'Your order is confirmed.',
+    Processing: 'Your jacket is in production.',
+    Shipped: 'Your order has shipped.',
+    delivered: 'Your order has been delivered.',
+    cancel: 'Your order has been cancelled.'
+  }[status] || 'Your order was updated.';
+  var lead = {
+    pending: 'We have your order and it is with our team. A free digital proof follows before anything is cut.',
+    Processing: 'Cutting, stitching and finishing are under way in our workshop. We will email you again the moment it ships.',
+    Shipped: 'Your jacket is on its way' + (t.courier ? ' with ' + t.courier : '') + '. Use the tracking details below to follow it to your door.',
+    delivered: 'The courier has marked your parcel as delivered. We hope you love it. If anything is not right, reply to this email and we will sort it out.',
+    cancel: 'This order will not be produced or shipped. If you did not expect this, reply to this email and we will help.'
+  }[status] || '';
+  var steps = [
+    ['01', 'Order placed', 0, fmtDay(t.createdAt || data.createdAt)],
+    ['02', 'In production', 1, ''],
+    ['03', 'Shipped', 2, fmtDay(t.shippedAt)],
+    ['04', 'Delivered', 3, fmtDay(t.deliveredAt)]
+  ];
+  var step = typeof t.step === 'number' ? t.step : 0;
+  var known = function (v) { return v && v !== 'N/A'; };
+  var addr = ship.address;
+  var addressLines = typeof addr === 'object' && addr
+    ? [addr.line1, addr.line2, [addr.city, addr.state].filter(Boolean).join(', '), [addr.country, addr.postal_code].filter(Boolean).join(' ')].filter(Boolean)
+    : [addr].filter(known);
+  var site = String(data.siteUrl || '').replace(/\/+$/, '');
+  var customerEmail = String(data.customerEmail || '');
+  // the customer's copy opens the tracking page with the order already looked up
+  var trackPage = site ? site + '/track-order?order=' + encodeURIComponent(data.orderId || '') + (!team && customerEmail ? '&email=' + encodeURIComponent(customerEmail) : '') : '';
+  var trackingUrl = /^https:\/\//.test(String(t.trackingUrl || '')) ? String(t.trackingUrl) : '';
+  var history = team && Array.isArray(data.teamHistory) ? data.teamHistory.slice().reverse() : [];
+  var sectionTitle = 'font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#a8861c;text-transform:uppercase;padding-bottom:10px;border-bottom:2px solid #14110f;';
+  var keyCell = 'padding:11px 12px 11px 0;border-bottom:1px solid #e9e1d2;font-size:13px;color:#6b635a;vertical-align:top;';
+  var valueCell = 'padding:11px 0;border-bottom:1px solid #e9e1d2;font-size:14px;font-weight:700;color:#14110f;vertical-align:top;word-break:break-word;';
+  var button = 'display:inline-block;padding:14px 22px;font-family:Arial,Helvetica,sans-serif;background:#14110f;color:#f4efe6;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;';
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <title><%= team ? 'Order #' + data.orderId + ' - ' + (t.statusLabel || status) : headline %></title>
+  <style>
+    body { margin: 0; padding: 0; background: #f4efe6; -webkit-text-size-adjust: 100%; }
+    table { border-collapse: collapse; }
+    a { color: #a8861c; }
+    @media only screen and (max-width: 560px) {
+      .px { padding-left: 22px !important; padding-right: 22px !important; }
+      .h1 { font-size: 34px !important; }
+      .row td { display: block !important; width: auto !important; padding: 2px 0 !important; }
+      .row td.k { padding-top: 12px !important; }
+      .step td.n { width: 44px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background:#f4efe6;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;"><%= team ? 'Order #' + data.orderId + ' marked ' + (t.statusLabel || status) + ' by ' + (data.changedBy || 'admin') : 'Order #' + data.orderId + ': ' + (t.statusLabel || status) + (t.trackingNumber ? ' · tracking ' + t.trackingNumber : '') %></div>
+  <table role="presentation" width="100%" style="background:#f4efe6;">
+    <tr><td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="100%" style="max-width:640px;background:#fbf8f2;border:1px solid #e9e1d2;border-radius:6px;overflow:hidden;">
+        <!-- gold stripe, like the site's section rule -->
+        <tr><td style="height:6px;background:#c9a227;line-height:6px;font-size:0;">&nbsp;</td></tr>
+        <!-- header -->
+        <tr><td class="px" style="background:#14110f;padding:30px 36px 34px;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:900;letter-spacing:.22em;color:#f4efe6;">EASY JACKETS</div>
+          <div style="height:26px;line-height:26px;font-size:0;">&nbsp;</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;color:#c9a227;text-transform:uppercase;"><%= team ? 'Order update' : 'Order ' + (t.statusLabel || status) %> · #<%= data.orderId %></div>
+          <div class="h1" style="margin-top:10px;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-size:42px;line-height:.98;font-weight:800;letter-spacing:-.01em;color:#f4efe6;text-transform:uppercase;"><%= team ? 'Marked ' + (t.statusLabel || status) + '.' : headline %></div>
+        </td></tr>
+        <!-- intro -->
+        <tr><td class="px" style="padding:30px 36px 6px;font-family:Arial,Helvetica,sans-serif;">
+          <% if (team) { %>
+            <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#2a2521;">Updated by <strong><%= data.changedBy || 'admin' %></strong> on <%= fmt(new Date()) %><%= data.statusChanged ? ' (was ' + (data.previousStatusLabel || 'Order placed') + ')' : ' (shipping details changed, status unchanged)' %>. The customer <%= data.customerNotified ? 'was emailed at ' + customerEmail : 'was NOT emailed' %>.</p>
+          <% } else { %>
+            <p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#14110f;">Hi <%= first %>,</p>
+            <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#2a2521;"><%= lead %></p>
+          <% } %>
+        </td></tr>
+        <% if (isCancelled) { %>
+        <!-- cancelled -->
+        <tr><td class="px" style="padding:14px 36px 0;">
+          <table role="presentation" width="100%" style="background:#f4efe6;border-left:4px solid #b3261e;">
+            <tr><td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#2a2521;">
+              <strong style="color:#14110f;">Cancelled on <%= fmtDay(new Date()) %>.</strong><% if (t.note) { %> <%= t.note %><% } %>
+            </td></tr>
+          </table>
+        </td></tr>
+        <% } else { %>
+        <!-- progress -->
+        <tr><td class="px" style="padding:14px 36px 0;">
+          <div style="<%= sectionTitle %>padding-bottom:6px;border-bottom:0;">Order progress</div>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            <% steps.forEach(function (s) { var done = step >= s[2]; var now = step === s[2]; %>
+            <tr class="step">
+              <td class="n" width="54" style="padding:12px 0;border-top:1px solid #e9e1d2;vertical-align:top;font-family:'Arial Narrow',Arial,sans-serif;font-size:26px;line-height:1;font-weight:800;color:<%= done ? '#c9a227' : '#d8cdb9' %>;"><%= s[0] %></td>
+              <td style="padding:12px 0;border-top:1px solid #e9e1d2;vertical-align:top;">
+                <div style="font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:<%= done ? '#14110f' : '#9a8f82' %>;"><%= s[1] %><% if (done && !now) { %> <span style="color:#a8861c;">✓</span><% } %><% if (now) { %> <span style="color:#a8861c;">· now</span><% } %></div>
+                <% if (done && s[3]) { %><div style="margin-top:3px;font-size:13px;line-height:1.55;color:#6b635a;"><%= s[3] %></div><% } %>
+              </td>
+            </tr>
+            <% }); %>
+          </table>
+        </td></tr>
+        <% } %>
+        <% if (t.courier || t.trackingNumber || (t.note && !isCancelled)) { %>
+        <!-- shipping -->
+        <tr><td class="px" style="padding:28px 36px 0;">
+          <div style="<%= sectionTitle %>">Shipping</div>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            <% if (t.courier) { %><tr class="row"><td class="k" width="42%" style="<%= keyCell %>">Courier</td><td style="<%= valueCell %>"><%= t.courier %></td></tr><% } %>
+            <% if (t.trackingNumber) { %><tr class="row"><td class="k" width="42%" style="<%= keyCell %>">Tracking number</td><td style="<%= valueCell %>font-family:'Courier New',monospace;font-size:16px;letter-spacing:.04em;"><%= t.trackingNumber %></td></tr><% } %>
+            <% if (t.shippedAt) { %><tr class="row"><td class="k" width="42%" style="<%= keyCell %>">Shipped on</td><td style="<%= valueCell %>"><%= fmtDay(t.shippedAt) %></td></tr><% } %>
+            <% if (t.deliveredAt) { %><tr class="row"><td class="k" width="42%" style="<%= keyCell %>">Delivered on</td><td style="<%= valueCell %>"><%= fmtDay(t.deliveredAt) %></td></tr><% } %>
+            <% if (t.note && !isCancelled) { %><tr class="row"><td class="k" width="42%" style="<%= keyCell %>">Note</td><td style="<%= valueCell %>font-weight:400;"><%= t.note %></td></tr><% } %>
+          </table>
+          <% if (trackingUrl) { %><div style="margin-top:18px;"><a href="<%= trackingUrl %>" style="<%= button %>background:#c9a227;color:#14110f;">Track with <%= t.courier || 'the courier' %></a></div><% } %>
+        </td></tr>
+        <% } %>
+        <!-- items -->
+        <tr><td class="px" style="padding:28px 36px 0;">
+          <div style="<%= sectionTitle %>"><%= (team ? '' : 'Your ') + (items.length === 1 ? 'jacket' : 'jackets') %></div>
+          <% items.forEach(function (p) { var spec = [p.color, p.size ? 'Size ' + p.size : ''].filter(Boolean).join(' · '); %>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;border-bottom:1px solid #e9e1d2;">
+            <tr>
+              <td width="72" style="width:72px;padding:14px 14px 14px 0;vertical-align:top;">
+                <% if (/^(cid:|https?:\/\/)/i.test(String(p.frontImage || ''))) { %><img src="<%= p.frontImage %>" alt="<%= p.name %>" width="72" style="display:block;width:72px;height:auto;border:1px solid #e9e1d2;border-radius:4px;background:#ffffff;"><% } %>
+              </td>
+              <td style="padding:14px 0;vertical-align:top;">
+                <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-size:18px;line-height:1.05;font-weight:800;text-transform:uppercase;color:#14110f;"><%= p.name %></div>
+                <div style="margin-top:6px;font-size:13px;color:#6b635a;"><%= [p.custom ? 'Designed in the design lab' : '', spec].filter(Boolean).join(' · ') || 'Standard build' %> · Qty <%= p.quantity %></div>
+              </td>
+            </tr>
+          </table>
+          <% }); %>
+        </td></tr>
+        <% if (addressLines.length) { %>
+        <!-- delivery -->
+        <tr><td class="px" style="padding:28px 36px 0;">
+          <div style="<%= sectionTitle %>">Delivering to</div>
+          <div style="padding-top:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65;color:#2a2521;">
+            <strong style="color:#14110f;"><%= ship.name || customer.name || first %></strong><br>
+            <% addressLines.forEach(function (l) { %><%= l %><br><% }); %>
+            <% if (known(ship.phone)) { %><%= ship.phone %><% } %>
+          </div>
+        </td></tr>
+        <% } %>
+        <% if (history.length) { %>
+        <!-- status history (team copy) -->
+        <tr><td class="px" style="padding:28px 36px 0;">
+          <div style="<%= sectionTitle %>">Status history</div>
+          <table role="presentation" width="100%" style="font-family:Arial,Helvetica,sans-serif;">
+            <% history.forEach(function (h) { %>
+            <tr class="row">
+              <td class="k" width="38%" style="<%= keyCell %>"><%= fmt(h.at) %></td>
+              <td style="<%= valueCell %>"><%= h.statusLabel %><%= h.carrier ? ' · ' + h.carrier : '' %><%= h.trackingNumber ? ' · ' + h.trackingNumber : '' %>
+                <div style="font-weight:400;font-size:12px;color:#6b635a;"><%= h.by ? 'by ' + h.by : '' %><%= h.customerNotified ? '' : (h.by ? ' · ' : '') + 'customer not emailed' %></div>
+                <% if (h.note) { %><div style="font-weight:400;font-size:13px;color:#2a2521;"><%= h.note %></div><% } %>
+              </td>
+            </tr>
+            <% }); %>
+          </table>
+        </td></tr>
+        <% } %>
+        <!-- actions -->
+        <tr><td class="px" style="padding:26px 36px 32px;font-family:Arial,Helvetica,sans-serif;">
+          <% if (team) { %>
+            <% if (customerEmail) { %><a href="mailto:<%= customerEmail %>?subject=<%= encodeURIComponent('Your Easy Jackets order #' + data.orderId) %>" style="<%= button %>">Email the customer</a><% } %>
+          <% } else { %>
+            <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#2a2521;">Questions about your order? <strong>Reply to this email</strong>; it goes straight to our team.</p>
+            <% if (trackPage) { %><a href="<%= trackPage %>" style="<%= button %>">Track your order</a><% } %>
+          <% } %>
+        </td></tr>
+        <!-- footer -->
+        <tr><td class="px" style="background:#14110f;padding:22px 36px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:rgba(244,239,230,.6);">
+          <strong style="color:#f4efe6;letter-spacing:.14em;">EASY JACKETS</strong><br>
+          Custom varsity and letterman jackets for schools, teams, businesses and clubs.<br>
+          <% if (site) { %><a href="<%= site %>" style="color:#c9a227;text-decoration:none;"><%= site.replace(/^https?:\/\//, '') %></a><% } %>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

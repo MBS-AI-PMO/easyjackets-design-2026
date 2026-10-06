@@ -57,6 +57,33 @@ const orderSchema = new mongoose.Schema(
     }],
     shipping_details: { type: Array },
     billing_Details: { type: Array },
+    // The courier and tracking number the admin enters when the order ships (Orders → order →
+    // Status & Shipping). The tracking link is built from the courier's own tracking page
+    // (helpers/orderShipping.js), never from typed text.
+    shipping: {
+      carrier: { type: String, default: '' }, // UPS | DHL | FedEx | Other
+      carrierName: { type: String, default: '' }, // shown when carrier is Other
+      trackingNumber: { type: String, default: '' },
+      trackingUrl: { type: String, default: '' },
+      note: { type: String, default: '' }, // a line for the customer, e.g. "expected in 4–5 days"
+      shippedAt: { type: Date },
+      deliveredAt: { type: Date },
+    },
+    // Every status change, oldest first: what the tracking page and the emails show. Left out of every
+    // query unless asked for (select: false): it names the admin who made each change, and the buyer's
+    // own order list (/auth/orders) returns whole orders.
+    statusHistory: {
+      type: [{
+        status: { type: String },
+        note: { type: String, default: '' },
+        carrier: { type: String, default: '' },
+        trackingNumber: { type: String, default: '' },
+        at: { type: Date, default: Date.now },
+        by: { type: String, default: '' }, // the admin's name or email
+        customerNotified: { type: Boolean, default: false },
+      }],
+      select: false,
+    },
     isDeleted: { type: Boolean, default: false },
     hiddenByUser: { type: Boolean, default: false }
   },

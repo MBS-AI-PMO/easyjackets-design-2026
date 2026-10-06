@@ -18,7 +18,12 @@ import {
   DialogActions,
   FormControl,
   Select,
-  MenuItem
+  MenuItem,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  InputLabel,
+  Stack
 } from '@mui/material';
 import {
   ArrowBack,
@@ -66,6 +71,25 @@ const usableProductImage = (item, productImage) => {
   return designSnapshot(item) || productImage;
 };
 
+// Couriers the shop ships with (Orders → Status & Shipping) and their tracking pages; the backend
+// builds the same links (backend/helpers/orderShipping.js). An "Other" courier has no link: links are
+// only ever built from this list, never typed in.
+const CARRIER_TRACKING = {
+  UPS: (n) => `https://www.ups.com/track?loc=en_US&tracknum=${encodeURIComponent(n)}`,
+  DHL: (n) => `https://www.dhl.com/global-en/home/tracking.html?tracking-id=${encodeURIComponent(n)}`,
+  FedEx: (n) => `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(n)}`,
+};
+const STATUS_LABELS = { pending: 'Pending', processing: 'Processing', shipped: 'Shipped', delivered: 'Delivered', cancel: 'Cancelled', cancelled: 'Cancelled' };
+const statusLabel = (s) => STATUS_LABELS[String(s || '').toLowerCase()] || s || '';
+const shippingFormFor = (order) => ({
+  status: order?.status || 'pending',
+  carrier: order?.shipping?.carrier || '',
+  carrierName: order?.shipping?.carrierName || '',
+  trackingNumber: order?.shipping?.trackingNumber || '',
+  note: order?.shipping?.note || '',
+  notifyCustomer: true,
+});
+
 const OrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -104,16 +128,33 @@ const OrderDetails = () => {
     getProperties();
   }, [getOrderDetails, getProperties]);
 
-  const handleStatusUpdate = async (newStatus) => {
+  // Status & Shipping panel: courier, tracking number and note are saved with the status; the
+  // backend adds the change to the order's history and emails the customer and the owner.
+  const [shipForm, setShipForm] = useState(null);
+  const [savingShip, setSavingShip] = useState(false);
+  useEffect(() => { setShipForm(orderData ? shippingFormFor(orderData) : null); }, [orderData]);
+  const trackingPreview = shipForm && CARRIER_TRACKING[shipForm.carrier] && shipForm.trackingNumber.trim()
+    ? CARRIER_TRACKING[shipForm.carrier](shipForm.trackingNumber.trim())
+    : '';
+
+  const handleShippingSave = async () => {
+    if (!shipForm) return;
+    if (shipForm.status === 'Shipped' && !shipForm.trackingNumber.trim()
+      && !window.confirm('No tracking number entered. Mark the order as shipped anyway?')) return;
+    setSavingShip(true);
     try {
-      const { data } = await instance.put(`/order/${id}`, { status: newStatus });
+      const { data } = await instance.put(`/order/${id}`, shipForm);
       if (data.success) {
-        setOrderData((prev) => ({ ...prev, status: newStatus }));
-        toast.success("Order status updated successfully");
+        if (data.order) setOrderData((prev) => ({ ...prev, status: data.order.status, shipping: data.order.shipping, statusHistory: data.order.statusHistory }));
+        toast.success(data.customerNotified ? `${data.message}. The customer has been emailed.` : data.message);
+      } else {
+        toast.error(data.message || 'Failed to update the order');
       }
     } catch (err) {
-      console.error("Error updating status:", err);
-      toast.error("Failed to update order status");
+      console.error('Error updating order:', err);
+      toast.error(err.response?.data?.message || 'Failed to update the order');
+    } finally {
+      setSavingShip(false);
     }
   };
 
@@ -1357,6 +1398,7 @@ const OrderDetails = () => {
     switch (status?.toLowerCase()) {
       case 'shipped': return '#2196f3';
       case 'delivered': return '#4caf50';
+      case 'cancel':
       case 'cancelled': return '#f44336';
       case 'processing': return '#ff9800';
       default: return '#37a6ff';
@@ -1528,35 +1570,112 @@ const OrderDetails = () => {
                           </Typography>
                         </Box>
                         <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #f0f0f0' }}>
-                          <Typography variant="caption" sx={{ color: '#888', mb: 1, display: 'block' }}>
-                            Update Order Status
+                          <Typography variant="caption" sx={{ color: '#888', mb: 1.5, display: 'block' }}>
+                            Status & Shipping
                           </Typography>
-                          <FormControl fullWidth size="small">
-                            <Select
-                              value={orderData.status || 'pending'}
-                              onChange={(e) => handleStatusUpdate(e.target.value)}
-                              sx={{
-                                borderRadius: 2,
-                                '& .MuiSelect-select': {
-                                  py: 1,
-                                  fontWeight: 'bold',
-                                  color: getStatusColor(orderData.status)
-                                },
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: `${getStatusColor(orderData.status)}40`
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: getStatusColor(orderData.status)
-                                }
-                              }}
-                            >
-                              <MenuItem value="pending" sx={{ fontWeight: 'bold', color: getStatusColor('pending') }}>Pending</MenuItem>
-                              <MenuItem value="Processing" sx={{ fontWeight: 'bold', color: getStatusColor('processing') }}>Processing</MenuItem>
-                              <MenuItem value="Shipped" sx={{ fontWeight: 'bold', color: getStatusColor('shipped') }}>Shipped</MenuItem>
-                              <MenuItem value="delivered" sx={{ fontWeight: 'bold', color: getStatusColor('delivered') }}>Delivered</MenuItem>
-                              <MenuItem value="cancel" sx={{ fontWeight: 'bold', color: getStatusColor('cancel') }}>Cancelled</MenuItem>
-                            </Select>
-                          </FormControl>
+                          {shipForm && (
+                            <Stack spacing={1.5}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel id="ship-status-label">Order status</InputLabel>
+                                <Select
+                                  labelId="ship-status-label"
+                                  label="Order status"
+                                  value={shipForm.status}
+                                  onChange={(e) => setShipForm({ ...shipForm, status: e.target.value })}
+                                  sx={{ borderRadius: 2, '& .MuiSelect-select': { fontWeight: 'bold', color: getStatusColor(shipForm.status) } }}
+                                >
+                                  <MenuItem value="pending" sx={{ fontWeight: 'bold', color: getStatusColor('pending') }}>Pending</MenuItem>
+                                  <MenuItem value="Processing" sx={{ fontWeight: 'bold', color: getStatusColor('processing') }}>Processing</MenuItem>
+                                  <MenuItem value="Shipped" sx={{ fontWeight: 'bold', color: getStatusColor('shipped') }}>Shipped</MenuItem>
+                                  <MenuItem value="delivered" sx={{ fontWeight: 'bold', color: getStatusColor('delivered') }}>Delivered</MenuItem>
+                                  <MenuItem value="cancel" sx={{ fontWeight: 'bold', color: getStatusColor('cancel') }}>Cancelled</MenuItem>
+                                </Select>
+                              </FormControl>
+                              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
+                                <FormControl fullWidth size="small">
+                                  <InputLabel id="ship-carrier-label">Courier</InputLabel>
+                                  <Select
+                                    labelId="ship-carrier-label"
+                                    label="Courier"
+                                    value={shipForm.carrier}
+                                    onChange={(e) => setShipForm({ ...shipForm, carrier: e.target.value })}
+                                    sx={{ borderRadius: 2 }}
+                                  >
+                                    <MenuItem value=""><em>Not shipped yet</em></MenuItem>
+                                    <MenuItem value="UPS">UPS</MenuItem>
+                                    <MenuItem value="DHL">DHL</MenuItem>
+                                    <MenuItem value="FedEx">FedEx</MenuItem>
+                                    <MenuItem value="Other">Other courier</MenuItem>
+                                  </Select>
+                                </FormControl>
+                                <TextField
+                                  size="small"
+                                  label="Tracking number"
+                                  value={shipForm.trackingNumber}
+                                  onChange={(e) => setShipForm({ ...shipForm, trackingNumber: e.target.value })}
+                                  inputProps={{ maxLength: 80 }}
+                                />
+                              </Box>
+                              {shipForm.carrier === 'Other' && (
+                                <TextField
+                                  size="small"
+                                  label="Courier name"
+                                  value={shipForm.carrierName}
+                                  onChange={(e) => setShipForm({ ...shipForm, carrierName: e.target.value })}
+                                  inputProps={{ maxLength: 60 }}
+                                  helperText="The customer sees the courier's name and the tracking number (no tracking link for other couriers)."
+                                />
+                              )}
+                              <TextField
+                                size="small"
+                                label="Note to the customer (optional)"
+                                placeholder="e.g. Left with the courier today, expected in 4–5 business days"
+                                value={shipForm.note}
+                                onChange={(e) => setShipForm({ ...shipForm, note: e.target.value })}
+                                multiline
+                                minRows={2}
+                                inputProps={{ maxLength: 300 }}
+                              />
+                              {trackingPreview && (
+                                <Typography variant="caption">
+                                  Tracking link: <a href={trackingPreview} target="_blank" rel="noreferrer" style={{ color: '#37a6ff', wordBreak: 'break-all' }}>{trackingPreview}</a>
+                                </Typography>
+                              )}
+                              <FormControlLabel
+                                control={<Checkbox size="small" checked={shipForm.notifyCustomer} onChange={(e) => setShipForm({ ...shipForm, notifyCustomer: e.target.checked })} />}
+                                label={<Typography variant="body2">Email the customer about this update</Typography>}
+                              />
+                              <Typography variant="caption" sx={{ color: '#888', mt: -1 }}>
+                                The owner always receives a copy. Every save is recorded in the status history.
+                              </Typography>
+                              <Button
+                                variant="contained"
+                                disableElevation
+                                onClick={handleShippingSave}
+                                disabled={savingShip}
+                                sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, alignSelf: 'flex-start' }}
+                              >
+                                {savingShip ? 'Saving…' : shipForm.notifyCustomer ? 'Save & email customer' : 'Save'}
+                              </Button>
+                            </Stack>
+                          )}
+                          {Array.isArray(orderData.statusHistory) && orderData.statusHistory.length > 0 && (
+                            <Box sx={{ mt: 2.5 }}>
+                              <Typography variant="caption" sx={{ color: '#888', mb: 0.5, display: 'block' }}>Status history</Typography>
+                              {[...orderData.statusHistory].reverse().map((h, i) => (
+                                <Box key={i} sx={{ display: 'flex', gap: 1.5, py: 0.75, borderTop: '1px solid #f3f3f3', fontSize: 13 }}>
+                                  <Box sx={{ color: '#888', minWidth: 150, flex: 'none' }}>{h.at ? new Date(h.at).toLocaleString() : ''}</Box>
+                                  <Box>
+                                    <strong style={{ color: getStatusColor(h.status) }}>{statusLabel(h.status)}</strong>
+                                    {h.carrier ? ` · ${h.carrier}` : ''}{h.trackingNumber ? ` · ${h.trackingNumber}` : ''}
+                                    {h.by ? <span style={{ color: '#999' }}> · by {h.by}</span> : null}
+                                    {h.customerNotified === false ? <span style={{ color: '#999' }}> · customer not emailed</span> : null}
+                                    {h.note ? <div style={{ color: '#666' }}>{h.note}</div> : null}
+                                  </Box>
+                                </Box>
+                              ))}
+                            </Box>
+                          )}
                         </Box>
                       </Box>
                     ) : <Typography sx={{ color: '#999' }}>No shipping info</Typography>}
