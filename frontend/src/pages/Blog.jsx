@@ -90,6 +90,15 @@ export default function Blog() {
             </div>
           </A>
         </section>
+      ) : loading && cat === 'All' ? (
+        // While the posts load, the featured card's place is held by a skeleton of the same shape, so the
+        // card does not push the post list down when it arrives (a layout shift Lighthouse counts).
+        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '28px clamp(16px,4vw,48px) 0' }} aria-hidden="true">
+          <div className="ez-feat" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,7fr) minmax(0,5fr)', gap: '0', borderRadius: '4px', overflow: 'hidden' }}>
+            <div className="ez-skeleton" style={{ aspectRatio: '16/10' }} />
+            <div className="ez-skeleton" style={{ minHeight: '360px', opacity: 0.6 }} />
+          </div>
+        </section>
       ) : null}
       {/* Posts */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,48px) 0' }}>

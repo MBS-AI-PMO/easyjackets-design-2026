@@ -34,8 +34,10 @@ function NewsletterForm() {
   };
   return (
     <div>
-      <form onSubmit={submit} noValidate className="ez-footer-form">
-        <input type="email" placeholder="you@school.edu" aria-label="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={state.sending} aria-invalid={!state.ok && !!state.message} />
+      {/* offered to AI agents as a tool (WebMCP, lib/webmcp.js): an agent may fill it in, the visitor presses Join */}
+      <form onSubmit={submit} noValidate className="ez-footer-form"
+        toolname="subscribe_newsletter" tooldescription="Fills in the Easy Jackets newsletter sign-up (10% off the first jacket, sent by email). The visitor presses Join to subscribe.">
+        <input type="email" name="email" placeholder="you@school.edu" aria-label="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={state.sending} aria-invalid={!state.ok && !!state.message} toolparamdescription="The email address to subscribe." />
         <button type="submit" className="ez-btn ez-btn-gold" disabled={state.sending} style={{ borderRadius: '0 2px 2px 0', opacity: state.sending ? 0.7 : 1 }}>{state.sending ? 'Joining…' : 'Join'}</button>
       </form>
       {state.message ? (
@@ -89,7 +91,8 @@ export default function Footer({ faq }) {
           {site?.socials?.length ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px' }}>
               {site.socials.map((s) => (
-                <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`Easy Jackets on ${s.name}`} title={s.name} className="ez-footer-social">{s.abbr}</a>
+                // the name starts with the visible letters ("FB"), so a voice command naming them still finds the link
+                <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${s.abbr}: Easy Jackets on ${s.name}`} title={s.name} className="ez-footer-social">{s.abbr}</a>
               ))}
             </div>
           ) : null}

@@ -1,0 +1,60 @@
+# Easy Jackets
+
+> Easy Jackets makes custom varsity and letterman jackets to order in its own workshop in Sialkot, Pakistan, and ships them worldwide. Shoppers can buy a ready-made jacket from the catalogue or design their own in the online design studio: wool, leather, satin, fleece, twill, nylon and soft shell; varsity, cropped, bomber and coach jackets and hoodies; chenille and embroidered patches, names and numbers. One jacket or a hundred for a team; there is no minimum order.
+
+Every link below is relative to this site's address. Prices, sizes, colours and stock come from the live catalogue, so read them from the product pages (or the WebMCP tools listed at the end) rather than from this file.
+
+Key facts:
+
+- Every custom jacket is made to order after the customer approves a free digital proof; production starts on approval, not at checkout.
+- Production takes about 10-12 business days for blank jackets and 2-3 weeks with chenille or embroidery.
+- Orders ship from the workshop by DHL Express or FedEx, tracked and insured: about 4-5 business days to the United States and 5-8 elsewhere.
+- Each custom jacket includes one free size exchange (ask within 14 days of delivery). Custom jackets are not refundable, but a jacket that does not match the approved proof, or arrives damaged, is remade at Easy Jackets' cost.
+- Sizes run from XXS to 6XL; the size chart gives body and finished-jacket measurements in inches and centimetres.
+- Team and bulk pricing starts at ten jackets, with a free mockup.
+
+## Shop
+
+- [All jackets](/shop): the full catalogue, with filters for style, material, colour, size and price, and sorting by popularity, rating, price or newest.
+- [Varsity jackets](/shop/category/varsity-jackets): classic letterman jackets in wool, leather, satin and more.
+- [Cropped varsity jackets](/shop/category/cropped-varsity-jackets): shorter-cut varsity jackets.
+- [Bomber jackets](/shop/category/bomber-jackets): nylon, soft shell and twill bombers.
+- [Coach jackets](/shop/category/coach-jackets): lightweight snap-front coach jackets.
+- [Hoodies](/shop/category/hoodies): fleece hoodies.
+- [Customer reviews](/reviews): approved reviews and ratings from buyers.
+
+Shop addresses follow one pattern: `/shop/category/<slug>`, `/shop/material/<slug>` (for example `/shop/material/melton-wool`), `/shop/color/<slug>` and `/shop/size/<size>`; several filters combine as `/shop/filter/category/<slug>/material/<slug>`. Add `?q=<words>` to search, `?sort=price-asc` (or `price-desc`, `rating`, `new`) to sort and `?max=<dollars>` for a price cap. Each jacket has its own page at `/product/<slug>` with its price per size, colour, materials and photos.
+
+## Design your own jacket
+
+- [Design studio](/design-custom-jacket): choose a jacket style and open the online design lab to pick materials and colours for the body, sleeves and trim, add patches, letters, names and numbers, and see the price live.
+- [How to design a jacket](/how-to-design-jacket): a step-by-step guide to the design lab.
+- [Material colours](/material-colors): every colour the design lab offers, grouped by material.
+- [Fabrics & materials](/fabrics): melton wool, cowhide and sheep leather, satin, fleece, twill, nylon and soft shell, with weight and feel.
+- [Embroidery & patches](/embroidery-and-patches): chenille letters, embroidered patches, crests, names and numbers.
+- [Size chart](/sizechart): sizes XXS to 6XL, how to measure and fit notes.
+
+## Orders and help
+
+- [Bulk & team orders](/bulk-order): request a quote for schools, teams, businesses and clubs (ten jackets or more), with volume pricing and the production process.
+- [Track an order](/track-order): the status, courier and tracking number of an order, looked up with the order number and the email it was placed with.
+- [FAQ](/faq): ordering, designing, sizing, shipping and care.
+- [Contact](/contact-us): email, phone, workshop address and a message form; a person replies within one business day.
+- [Cart](/cart): the shopper's cart. Checkout and payment are always completed by the shopper.
+
+## Policies
+
+- [Shipping & returns](/shipping): production times, delivery rates, duties and taxes, tracking, size exchanges, refunds, remakes and cancellations.
+- [Privacy policy](/privacypolicy): what is collected with an order, why, and how to control it.
+- [Terms & conditions](/terms-and-conditions): pricing, proofs, artwork rights, sizing, delivery and team orders.
+
+## For AI agents
+
+In browsers that support WebMCP, every page of this site registers these tools: `search_products`, `get_product`, `list_categories`, `list_materials_and_colors`, `get_size_chart`, `get_shipping_and_returns`, `get_contact_info`, `track_order`, `open_page` and `add_to_cart`. All of them are read-only except `open_page` (moves the browser to a page of this site) and `add_to_cart` (adds a catalogue jacket in a chosen size to the shopper's cart). No tool can check out, pay, or read account details; the shopper places the order.
+
+## Optional
+
+- [The Varsity Journal](/new-blog): guides on materials, styling and design ideas.
+- [Photo gallery](/gallery): finished jackets on real customers.
+- [About Easy Jackets](/about-us): the workshop and how the jackets are made.
+- [Custom jackets in the United States](/united-states): pages for schools and teams in each state.

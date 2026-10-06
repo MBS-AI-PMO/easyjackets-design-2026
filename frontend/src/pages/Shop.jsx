@@ -240,12 +240,13 @@ export default function Shop() {
           </div>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+              <span id="shop-max-price-label" style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>
                 Max price
               </span>
               <span style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '22px' }}>{maxPrice >= PRICE_MAX ? 'Any' : `$${maxPrice}`}</span>
             </div>
-            <input type="range" min={PRICE_MIN} max={PRICE_MAX} step="10" value={maxPrice} onChange={(e) => setParam('max', e.target.value)} onPointerUp={() => setFiltersOpen(false)} onKeyUp={(e) => { if (e.key === 'Enter') setFiltersOpen(false); }} style={{ width: '100%', accentColor: 'var(--ink)' }} />
+            {/* named by the "Max price" heading above it, and read out as the price shown, not the raw number */}
+            <input type="range" min={PRICE_MIN} max={PRICE_MAX} step="10" value={maxPrice} aria-labelledby="shop-max-price-label" aria-valuetext={maxPrice >= PRICE_MAX ? 'Any price' : `$${maxPrice}`} onChange={(e) => setParam('max', e.target.value)} onPointerUp={() => setFiltersOpen(false)} onKeyUp={(e) => { if (e.key === 'Enter') setFiltersOpen(false); }} style={{ width: '100%', accentColor: 'var(--ink)' }} />
           </div>
           <div className="ez-side-done">
             <button type="button" className="ez-btn ez-btn-ink" onClick={() => setFiltersOpen(false)} style={{ width: '100%' }}>

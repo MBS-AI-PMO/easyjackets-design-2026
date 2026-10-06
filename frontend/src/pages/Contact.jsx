@@ -169,27 +169,29 @@ export default function Contact() {
               <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(32px,3.5vw,44px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '0' }}>
                 Send a message
               </h2>
-              <form onSubmit={submit} noValidate style={{ display: 'grid', gap: '18px', marginTop: '24px' }}>
+              {/* offered to AI agents as a tool (WebMCP, lib/webmcp.js): an agent may fill it in, the visitor sends it */}
+              <form onSubmit={submit} noValidate style={{ display: 'grid', gap: '18px', marginTop: '24px' }}
+                toolname="send_contact_message" tooldescription="Fills in the Easy Jackets contact form, which emails the workshop (sizing, artwork and proofs, an existing order, team or wholesale orders). The visitor reviews the message and presses Send; a person replies within one business day.">
                 <div className="ez-form-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '14px' }}>
                   <label className="ez-label">
                     Name
-                    <input className="ez-input" name="name" required placeholder="Jordan Lee" autoComplete="name" value={form.name} onChange={set('name')} aria-invalid={!!invalid.name} />
+                    <input className="ez-input" name="name" required placeholder="Jordan Lee" autoComplete="name" value={form.name} onChange={set('name')} aria-invalid={!!invalid.name} toolparamdescription="The sender's full name." />
                     {invalid.name ? <span style={fieldError}>{invalid.name}</span> : null}
                   </label>
                   <label className="ez-label">
                     Email
-                    <input className="ez-input" type="email" name="email" required placeholder="you@example.com" autoComplete="email" value={form.email} onChange={set('email')} aria-invalid={!!invalid.email} />
+                    <input className="ez-input" type="email" name="email" required placeholder="you@example.com" autoComplete="email" value={form.email} onChange={set('email')} aria-invalid={!!invalid.email} toolparamdescription="The email address the reply goes to." />
                     {invalid.email ? <span style={fieldError}>{invalid.email}</span> : null}
                   </label>
                 </div>
                 <div className="ez-form-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '14px' }}>
                   <label className="ez-label">
                     Phone
-                    <input className="ez-input" type="tel" name="phone" placeholder="Optional" autoComplete="tel" value={form.phone} onChange={set('phone')} />
+                    <input className="ez-input" type="tel" name="phone" placeholder="Optional" autoComplete="tel" value={form.phone} onChange={set('phone')} toolparamdescription="A phone number, optional." />
                   </label>
                   <label className="ez-label">
                     Order number
-                    <input className="ez-input" name="order" placeholder="EJ-12345 (if any)" value={form.order} onChange={set('order')} />
+                    <input className="ez-input" name="order" placeholder="EJ-12345 (if any)" value={form.order} onChange={set('order')} toolparamdescription="The order number, if the message is about an existing order." />
                   </label>
                 </div>
                 <div className="ez-label">
@@ -199,14 +201,14 @@ export default function Contact() {
                       <button key={t} type="button" className="ez-chip" aria-pressed={topic === t} onClick={() => setTopic(t)}>{t}</button>
                     ))}
                     {/* phones: the device's own dropdown instead of the chips */}
-                    <select className="ez-input ez-chip-select" aria-label="Topic" value={topic} onChange={(e) => setTopic(e.target.value)}>
+                    <select className="ez-input ez-chip-select" name="topic" aria-label="Topic" value={topic} onChange={(e) => setTopic(e.target.value)} toolparamdescription="What the message is about.">
                       {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                 </div>
                 <label className="ez-label">
                   Message
-                  <textarea className="ez-input" name="msg" required placeholder="Tell us what you need…" value={form.msg} onChange={set('msg')} aria-invalid={!!invalid.msg} />
+                  <textarea className="ez-input" name="msg" required placeholder="Tell us what you need…" value={form.msg} onChange={set('msg')} aria-invalid={!!invalid.msg} toolparamdescription="The message, at least 10 characters." />
                   {invalid.msg ? <span style={fieldError}>{invalid.msg}</span> : null}
                 </label>
                 {status.error ? <p role="alert" style={{ margin: '0', fontSize: '14px', color: '#b3261e', lineHeight: '1.5' }}>{status.error}</p> : null}

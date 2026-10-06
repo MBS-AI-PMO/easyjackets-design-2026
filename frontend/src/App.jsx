@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { productPath } from './lib/urls';
+import AgentTools from './components/AgentTools';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollManager from './components/ScrollManager';
 import Seo from './components/Seo';
@@ -53,6 +54,8 @@ export default function App() {
     <>
       <ScrollManager />
       <Seo />
+      {/* WebMCP tools for AI agents in the visitor's browser (only where the browser supports them) */}
+      <AgentTools />
       <ErrorBoundary key={pathname}>
       <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
         <Routes>

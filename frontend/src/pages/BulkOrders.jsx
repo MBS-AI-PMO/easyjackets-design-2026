@@ -60,13 +60,13 @@ const BUDGETS = ['Under $100', '$100–150', '$150–200', '$200+', 'Flexible'];
  * phones and tablets (CSS picks one). Both drive the same value; the native one
  * carries `name`, so the form data stays complete either way.
  */
-function FormSelect({ id, label, name, value, options, onChange }) {
+function FormSelect({ id, label, name, value, options, onChange, agentHint }) {
   const pairs = options.map((o) => (Array.isArray(o) ? o : [o, o]));
   return (
     <div className="ez-label bo-select">
       <span id={id}>{label}</span>
       <span className="bo-select-desktop"><SelectMenu value={value} options={pairs} onChange={onChange} labelledBy={id} /></span>
-      <select className="ez-input bo-select-native" name={name} aria-labelledby={id} value={value} onChange={(e) => onChange(e.target.value)}>
+      <select className="ez-input bo-select-native" name={name} aria-labelledby={id} value={value} onChange={(e) => onChange(e.target.value)} toolparamdescription={agentHint}>
         {pairs.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
     </div>
@@ -237,25 +237,27 @@ export default function BulkOrders() {
               <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(32px,3.5vw,44px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '8px 0 0' }}>
                 Request a bulk quote
               </h2>
-              <form onSubmit={submit} style={{ display: 'grid', gap: '18px', marginTop: '24px' }} noValidate>
+              {/* offered to AI agents as a tool (WebMCP, lib/webmcp.js): an agent may fill it in, the visitor sends it */}
+              <form onSubmit={submit} style={{ display: 'grid', gap: '18px', marginTop: '24px' }} noValidate
+                toolname="request_bulk_quote" tooldescription="Fills in the Easy Jackets bulk and team order quote request (ten jackets or more, for schools, teams, businesses and clubs). The visitor checks the order type, lining and design-location choices on the form and presses Get my quote; a specialist emails pricing and a free mockup within one business day.">
                 <div className="bo-contact-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '14px' }}>
                   <label className="ez-label">
                     Full name
-                    <input className="ez-input" name="name" required placeholder="Jordan Lee" />
+                    <input className="ez-input" name="name" required placeholder="Jordan Lee" toolparamdescription="The contact person's full name." />
                   </label>
                   <label className="ez-label">
                     Organization
-                    <input className="ez-input" name="org" required placeholder="Lincoln High School" />
+                    <input className="ez-input" name="org" required placeholder="Lincoln High School" toolparamdescription="The school, team, business or club ordering." />
                   </label>
                 </div>
                 <div className="bo-contact-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '14px' }}>
                   <label className="ez-label">
                     Email
-                    <input className="ez-input" type="email" name="email" required placeholder="you@school.edu" />
+                    <input className="ez-input" type="email" name="email" required placeholder="you@school.edu" toolparamdescription="The email address the quote goes to." />
                   </label>
                   <label className="ez-label">
                     Phone
-                    <input className="ez-input" type="tel" name="phone" placeholder="+1 (555) 000-0000" />
+                    <input className="ez-input" type="tel" name="phone" placeholder="+1 (555) 000-0000" toolparamdescription="A phone number, optional." />
                   </label>
                 </div>
                 <div className="ez-label">
@@ -267,14 +269,14 @@ export default function BulkOrders() {
                   </div>
                 </div>
                 <div className="bo-type-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '14px' }}>
-                  <FormSelect id="bo-type" label="Jacket type" name="type" value={state.type} options={[...PRODUCTS, 'Not sure yet']} onChange={(type) => setState({ type })} />
-                  <FormSelect id="bo-qty" label="Quantity" name="qty" value={state.qty} options={QUANTITIES} onChange={(qty) => setState({ qty })} />
+                  <FormSelect id="bo-type" label="Jacket type" name="type" value={state.type} options={[...PRODUCTS, 'Not sure yet']} onChange={(type) => setState({ type })} agentHint="The jacket style wanted, or Not sure yet." />
+                  <FormSelect id="bo-qty" label="Quantity" name="qty" value={state.qty} options={QUANTITIES} onChange={(qty) => setState({ qty })} agentHint="How many jackets, as a range." />
                 </div>
                 <div className="bo-two">
                   <FormSelect id="bo-closure" label="Front closure" name="closure" value={state.closure}
                     options={(closures && closures.length ? closures : ['buttons', 'zipper', 'pullover', 'flap']).map((c) => [c, capitalize(c)])}
-                    onChange={(closure) => setState({ closure })} />
-                  <FormSelect id="bo-lining" label="Lining" name="lining" value={state.lining} options={LININGS} onChange={(lining) => setState({ lining })} />
+                    onChange={(closure) => setState({ closure })} agentHint="How the jacket fastens at the front." />
+                  <FormSelect id="bo-lining" label="Lining" name="lining" value={state.lining} options={LININGS} onChange={(lining) => setState({ lining })} agentHint="The lining inside the jacket." />
                   <div className="ez-label">
                     ½ Zipout lining
                     <YesNo label="½ Zipout lining" value={state.zipout} onChange={(on) => setState({ zipout: on })} />
@@ -287,9 +289,9 @@ export default function BulkOrders() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '14px' }}>
                   <label className="ez-label">
                     Needed by
-                    <input className="ez-input" type="date" name="date" />
+                    <input className="ez-input" type="date" name="date" toolparamdescription="The date the jackets are needed by (YYYY-MM-DD), optional." />
                   </label>
-                  <FormSelect id="bo-budget" label="Budget per jacket" name="budget" value={state.budget} options={BUDGETS} onChange={(budget) => setState({ budget })} />
+                  <FormSelect id="bo-budget" label="Budget per jacket" name="budget" value={state.budget} options={BUDGETS} onChange={(budget) => setState({ budget })} agentHint="The budget per jacket in US dollars." />
                 </div>
                 <div className="ez-label">
                   Personalization
@@ -305,7 +307,7 @@ export default function BulkOrders() {
                 </div>
                 <label className="ez-label">
                   Details
-                  <textarea className="ez-input" name="details" placeholder="School colors, sizes, logo placement, anything else…" />
+                  <textarea className="ez-input" name="details" placeholder="School colors, sizes, logo placement, anything else…" toolparamdescription="Colours, sizes, logo placement and anything else about the order." />
                 </label>
                 <p style={{ margin: '0', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.5' }}>
                   Logo or artwork? Reply to our email with PNG, JPG, PDF, AI or SVG files and our artists draw the mockup from them.

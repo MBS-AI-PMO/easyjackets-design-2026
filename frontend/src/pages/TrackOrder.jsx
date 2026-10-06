@@ -11,6 +11,7 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { ORDER_STAGES, trackOrder } from '../lib/orders';
 import { usePageTitle } from '../lib/usePageTitle';
+import { agentSubmission, orderStatusSummary } from '../lib/webmcp';
 
 export default function TrackOrder() {
   usePageTitle('Track your order', 'See where your custom jacket is, from proof to your door.');
@@ -21,12 +22,28 @@ export default function TrackOrder() {
 
   const lookup = async (e, o = orderNo, m = email) => {
     if (e) e.preventDefault();
-    if (!o.trim() || !m.trim()) { setState({ order: null, loading: false, error: 'Enter your order number and email.' }); return; }
+    // filled in and sent by an AI agent (WebMCP, the form's toolname below): the values come from the
+    // form itself, shown in the fields too, and the agent is told the result
+    const agent = agentSubmission(e);
+    if (agent) {
+      o = String(agent.values.order || '');
+      m = String(agent.values.email || '');
+      setOrderNo(o);
+      setEmail(m);
+    }
+    if (!o.trim() || !m.trim()) {
+      setState({ order: null, loading: false, error: 'Enter your order number and email.' });
+      agent?.reply({ error: 'Enter the order number and the email the order was placed with.' });
+      return;
+    }
     setState({ order: null, loading: true, error: '' });
     try {
-      setState({ order: await trackOrder(o.trim(), m.trim()), loading: false, error: '' });
+      const order = await trackOrder(o.trim(), m.trim());
+      setState({ order, loading: false, error: '' });
+      agent?.reply(order ? orderStatusSummary(order) : { error: 'That order could not be found.' });
     } catch (err) {
       setState({ order: null, loading: false, error: err.message || 'That order could not be found.' });
+      agent?.reply({ error: err.message || 'That order could not be found.' });
     }
   };
   // Arriving from the confirmation page with both values filled in: look it up at once.
@@ -64,14 +81,17 @@ export default function TrackOrder() {
       </section>
       {/* Track form */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,48px) clamp(16px,4vw,48px) 0' }}>
-        <form onSubmit={lookup} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '14px', maxWidth: '820px', alignItems: 'end' }} noValidate>
+        {/* toolname / tooldescription / toolparamdescription: offered to AI agents as a tool (WebMCP, lib/webmcp.js);
+            a lookup changes nothing, so an agent may send it itself (toolautosubmit) */}
+        <form onSubmit={lookup} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '14px', maxWidth: '820px', alignItems: 'end' }} noValidate
+          toolname="track_order_form" tooldescription="Looks up an Easy Jackets order on this page: its stage (order placed, in production, shipped, delivered), courier, tracking number and the jackets in it. Needs the order number and the email address the order was placed with." toolautosubmit="">
           <label className="ez-label">
             Order number
-            <input className="ez-input" value={orderNo} onChange={(e) => setOrderNo(e.target.value)} placeholder="From your confirmation email" required autoComplete="off" />
+            <input className="ez-input" name="order" value={orderNo} onChange={(e) => setOrderNo(e.target.value)} placeholder="From your confirmation email" required autoComplete="off" toolparamdescription="The order number from the order confirmation email." />
           </label>
           <label className="ez-label">
             Email
-            <input className="ez-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email" />
+            <input className="ez-input" type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email" toolparamdescription="The email address the order was placed with." />
           </label>
           <button type="submit" className="ez-btn ez-btn-ink" style={{ minHeight: '50px' }} disabled={loading}>{loading ? 'Looking…' : 'Track →'}</button>
         </form>

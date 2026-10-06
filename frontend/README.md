@@ -96,4 +96,10 @@ Big Shoulders Display and Instrument Sans are self-hosted (`public/fonts/`, rule
 ## Deploy
 
 `Dockerfile` builds the app and serves `dist/` with nginx (`nginx.conf`, SPA
-fallback to `index.html`). Coolify: Dockerfile build pack, port 80.
+fallback to `index.html`, except `*.txt` and `/.well-known/`, which are the real file or a 404). Coolify: Dockerfile build pack, port 80.
+
+## AI agents (Lighthouse "Agentic Browsing")
+
+- `public/llms.txt`: what the shop sells, its key pages (relative links) and the WebMCP tools. Keep it in step when routes change.
+- WebMCP tools, in browsers that offer WebMCP: `components/AgentTools.jsx` registers `lib/agentTools.js` (search_products, get_product, list_categories, list_materials_and_colors, get_size_chart, get_shipping_and_returns, get_contact_info, track_order, open_page, add_to_cart; nothing for checkout, payment or the account). Other browsers never download that code.
+- Forms an agent may fill in carry `toolname` / `tooldescription` / `toolparamdescription` (newsletter, track order, contact, bulk quote, product review; `lib/webmcp.js`). Sign-in, checkout and the dashboard are left out on purpose.

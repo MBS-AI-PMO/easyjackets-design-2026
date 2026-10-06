@@ -16,7 +16,8 @@ export default function Pagination({ page, pages, onChange, disabled = false, la
   const go = (n) => { if (!disabled && n >= 1 && n <= pages && n !== page) onChange(n); };
   return (
     <nav className="ez-pages" aria-label={label}>
-      <button type="button" className="ez-page ez-page-step" onClick={() => go(page - 1)} disabled={disabled || page <= 1} aria-label="Previous page">← Prev</button>
+      {/* the names hold the visible words ("Prev", "Next"), so voice control finds the buttons */}
+      <button type="button" className="ez-page ez-page-step" onClick={() => go(page - 1)} disabled={disabled || page <= 1} aria-label="Prev page">← Prev</button>
       {list.map((item) => (typeof item === 'string'
         ? <span key={item} className="ez-page-gap" aria-hidden="true">…</span>
         : <button key={item} type="button" className="ez-page" aria-current={item === page ? 'page' : undefined} onClick={() => go(item)} disabled={disabled}>{item}</button>))}

@@ -178,12 +178,14 @@ export default function Product() {
       <section className="ez-pdp" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(24px,3vw,40px) clamp(16px,4vw,48px) 0', display: 'grid', gridTemplateColumns: 'minmax(0,7fr) minmax(0,5fr)', gap: '40px clamp(24px,4vw,64px)', alignItems: 'start' }}>
         {/* gallery */}
         <div className="pdp-gallery">
-          <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          {/* one line whatever the name: a long name wrapping once it loaded pushed the photo and the buy box
+              down (a layout shift); it ends in "…" instead, and is shown in full as the heading */}
+          <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px', marginBottom: '16px', whiteSpace: 'nowrap' }}>
             <A href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Home</A>
             <span>/</span>
             <A href={catHref} style={{ textDecoration: 'none', color: 'inherit' }}>{product?.category?.name || 'Jackets'}</A>
             <span>/</span>
-            <span style={{ color: 'var(--ink)', fontWeight: '600' }}>{product?.name || '…'}</span>
+            <span style={{ color: 'var(--ink)', fontWeight: '600', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{product?.name || '…'}</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '72px minmax(0,1fr)', gap: '14px' }}>
             <div style={{ display: 'grid', gap: '10px', alignContent: 'start' }}>
@@ -289,10 +291,13 @@ export default function Product() {
                     </div>
                   ) : null}
                 </div>
-                <form onSubmit={sendReview} style={{ display: 'grid', gap: '10px' }}>
+                {/* fields named for screen readers and offered to AI agents as a tool (WebMCP, lib/webmcp.js):
+                    an agent may fill in the shopper's own review, the shopper picks the stars and submits it */}
+                <form onSubmit={sendReview} style={{ display: 'grid', gap: '10px' }}
+                  toolname="write_product_review" tooldescription="Fills in a review of this jacket from the shopper's own experience (name, email, title and text; the star rating is chosen on the page). The shopper presses Submit review; reviews appear after approval.">
                   <div className="ez-form-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '10px' }}>
-                    <input className="ez-input" placeholder="Your name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                    <input className="ez-input" type="email" placeholder="Email (not shown)" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    <input className="ez-input" name="name" aria-label="Your name" autoComplete="name" placeholder="Your name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} toolparamdescription="The reviewer's name, shown with the review." />
+                    <input className="ez-input" type="email" name="email" aria-label="Email (not shown)" autoComplete="email" placeholder="Email (not shown)" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} toolparamdescription="The reviewer's email address, never shown." />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
                     <span style={{ color: 'var(--muted)' }}>Rating</span>
@@ -302,8 +307,8 @@ export default function Product() {
                       ))}
                     </div>
                   </div>
-                  <input className="ez-input" placeholder="Title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-                  <textarea className="ez-input" placeholder="How did it fit, feel and hold up?" required value={form.comment} onChange={(e) => setForm({ ...form, comment: e.target.value })} style={{ minHeight: '110px' }} />
+                  <input className="ez-input" name="title" aria-label="Review title" placeholder="Title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} toolparamdescription="A short headline for the review." />
+                  <textarea className="ez-input" name="comment" aria-label="Your review" placeholder="How did it fit, feel and hold up?" required value={form.comment} onChange={(e) => setForm({ ...form, comment: e.target.value })} style={{ minHeight: '110px' }} toolparamdescription="The review: how the jacket fit, felt and held up." />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     <button type="submit" className="ez-btn ez-btn-ink" disabled={formState.sending} style={{ minHeight: '46px', fontSize: '18px' }}>{formState.sending ? 'Sending…' : 'Submit review'}</button>
                     {formState.done ? <span style={{ fontSize: '13px', color: 'var(--gold-2)', fontWeight: '600' }}>Thanks — it will appear once approved.</span> : null}
