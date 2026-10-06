@@ -1,47 +1,63 @@
 import orderModel from "../models/orderModel.js";
 import axios from "axios";
 
+// The admin's order PDF loads design images through here (a plain <img>, so no login can be sent). It only
+// ever fetches an image from an exact list of image hosts: https, no redirects, image types only, at most
+// PROXY_MAX_BYTES. (It used to fetch any address that merely contained one of the names, e.g.
+// http://169.254.169.254/?x=res.cloudinary.com, letting anyone make the server read internal addresses.)
+const PROXY_MAX_BYTES = 15 * 1024 * 1024;
+const hostOf = (value) => {
+  try { return value ? new URL(value).hostname.toLowerCase() : ''; } catch { return ''; }
+};
+const proxyHosts = () => new Set([
+  'api.easyjackets.com',
+  'api2.easyjackets.com',
+  'easyjacket.s3.amazonaws.com',
+  'res.cloudinary.com',
+  hostOf(process.env.AWS_FILE_PATH),
+  hostOf(process.env.UPLOADS_PUBLIC_BASE_URL),
+].filter(Boolean));
+
 export const proxyImage = async (req, res) => {
   try {
-    const { url } = req.query;
-    if (!url) return res.status(400).send("URL is required");
+    const raw = typeof req.query.url === 'string' ? req.query.url : '';
+    let target;
+    try { target = new URL(raw); } catch { return res.status(400).send("A full image address is required"); }
 
-    // Basic security: Only allow S3 images or local assets
-    const allowedPatterns = [
-      'easyjacket.s3.amazonaws.com',
-      's3.amazonaws.com/easyjacket',
-      'res.cloudinary.com',
-      'api.easyjackets.com/uploads',
-      process.env.AWS_S3_ENDPOINT?.replace(/^https?:\/\//, ''),
-      process.env.AWS_FILE_PATH?.replace(/^https?:\/\//, '').replace(/\/+$/, ''),
-      process.env.UPLOADS_PUBLIC_BASE_URL?.replace(/^https?:\/\//, '').replace(/\/+$/, ''),
-    ].filter(Boolean);
-
-    const isAllowed = allowedPatterns.some(pattern => url.includes(pattern)) || url.startsWith('/');
-
-    if (!isAllowed) {
-      console.warn(`🛑 Blocked proxy request for: ${url}`);
+    if (target.protocol !== 'https:' || target.username || target.password || target.port
+      || !proxyHosts().has(target.hostname.toLowerCase())) {
+      console.warn(`🛑 Blocked proxy request for: ${raw.slice(0, 200)}`);
       return res.status(403).send("Forbidden: Domain not allowed");
     }
 
-    console.log(`🖼️ Proxying image: ${url}`);
-
     const response = await axios({
-      url,
+      url: target.toString(),
       method: 'GET',
       responseType: 'stream',
-      timeout: 10000 // 10s timeout
+      timeout: 10000,
+      maxRedirects: 0,
+      maxContentLength: PROXY_MAX_BYTES,
     });
 
-    // Forward headers
-    res.set('Content-Type', response.headers['content-type']);
+    const type = String(response.headers['content-type'] || '');
+    if (!type.startsWith('image/')) {
+      response.data.destroy();
+      return res.status(415).send("Not an image");
+    }
+
+    res.set('Content-Type', type);
+    res.set('X-Content-Type-Options', 'nosniff');
     res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24h
 
-    // Stream response
+    let sent = 0;
+    response.data.on('data', (chunk) => {
+      sent += chunk.length;
+      if (sent > PROXY_MAX_BYTES) response.data.destroy();
+    });
     response.data.pipe(res);
   } catch (error) {
     console.error('❌ Proxy image error:', error.message);
-    res.status(500).send("Failed to proxy image");
+    if (!res.headersSent) res.status(502).send("Failed to proxy image");
   }
 };
 
@@ -85,7 +101,12 @@ export const getOrder = async (req, res) => {
 
 export const getOrderlist = async (req, res) => {
   try {
-    const { name, date, address, phone, status, page = 1, limit = 10 } = req.query;
+    const { date, status, page = 1, limit = 10 } = req.query;
+    // the searched text as typed (not a pattern: "(" or a crafted pattern would fail or stall the database)
+    const literal = (value) => String(value).slice(0, 200).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const name = req.query.name ? literal(req.query.name) : '';
+    const address = req.query.address ? literal(req.query.address) : '';
+    const phone = req.query.phone ? literal(req.query.phone) : '';
 
     // Build the query object based on filters
     const query = {};

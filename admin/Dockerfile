@@ -23,6 +23,7 @@ RUN npm run build
 
 FROM nginx:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/build /usr/share/nginx/html
 # `deploy-status start|finish`: Coolify's pre- and post-deployment commands report this deployment, so the
 # sites show their "under construction" screen meanwhile (deploy-status.sh; DEPLOY_STATUS_API = the backend)

@@ -397,6 +397,7 @@ const App = ({
     }
 
     let ids = [];
+    let keys = []; // each saved design's private key: the cart needs it to change the design later
     let promises = [];
     for (let i = 0; i < jackets.length; i++) {
       const element = store.getState().jackets[i];
@@ -419,14 +420,17 @@ const App = ({
         custom_image_right: element.right,
       };
       let res = await axiosInstance.post(`/custom/addToCart`, { categoryCode: globals?.productId, ...data });
-      if (res.status === 200) ids.push(res.data.id);
+      if (res.status === 200) {
+        ids.push(res.data.id);
+        keys.push(res.data.editKey || '');
+      }
       promises.push(res);
     }
 
     Promise.all(promises).then(() => {
       updateGlobals('loading', false);
       window.onbeforeunload = null;
-      window.location.href = frontendUrl(`/cart?index=${ids.join(',')}`);
+      window.location.href = frontendUrl(`/cart?index=${ids.join(',')}&keys=${keys.join(',')}`);
     });
   };
 

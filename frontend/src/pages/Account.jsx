@@ -1,5 +1,6 @@
-// Sign in, create an account, or reset a password — against /auth/login,
-// /auth/register and /auth/forgot-password (the current site's accounts).
+// Sign in, create an account, or reset a password — against /auth/login, /auth/register, and for a
+// forgotten password /auth/forgot-password (emails a one-time link to /account?reset=<token>) then
+// /auth/reset-password (the new password, with that token).
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import A from '../components/A';
@@ -10,15 +11,16 @@ import { api } from '../lib/api';
 import { usePageTitle } from '../lib/usePageTitle';
 
 const MODES = [['login', 'Sign in'], ['signup', 'Create account']];
-const EMPTY = { name: '', email: '', password: '', phone: '', address: '', answer: '', newPassword: '' };
+const EMPTY = { name: '', email: '', password: '', phone: '', address: '', newPassword: '', confirmPassword: '' };
 
 export default function Account() {
   usePageTitle('Your account', 'Sign in to Easy Jackets to track orders, save designs and reorder for a new season.');
   const { user, ready, login, register } = useAuth();
   const navigate = useNavigate();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const next = params.get('next') && params.get('next').startsWith('/') ? params.get('next') : '/dashboard';
-  const [mode, setMode] = useState(params.get('mode') === 'signup' ? 'signup' : 'login');
+  const resetToken = params.get('reset') || '';
+  const [mode, setMode] = useState(resetToken ? 'reset' : params.get('mode') === 'signup' ? 'signup' : 'login');
   const [form, setForm] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -41,14 +43,20 @@ export default function Account() {
         navigate(next, { replace: true });
       } else if (mode === 'signup') {
         if (form.password.length < 6) throw new Error('Use a password of at least 6 characters.');
-        await register({ name: form.name.trim(), email: form.email.trim(), password: form.password, phone: form.phone.trim(), address: form.address.trim(), answer: form.answer.trim() });
+        await register({ name: form.name.trim(), email: form.email.trim(), password: form.password, phone: form.phone.trim(), address: form.address.trim() });
         navigate(next, { replace: true });
+      } else if (mode === 'forgot') {
+        if (!form.email.trim()) throw new Error('Enter the email of your account.');
+        const res = await api.post('/auth/forgot-password', { email: form.email.trim() }, { auth: false });
+        setNotice(res?.message || 'If an account exists for that email, we have sent a link to reset its password.');
       } else {
         if (form.newPassword.length < 6) throw new Error('Use a new password of at least 6 characters.');
-        await api.post('/auth/forgot-password', { email: form.email.trim(), answer: form.answer.trim(), newPassword: form.newPassword }, { auth: false });
-        setNotice('Password reset. Sign in with your new password.');
+        if (form.newPassword !== form.confirmPassword) throw new Error('The two passwords are not the same.');
+        const res = await api.post('/auth/reset-password', { token: resetToken, newPassword: form.newPassword }, { auth: false });
+        setParams({}, { replace: true }); // the link is used up
         setMode('login');
-        setForm((f) => ({ ...EMPTY, email: f.email }));
+        setForm(EMPTY);
+        setNotice(res?.message || 'Password changed. Sign in with your new password.');
       }
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -57,8 +65,9 @@ export default function Account() {
     }
   };
 
-  const title = mode === 'signup' ? ['Start', 'here'] : mode === 'forgot' ? ['Reset your', 'password'] : ['Welcome', 'back'];
-  const submitLabel = mode === 'login' ? 'Sign in →' : mode === 'signup' ? 'Create account →' : 'Reset password →';
+  const title = mode === 'signup' ? ['Start', 'here'] : mode === 'forgot' ? ['Reset your', 'password'] : mode === 'reset' ? ['Choose a new', 'password'] : ['Welcome', 'back'];
+  const submitLabel = mode === 'login' ? 'Sign in →' : mode === 'signup' ? 'Create account →' : mode === 'forgot' ? 'Email me a reset link →' : 'Save new password →';
+  const tabs = mode === 'login' || mode === 'signup';
 
   return (
     <div className="pg-account">
@@ -94,7 +103,7 @@ export default function Account() {
           </div>
         </div>
         <div style={{ background: '#fbf8f2', border: '1px solid var(--cream-2)', borderRadius: '4px', padding: 'clamp(22px,3vw,36px)' }}>
-          {mode !== 'forgot' ? (
+          {tabs ? (
             <div className="ez-seg" style={{ display: 'flex' }}>
               {MODES.map(([v, l]) => (
                 <button key={v} type="button" aria-pressed={mode === v} onClick={() => switchMode(v)} style={{ flex: '1' }}>{l}</button>
@@ -108,15 +117,22 @@ export default function Account() {
                 <input className="ez-input" required value={form.name} onChange={set('name')} autoComplete="name" />
               </label>
             ) : null}
-            <label className="ez-label">
-              Email
-              <input className="ez-input" type="email" required placeholder="you@example.com" value={form.email} onChange={set('email')} autoComplete="email" />
-            </label>
-            {mode !== 'forgot' ? (
+            {mode !== 'reset' ? (
+              <label className="ez-label">
+                Email
+                <input className="ez-input" type="email" required placeholder="you@example.com" value={form.email} onChange={set('email')} autoComplete="email" />
+              </label>
+            ) : null}
+            {tabs ? (
               <label className="ez-label">
                 Password
                 <input className="ez-input" type="password" required placeholder="••••••••" value={form.password} onChange={set('password')} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={6} />
               </label>
+            ) : null}
+            {mode === 'forgot' ? (
+              <p style={{ margin: '0', fontSize: '14px', color: 'var(--muted)', lineHeight: '1.5' }}>
+                We will email you a link to choose a new password. It works once and expires in an hour.
+              </p>
             ) : null}
             {mode === 'signup' ? (
               <>
@@ -130,17 +146,17 @@ export default function Account() {
                 </label>
               </>
             ) : null}
-            {mode !== 'login' ? (
-              <label className="ez-label">
-                Security word
-                <input className="ez-input" required placeholder={mode === 'signup' ? 'A word only you know — it resets your password' : 'The word you chose when you signed up'} value={form.answer} onChange={set('answer')} />
-              </label>
-            ) : null}
-            {mode === 'forgot' ? (
-              <label className="ez-label">
-                New password
-                <input className="ez-input" type="password" required placeholder="••••••••" value={form.newPassword} onChange={set('newPassword')} autoComplete="new-password" minLength={6} />
-              </label>
+            {mode === 'reset' ? (
+              <>
+                <label className="ez-label">
+                  New password
+                  <input className="ez-input" type="password" required placeholder="••••••••" value={form.newPassword} onChange={set('newPassword')} autoComplete="new-password" minLength={6} />
+                </label>
+                <label className="ez-label">
+                  New password again
+                  <input className="ez-input" type="password" required placeholder="••••••••" value={form.confirmPassword} onChange={set('confirmPassword')} autoComplete="new-password" minLength={6} />
+                </label>
+              </>
             ) : null}
             {mode === 'login' ? (
               <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', fontSize: '13px' }}>
@@ -150,8 +166,8 @@ export default function Account() {
             {error ? <p role="alert" style={{ margin: '0', fontSize: '14px', color: '#b3261e', lineHeight: '1.5' }}>{error}</p> : null}
             {notice ? <p role="status" style={{ margin: '0', fontSize: '14px', color: 'var(--gold-2)', fontWeight: '600', lineHeight: '1.5' }}>{notice}</p> : null}
             <button type="submit" className="ez-btn ez-btn-ink" style={{ width: '100%' }} disabled={busy}>{busy ? 'One moment…' : submitLabel}</button>
-            {mode === 'forgot' ? (
-              <button type="button" className="ez-btn" style={{ width: '100%' }} onClick={() => switchMode('login')}>Back to sign in</button>
+            {!tabs ? (
+              <button type="button" className="ez-btn" style={{ width: '100%' }} onClick={() => { if (mode === 'reset') setParams({}, { replace: true }); switchMode('login'); }}>Back to sign in</button>
             ) : null}
             <p style={{ margin: '0', fontSize: '12px', color: 'var(--muted)', lineHeight: '1.5', textAlign: 'center' }}>
               No account needed to order.{' '}

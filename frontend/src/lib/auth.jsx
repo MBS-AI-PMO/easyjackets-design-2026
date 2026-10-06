@@ -37,10 +37,16 @@ export function AuthProvider({ children }) {
     return login(fields.email, fields.password);
   }, [login]);
 
-  const logout = useCallback(() => save(null), [save]);
+  // the API ends this session too (the token stops working at once), then this browser forgets it
+  const logout = useCallback(() => {
+    api.post('/auth/logout').catch(() => { /* already ended or offline: signed out here anyway */ });
+    save(null);
+  }, [save]);
   const updateUser = useCallback((user) => setAuth((prev) => { const next = { ...prev, user: { ...prev?.user, ...user } }; setStoredAuth(next); return next; }), []);
+  // a password change ends every other session and hands this one a fresh token
+  const replaceToken = useCallback((token) => { if (token) setAuth((prev) => { const next = { ...prev, token }; setStoredAuth(next); return next; }); }, []);
 
-  const value = useMemo(() => ({ user: auth?.user ?? null, token: auth?.token ?? null, ready, login, register, logout, updateUser }), [auth, ready, login, register, logout, updateUser]);
+  const value = useMemo(() => ({ user: auth?.user ?? null, token: auth?.token ?? null, ready, login, register, logout, updateUser, replaceToken }), [auth, ready, login, register, logout, updateUser, replaceToken]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

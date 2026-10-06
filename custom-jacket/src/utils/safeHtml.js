@@ -2,17 +2,25 @@
 // reaches the page: nothing executable survives, and pasted-in inline styling is dropped so the
 // page's own typography applies. The storefront has the same rules in frontend/src/lib/html.js;
 // this builder ships separately and cannot import from it.
+// DOMPurify does the cleaning (the hand-made filter before it could be tricked, e.g. by markup hidden
+// inside <noscript> that only turned into a live <img onerror> once on the page); the rest is tidying.
+import DOMPurify from 'dompurify';
 import { uploadUrl } from '../config/url';
 
 const BLOCKED_TAGS = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'link', 'meta'];
+// tags that read differently once on the page than when cleaned, or change how the page resolves links
+const PURIFY = {
+  FORBID_TAGS: [...BLOCKED_TAGS, 'noscript', 'xmp', 'noembed', 'noframes', 'base', 'template', 'math'],
+  RETURN_DOM: true,
+};
 const OUR_UPLOAD = /^(https?:\/\/api2?\.easyjackets\.com)?\/uploads\//i;
 const PASTE_ATTRS = ['style', 'dir', 'class', 'lang', 'align', 'width', 'height', 'face', 'size', 'color', 'bgcolor'];
 
 export const hasMarkup = (s) => /<[a-z][\s\S]*>/i.test(String(s || ''));
 
 export function safeHtml(html) {
-  if (typeof DOMParser === 'undefined') return '';
-  const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+  if (typeof window === 'undefined') return '';
+  const doc = { body: DOMPurify.sanitize(String(html || ''), PURIFY) };
   for (const tag of BLOCKED_TAGS) for (const el of [...doc.body.querySelectorAll(tag)]) el.remove();
   for (const el of doc.body.querySelectorAll('*')) {
     for (const attr of [...el.attributes]) {

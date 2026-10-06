@@ -39,6 +39,7 @@ import fileInstance from '../constant/filesInstance';
 import EditorPrompt from './EditorPrompt';
 
 import { FRONTEND_URL } from '../constant/url';
+import { cleanHtml } from '../utils/safeHtml';
 /**
  * Sends one image to storage and returns its public URL.
  *
@@ -427,7 +428,7 @@ const BlogRichTextEditor = ({
     if (isSourceMode) {
       setIsSourceMode(false);
       window.requestAnimationFrame(() => {
-        if (editorRef.current) editorRef.current.innerHTML = sourceValue || '';
+        if (editorRef.current) editorRef.current.innerHTML = cleanHtml(sourceValue);
       });
       onChange?.(sourceValue || '');
       return;
@@ -445,8 +446,9 @@ const BlogRichTextEditor = ({
       return;
     }
 
+    // stored html is cleaned on the way in (what the editor itself sends back is already its own content)
     if (editorRef.current && editorRef.current.innerHTML !== html) {
-      editorRef.current.innerHTML = html;
+      editorRef.current.innerHTML = cleanHtml(html);
     }
   }, [value, isSourceMode]);
 

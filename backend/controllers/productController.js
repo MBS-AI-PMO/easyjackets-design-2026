@@ -989,7 +989,8 @@ export const productListController = async (req, res) => {
 
 export const searchProductController = async (req, res) => {
   try {
-    const { keyword } = req.params;
+    // the words as typed, not a pattern (a crafted pattern could keep the database busy for minutes)
+    const keyword = String(req.params.keyword || '').slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const resutls = await productModel
       .find({
         $or: [

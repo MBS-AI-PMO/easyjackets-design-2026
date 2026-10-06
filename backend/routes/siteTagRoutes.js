@@ -7,19 +7,18 @@ import {
   deleteTag
 } from '../controllers/siteTagController.js';
 
-// Assuming there's an auth middleware, we could import it here to protect admin routes
-// import { requireSignIn, isAdmin } from '../middlewares/authMiddleware.js';
+import { requireSignin, isAdmin } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 // Public route for frontend
 router.get('/active', getActiveTags);
 
-// Admin routes
-// NOTE: Add requireSignIn, isAdmin middlewares if you want to secure these
-router.get('/', getAllTags);
-router.post('/', createTag);
-router.put('/:id', updateTag);
-router.delete('/:id', deleteTag);
+// Admin routes: a site tag can be a <script> on every page, so only admins may list, add, change or delete
+// them (they used to need no login at all)
+router.get('/', requireSignin, isAdmin, getAllTags);
+router.post('/', requireSignin, isAdmin, createTag);
+router.put('/:id', requireSignin, isAdmin, updateTag);
+router.delete('/:id', requireSignin, isAdmin, deleteTag);
 
 export default router;

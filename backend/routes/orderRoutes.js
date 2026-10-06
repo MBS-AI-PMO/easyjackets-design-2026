@@ -11,28 +11,33 @@ import {
     permanentDeleteBulkOrderController,
 } from '../controllers/bulkOrderController.js'
 import { isAdmin, requireSignin } from '../middlewares/authMiddleware.js'
+import { emailFormLimit } from '../middlewares/rateLimit.js'
 
 const router = express.Router()
 
 
-router.post('/bulk', createBulkOrder)
+router.post('/bulk', emailFormLimit('bulk-quote'), createBulkOrder) // emails the team and the customer (middlewares/rateLimit.js)
 router.get('/bulk/deleted', requireSignin, isAdmin, getDeletedBulkOrderController)
 router.put('/bulk/restore/:id', requireSignin, isAdmin, restoreBulkOrderController)
 router.delete('/bulk/permanent/:id', requireSignin, isAdmin, permanentDeleteBulkOrderController)
-router.get('/bulk', requireSignin, getAllbulkOrderController)
-router.get('/bulk/:id', requireSignin, getSingleOrderController)
+// Every order and bulk-order screen is the admin's: admins only (a customer account used to be enough to
+// read, change and delete everyone's orders)
+router.get('/bulk', requireSignin, isAdmin, getAllbulkOrderController)
+router.get('/bulk/:id', requireSignin, isAdmin, getSingleOrderController)
 router.delete('/bulk/:id', requireSignin, isAdmin, softDeleteBulkOrderController)
 
 router.get('/deleted', requireSignin, isAdmin, getDeletedOrderlist)
 router.delete('/clear-deleted', requireSignin, isAdmin, clearAllDeletedOrders)
-router.put('/restore/:id', requireSignin, restoreOrder)
+router.put('/restore/:id', requireSignin, isAdmin, restoreOrder)
 // Public: guest order tracking by order number + email (storefront /track-order)
 router.get('/track', trackOrderController);
+// Public, as the admin's order PDF loads images through it with a plain <img>: it only fetches images from
+// a fixed list of image hosts (controllers/orderController.js proxyImage)
 router.get('/proxy-image', proxyImage)
-router.get('/:id', requireSignin, getOrder)
-router.put('/:id', requireSignin, updateOrder)
-router.delete('/:id', requireSignin, softDeleteOrder)
-router.delete('/permanent/:id', requireSignin, deleteOrder)
-router.get('/', requireSignin, getOrderlist)
+router.get('/:id', requireSignin, isAdmin, getOrder)
+router.put('/:id', requireSignin, isAdmin, updateOrder)
+router.delete('/:id', requireSignin, isAdmin, softDeleteOrder)
+router.delete('/permanent/:id', requireSignin, isAdmin, deleteOrder)
+router.get('/', requireSignin, isAdmin, getOrderlist)
 
 export default router

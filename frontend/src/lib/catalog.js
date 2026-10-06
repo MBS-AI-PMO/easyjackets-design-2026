@@ -131,11 +131,12 @@ export const CUSTOMIZER = (onLocalhost
  * `design` opens a saved design as a starting point (Add to cart saves a new one); `designedit`
  * reopens the visitor's own cart design to change it in place (Update cart).
  */
-export const builderUrl = ({ code, design, designedit } = {}) => {
+export const builderUrl = ({ code, design, designedit, key } = {}) => {
   const url = new URL(CUSTOMIZER + '/');
   if (code) url.searchParams.set('id', code);
   if (design) url.searchParams.set('design', design);
   if (designedit) url.searchParams.set('designedit', designedit);
+  if (designedit && key) url.searchParams.set('key', key); // the cart design's private key (lib/designs.js)
   return url.toString();
 };
 /** The builder opened on this product's own design. */

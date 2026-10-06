@@ -1,4 +1,5 @@
 import express from 'express';
+import { isAdmin, requireSignin } from '../middlewares/authMiddleware.js';
 import { createCollarController, getAllCollarsController, getCollarByIdController, updateCollarController, deleteCollarController, 
     createSleeveController,
     getAllSleevesController,
@@ -52,61 +53,64 @@ import { createCollarController, getAllCollarsController, getCollarByIdControlle
 
 const router = express.Router();
 
-router.post('/materials', createMaterialController);
+// Reading the options and their prices is public (the builder and the storefront); adding, changing or
+// deleting them is for admins only (it used to need no login at all).
+
+router.post('/materials', requireSignin, isAdmin, createMaterialController);
 router.get('/materials', getAllMaterialsController);
 router.get('/materials/:id', getMaterialByIdController);
-router.put('/materials/:id', updateMaterialController);
-router.delete('/materials/:id', deleteMaterialController);
+router.put('/materials/:id', requireSignin, isAdmin, updateMaterialController);
+router.delete('/materials/:id', requireSignin, isAdmin, deleteMaterialController);
 
-router.post('/collars', createCollarController);
+router.post('/collars', requireSignin, isAdmin, createCollarController);
 router.get('/collars', getAllCollarsController);
 router.get('/collars/:id', getCollarByIdController);
-router.put('/collars/:id', updateCollarController);
-router.delete('/collars/:id', deleteCollarController);
+router.put('/collars/:id', requireSignin, isAdmin, updateCollarController);
+router.delete('/collars/:id', requireSignin, isAdmin, deleteCollarController);
 
-router.post('/sleeves', createSleeveController);
+router.post('/sleeves', requireSignin, isAdmin, createSleeveController);
 router.get('/sleeves', getAllSleevesController);
 router.get('/sleeves/:id', getSleeveByIdController);
-router.put('/sleeves/:id', updateSleeveController);
-router.delete('/sleeves/:id', deleteSleeveController);
+router.put('/sleeves/:id', requireSignin, isAdmin, updateSleeveController);
+router.delete('/sleeves/:id', requireSignin, isAdmin, deleteSleeveController);
 
-router.post('/closures/', createClosureController);
+router.post('/closures/', requireSignin, isAdmin, createClosureController);
 router.get('/closures/', getAllClosuresController);
 router.get('/closures/:id', getClosureByIdController);
-router.put('/closures/:id', updateClosureController);
-router.delete('/closures/:id', deleteClosureController);
+router.put('/closures/:id', requireSignin, isAdmin, updateClosureController);
+router.delete('/closures/:id', requireSignin, isAdmin, deleteClosureController);
 
-router.post('/pockets', createPocketController);
+router.post('/pockets', requireSignin, isAdmin, createPocketController);
 router.get('/pockets', getAllPocketsController);
 router.get('/pockets/:id', getPocketByIdController);
-router.put('/pockets/:id', updatePocketController);
-router.delete('/pockets/:id', deletePocketController);
+router.put('/pockets/:id', requireSignin, isAdmin, updatePocketController);
+router.delete('/pockets/:id', requireSignin, isAdmin, deletePocketController);
 
-router.post('/linings', createLiningController);
+router.post('/linings', requireSignin, isAdmin, createLiningController);
 router.get('/linings', getAllLiningsController);
 router.get('/linings/:id', getLiningByIdController);
-router.put('/linings/:id', updateLiningController);
-router.delete('/linings/:id', deleteLiningController);
+router.put('/linings/:id', requireSignin, isAdmin, updateLiningController);
+router.delete('/linings/:id', requireSignin, isAdmin, deleteLiningController);
 
 
-router.post('/designTypes', createDesignTypeController);
+router.post('/designTypes', requireSignin, isAdmin, createDesignTypeController);
 router.get('/designTypes', getAllDesignTypesController);
 router.get('/designTypes/:id', getDesignTypeByIdController);
-router.put('/designTypes/:id', updateDesignTypeController);
-router.delete('/designTypes/:id', deleteDesignTypeController);
+router.put('/designTypes/:id', requireSignin, isAdmin, updateDesignTypeController);
+router.delete('/designTypes/:id', requireSignin, isAdmin, deleteDesignTypeController);
 
-router.post('/sizes', createSizeController);
+router.post('/sizes', requireSignin, isAdmin, createSizeController);
 router.get('/sizes', getAllSizesController);
 router.get('/sizes/:id', getSizeByIdController);
-router.put('/sizes/:id', updateSizeController);
-router.delete('/sizes/:id', deleteSizeController);
+router.put('/sizes/:id', requireSignin, isAdmin, updateSizeController);
+router.delete('/sizes/:id', requireSignin, isAdmin, deleteSizeController);
 
 
-router.post('/colors', createColor); // Create a new color
+router.post('/colors', requireSignin, isAdmin, createColor); // Create a new color
 router.get('/colors', getColors); // Get all colors
 router.get('/colors/:id', getColorById); // Get a single color by ID
-router.put('/colors/:id', updateColor); // Update a color by ID
-router.delete('/colors/:id', deleteColor);
+router.put('/colors/:id', requireSignin, isAdmin, updateColor); // Update a color by ID
+router.delete('/colors/:id', requireSignin, isAdmin, deleteColor);
 
 
 router.get('/parts', getParts);

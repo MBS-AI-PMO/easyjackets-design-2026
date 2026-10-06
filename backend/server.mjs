@@ -10,7 +10,6 @@ import morgan from "morgan";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import cors from "cors";
-import "crypto-browserify";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import designRoutes from "./routes/designRoutes.js";
@@ -24,7 +23,6 @@ import paymentMethodRoutes from './routes/paymentMethodRoutes.js'
 import galleryRoutes from './routes/galleryRoutes.js'
 import patchPhotoRoutes from './routes/patchPhotoRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
-import customCheckoutRoutes from './routes/customCheckoutRoutes.js'
 import siteTagRoutes from './routes/siteTagRoutes.js'
 import fontRoutes from './routes/fontRoutes.js'
 import productReviewRoutes from './routes/productReviewRoutes.js'
@@ -38,6 +36,7 @@ import seoRenderRoutes from './routes/seoRenderRoutes.js'
 import visitorAnalyticsRoutes from './routes/visitorAnalyticsRoutes.js'
 import siteStatusRoutes from './routes/siteStatusRoutes.js'
 import { renderHoldingPage, siteUnderConstruction } from './helpers/holdingPage.js'
+import { sanitizeInput } from './middlewares/sanitizeInput.js'
 import { UPLOADS_ROOT, ensureUploadsRoot } from './helpers/localUploadStorage.js'
 import { resizedImageHandler } from './helpers/imageResize.js'
 import { uploadMirror } from './helpers/uploadMirror.js'
@@ -58,13 +57,53 @@ import fs from 'fs/promises'
 
 // import { connect } from "mongoose";
 
+// A promise that fails with nobody handling it is logged, not allowed to stop the whole API (Node's
+// default is to exit the process).
+process.on('unhandledRejection', (reason) => {
+  console.error('💥 Unhandled promise rejection:', reason);
+});
+
 await connectDB();
 await ensureUploadsRoot();
 
 const app = express();
+// behind Coolify's proxy: req.ip is the visitor's address (rate limits), req.protocol is https
+app.set('trust proxy', 1);
+app.disable('x-powered-by'); // no "X-Powered-By: Express" telling what the server runs
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// The usual security headers on every answer: no type guessing, never shown inside another site's frame,
+// no address leaked to other sites, and HTTPS only from now on (over HTTPS, through Coolify's proxy).
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=15552000');
+  next();
+});
+
+// An error answer to a visitor who is not signed in carries no internal details: error objects (database
+// and library errors, with their fields) are left out, and a server error's text becomes a plain message.
+// Signed-in customers and admins get the full answer, as before.
+const SERVER_ERROR_TEXT = 'Something went wrong on our side. Please try again.';
+app.use((req, res, next) => {
+  if (req.headers.authorization) return next();
+  const json = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 400 && body && typeof body === 'object' && !Array.isArray(body)) {
+      const clean = { ...body };
+      for (const key of ['err', 'error', 'stack']) {
+        if (clean[key] && typeof clean[key] === 'object') delete clean[key];
+      }
+      if (res.statusCode >= 500 && typeof clean.error === 'string') clean.error = SERVER_ERROR_TEXT;
+      return json(clean);
+    }
+    return json(body);
+  };
+  next();
+});
 
 app.use(cors())
 
@@ -76,18 +115,39 @@ const immutableStaticCache = {
   },
 };
 
+// Uploads are shown as images and nothing else: the browser must not guess another type, and any file
+// that is not a plain image (an uploaded .html or .svg, a PDF from the bulk-order form) is downloaded
+// in a sandbox, so it can never run as a page on this site.
+const SHOWN_AS_IMAGE = /\.(webp|jpe?g|png|gif|avif)$/i;
+const uploadsStatic = {
+  ...immutableStaticCache,
+  setHeaders: (res, filePath) => {
+    immutableStaticCache.setHeaders(res);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    if (!SHOWN_AS_IMAGE.test(filePath)) {
+      res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+      res.setHeader('Content-Disposition', 'attachment');
+    }
+  },
+};
+
 // Set up static files from frontend to serve site assets (Logo, mascots, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets'), immutableStaticCache));
 // `?w=640` on an image serves a narrower copy — see helpers/imageResize.js.
 // Falls through to the static file for everything else.
 app.use('/uploads', uploadMirror);
 app.use('/uploads', resizedImageHandler);
-app.use('/uploads', express.static(UPLOADS_ROOT, immutableStaticCache));
+app.use('/uploads', express.static(UPLOADS_ROOT, uploadsStatic));
 
 
 app.post('/stripe/webhook', express.raw({ type: 'application/json' }), triggerWebhook)
 
-app.use(express.json({ limit: "50mb" }));
+// Saved designs (all their views as images) and blog posts are large; everything else is small. Bigger
+// requests are refused before they are read into memory.
+app.use(['/api/v1/custom', '/api/v1/features'], express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "10mb" }));
+// no "$" keys from clients: they would be database operators (middlewares/sanitizeInput.js)
+app.use(sanitizeInput);
 app.use(morgan("dev"));
 app.set('view engine', 'ejs');
 
@@ -109,7 +169,8 @@ app.use('/api/v1/metadata', metadataRoute)
 app.use('/api/v1/gallery', galleryRoutes)
 app.use('/api/v1/patches', patchPhotoRoutes)
 app.use('/api/v1/analytics', analyticsRoutes)
-app.use('/api/v1/checkout', customCheckoutRoutes)
+// (/api/v1/checkout, card and code-confirmed cash payments, was removed: nothing used it, and it trusted the
+// amount and the buyer sent by the browser, so anyone could make paid orders or charge saved cards)
 app.use('/api/v1/sitetags', siteTagRoutes)
 app.use('/api/v1/fonts', fontRoutes)
 app.use('/api/v1/reviews', productReviewRoutes)
@@ -179,10 +240,14 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // Global Error Handler
+// A request's own mistake keeps its status and message (e.g. 413 for a body too large, 400 for broken
+// JSON); anything else is a 500 that says no more than that (the details are in the log).
 app.use((err, req, res, next) => {
   console.error('💥 Unhandled Error:', err);
-  res.status(500).json({
+  const status = Number(err.status || err.statusCode);
+  const clientError = status >= 400 && status < 500;
+  res.status(clientError ? status : 500).json({
     success: false,
-    message: err.message || 'Internal Server Error'
+    message: clientError ? (err.expose === false ? 'Bad request' : err.message) : 'Internal Server Error'
   });
 });

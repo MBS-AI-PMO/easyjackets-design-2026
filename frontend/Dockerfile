@@ -10,6 +10,7 @@ FROM nginx:alpine
 # Coolify's proxy terminates TLS and forwards to port 80, which is what the
 # stock nginx image already listens on.
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 # `deploy-status start|finish`: Coolify's pre- and post-deployment commands report this deployment, so the
 # sites show their "under construction" screen meanwhile (deploy-status.sh; DEPLOY_STATUS_API = the backend)

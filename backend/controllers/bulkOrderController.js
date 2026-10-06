@@ -16,18 +16,30 @@ const getUploadedFiles = (files, key) => {
   return Array.isArray(value) ? value : [value];
 };
 
+// The public bulk-quote form (no login): pictures only, at most 10 of 15 MB each. Images are re-encoded
+// to WebP (helpers/fileUpload.js); other files are not kept (an uploaded web page used to be stored as it
+// was and served from this site). The storefront's form sends no files today.
+const MAX_QUOTE_FILES = 10;
+const MAX_QUOTE_FILE_BYTES = 15 * 1024 * 1024;
+
 export const createBulkOrder = async (req, res) => {
-  const form = formidable({ multiples: true });
+  const form = formidable({
+    multiples: true,
+    maxFiles: MAX_QUOTE_FILES,
+    maxFileSize: MAX_QUOTE_FILE_BYTES,
+    maxTotalFileSize: MAX_QUOTE_FILES * MAX_QUOTE_FILE_BYTES,
+  });
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      return res.status(500).send({
+      return res.status(400).send({
         success: false,
-        message: 'Error parsing the files.',
+        message: 'Please attach at most 10 pictures of 15 MB each.',
       });
     }
 
     try {
-      const additionalImageFiles = getUploadedFiles(files, 'images');
+      const additionalImageFiles = getUploadedFiles(files, 'images')
+        .filter((file) => String(file?.mimetype || '').startsWith('image/'));
       const additionalImageUrls = [];
 
       for (const file of additionalImageFiles) {

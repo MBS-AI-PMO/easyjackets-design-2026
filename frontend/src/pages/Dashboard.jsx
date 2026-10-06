@@ -23,7 +23,7 @@ const h3 = { fontFamily: 'var(--display)', fontWeight: '900', fontSize: '32px', 
 
 export default function Dashboard() {
   usePageTitle('My account', 'Your Easy Jackets orders, address and profile.');
-  const { user, ready, logout, updateUser } = useAuth();
+  const { user, ready, logout, updateUser, replaceToken } = useAuth();
   const navigate = useNavigate();
   const [view, setView] = useState('overview');
   const [filter, setFilter] = useState('All');
@@ -46,15 +46,18 @@ export default function Dashboard() {
   const nav = [['overview', 'Overview', ''], ['orders', 'Orders', list.length ? String(list.length) : ''], ['designs', 'Designs', ''], ['addresses', 'Address', ''], ['payments', 'Payment', cards?.length ? String(cards.length) : ''], ['profile', 'Profile', '']];
 
   // profile form
-  const [profile, setProfile] = useState({ name: '', email: '', phone: '', address: '' });
-  useEffect(() => { if (user) setProfile({ name: user.name || '', email: user.email || '', phone: user.phone || '', address: addressText(user.address) }); }, [user]);
+  const [profile, setProfile] = useState({ name: '', email: '', phone: '', address: '', currentPassword: '' });
+  useEffect(() => { if (user) setProfile({ name: user.name || '', email: user.email || '', phone: user.phone || '', address: addressText(user.address), currentPassword: '' }); }, [user]);
+  // a new email needs the current password (the API asks for it)
+  const emailChanged = Boolean(user) && profile.email.trim().toLowerCase() !== String(user.email || '').trim().toLowerCase();
   const [profileState, setProfileState] = useState({ busy: false, msg: '', error: '' });
   const saveProfile = async (e) => {
     e.preventDefault();
     setProfileState({ busy: true, msg: '', error: '' });
     try {
-      const next = await updateProfile({ name: profile.name.trim(), email: profile.email.trim(), phone: profile.phone.trim(), address: profile.address.trim() });
+      const next = await updateProfile({ name: profile.name.trim(), email: profile.email.trim(), phone: profile.phone.trim(), address: profile.address.trim(), ...(emailChanged ? { currentPassword: profile.currentPassword } : {}) });
       updateUser(next || { name: profile.name.trim(), email: profile.email.trim(), phone: profile.phone.trim(), address: profile.address.trim() });
+      setProfile((p) => ({ ...p, currentPassword: '' }));
       setProfileState({ busy: false, msg: 'Saved.', error: '' });
     } catch (err) { setProfileState({ busy: false, msg: '', error: err.message || 'Could not save.' }); }
   };
@@ -64,7 +67,8 @@ export default function Dashboard() {
     e.preventDefault();
     setPwState({ busy: true, msg: '', error: '' });
     try {
-      await changePassword(pw.current, pw.next, pw.confirm);
+      const res = await changePassword(pw.current, pw.next, pw.confirm);
+      replaceToken(res?.token); // the change ended every other session; this one continues with a fresh token
       setPw({ current: '', next: '', confirm: '' });
       setPwState({ busy: false, msg: 'Password changed.', error: '' });
     } catch (err) { setPwState({ busy: false, msg: '', error: err.message || 'Could not change the password.' }); }
@@ -371,6 +375,9 @@ export default function Dashboard() {
                 <form onSubmit={saveProfile} className="ez-panel" style={{ display: 'grid', gap: '18px', maxWidth: '640px' }}>
                   <label className="ez-label">Full name<input className="ez-input" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required autoComplete="name" /></label>
                   <label className="ez-label">Email<input className="ez-input" type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} required autoComplete="email" /></label>
+                  {emailChanged ? (
+                    <label className="ez-label">Current password (to change your email)<input className="ez-input" type="password" value={profile.currentPassword} onChange={(e) => setProfile({ ...profile, currentPassword: e.target.value })} required autoComplete="current-password" /></label>
+                  ) : null}
                   <label className="ez-label">Phone<input className="ez-input" type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} autoComplete="tel" /></label>
                   <label className="ez-label">Address<input className="ez-input" value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} placeholder="Street, city, state, ZIP, country" autoComplete="street-address" /></label>
                   {profileState.error ? <p role="alert" style={{ margin: '0', fontSize: '14px', color: '#b3261e' }}>{profileState.error}</p> : null}

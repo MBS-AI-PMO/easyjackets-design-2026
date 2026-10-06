@@ -1,14 +1,23 @@
 // Admin-authored HTML (product descriptions, blog posts) goes through here
 // before it reaches the page: nothing executable survives, and for articles
 // the pasted-in inline styling is dropped so the site's own typography applies.
+// DOMPurify does the cleaning (the hand-made filter before it could be tricked, e.g. by markup hidden
+// inside <noscript> that only turned into a live <img onerror> once on the page); the rest is tidying.
+import DOMPurify from 'dompurify';
 import { uploadUrl } from './api';
 
 const BLOCKED_TAGS = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'link', 'meta'];
+// tags that read differently once on the page than when cleaned, or change how the page resolves links
+const PURIFY = {
+  FORBID_TAGS: [...BLOCKED_TAGS, 'noscript', 'xmp', 'noembed', 'noframes', 'base', 'template', 'math'],
+  RETURN_DOM: true,
+};
 // an uploaded file: https://api.easyjackets.com/uploads/…, https://api2.easyjackets.com/uploads/… or /uploads/…
 const OUR_UPLOAD = /^(https?:\/\/api2?\.easyjackets\.com)?\/uploads\//i;
 const PASTE_ATTRS = ['style', 'dir', 'class', 'lang', 'align', 'width', 'height', 'face', 'size', 'color', 'bgcolor'];
 
-const parse = (html) => (typeof DOMParser === 'undefined' ? null : new DOMParser().parseFromString(String(html || ''), 'text/html'));
+// the cleaned html as an element to tidy (its innerHTML is what the page gets)
+const parse = (html) => (typeof window === 'undefined' ? null : { body: DOMPurify.sanitize(String(html || ''), PURIFY) });
 
 function scrub(doc, { stripStyles = false } = {}) {
   for (const tag of BLOCKED_TAGS) for (const el of [...doc.body.querySelectorAll(tag)]) el.remove();

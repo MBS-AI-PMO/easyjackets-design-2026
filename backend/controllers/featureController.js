@@ -7,6 +7,8 @@ import Blog from '../models/blogs.js'
 import slugify from 'slugify';
 import { sendEmail } from '../helpers/email.js';
 import { getAdminEmail } from '../helpers/emailSettings.js';
+import { isOneEmail } from '../helpers/emailAddress.js';
+import { readSignedInUser } from '../middlewares/authMiddleware.js';
 import { BLOG_IMAGE_FOLDER, blogImageUrl, moveInlineImagesToStorage } from '../helpers/blogImages.js';
 
 // Create or Update Feature
@@ -206,9 +208,26 @@ export const createBlogController = async (req, res) => {
 // never uses.
 const LIST_FIELDS = '-content -comments';
 
+// Visitors see published posts and approved comments, without the commenters' emails; a signed-in admin
+// (the admin's Blog screen) sees everything, drafts and every comment included. (Drafts and every
+// commenter's email used to be public.)
+const viewerIsAdmin = async (req) => (await readSignedInUser(req))?.role === 1;
+const publicComments = (comments = []) => comments
+    .filter((c) => c && c.approved)
+    .map((c) => {
+        const { email, ...shown } = typeof c.toObject === 'function' ? c.toObject() : c;
+        return shown;
+    });
+const publicBlog = (blog) => {
+    const shown = typeof blog.toObject === 'function' ? blog.toObject() : { ...blog };
+    shown.comments = publicComments(shown.comments);
+    return shown;
+};
+
 export const getAllBlogsController = async (req, res) => {
     try {
-        const blogs = await Blog.find().sort({ createdAt: -1 }).select(LIST_FIELDS).lean();
+        const filter = (await viewerIsAdmin(req)) ? {} : { isActive: true };
+        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).select(LIST_FIELDS).lean();
         res.status(200).json(blogs);
     } catch (error) {
         console.error(error);
@@ -221,7 +240,9 @@ export const getBlogByIdController = async (req, res) => {
     try {
         const blog = await Blog.findById(req.params.id);
         if (!blog) return res.status(404).send('Blog not found.');
-        res.status(200).json(blog);
+        if (await viewerIsAdmin(req)) return res.status(200).json(blog);
+        if (!blog.isActive) return res.status(404).send('Blog not found.');
+        res.status(200).json(publicBlog(blog));
     } catch (error) {
         console.error(error);
         res.status(500).send('Error fetching blog.');
@@ -333,7 +354,7 @@ export const getBlogBySlugController = async (req, res) => {
             { new: true }
         );
         if (!blog) return res.status(404).json({ success: false, message: 'Blog not found.' });
-        res.status(200).json({ success: true, blog });
+        res.status(200).json({ success: true, blog: publicBlog(blog) });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Error fetching blog.' });
@@ -433,8 +454,7 @@ export const getCommentsController = async (req, res) => {
         const blog = await Blog.findById(req.params.id).select('comments');
         if (!blog) return res.status(404).json({ success: false, message: 'Blog not found.' });
 
-        const approvedComments = blog.comments.filter(c => c.approved);
-        res.status(200).json({ success: true, comments: approvedComments });
+        res.status(200).json({ success: true, comments: publicComments(blog.comments) });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Error fetching comments.' });
@@ -511,6 +531,10 @@ export const deleteCommentController = async (req, res) => {
 
 export const SubmitContact = async (req, res) => {
     try {
+        // one address: the confirmation goes to it (a list would have it sent to many people)
+        if (!isOneEmail(req.body?.email)) {
+            return res.status(400).json({ success: false, message: 'Please enter one valid email address.' });
+        }
         const contactData = {
             ...req.body,
             date: new Date().toLocaleString('en-US', {

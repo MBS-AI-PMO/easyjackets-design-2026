@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import instance from '../constant/instance';
 import {
   Box, Typography, Button, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -7,7 +7,6 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { BASE_URL } from '../constant/url';
 
 const booleanAttributes = new Set(['async', 'defer', 'nomodule']);
 const supportedTagTypes = new Set(['meta', 'link', 'script', 'title', 'style', 'noscript']);
@@ -76,7 +75,7 @@ const SiteTagsManager = () => {
 
   const fetchTags = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/sitetags`);
+      const res = await instance.get(`/sitetags`);
       if (res.data.success) {
         setTags(res.data.tags);
       }
@@ -116,7 +115,7 @@ const SiteTagsManager = () => {
           return;
         }
 
-        await Promise.all(parsedTags.map((tag) => axios.post(`${BASE_URL}/sitetags`, tag)));
+        await Promise.all(parsedTags.map((tag) => instance.post(`/sitetags`, tag)));
         fetchTags();
         handleClose();
         return;
@@ -138,9 +137,9 @@ const SiteTagsManager = () => {
       }
 
       if (isEditing) {
-        await axios.put(`${BASE_URL}/sitetags/${currentTag._id}`, payload);
+        await instance.put(`/sitetags/${currentTag._id}`, payload);
       } else {
-        await axios.post(`${BASE_URL}/sitetags`, payload);
+        await instance.post(`/sitetags`, payload);
       }
       fetchTags();
       handleClose();
@@ -153,7 +152,7 @@ const SiteTagsManager = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this tag?')) {
       try {
-        await axios.delete(`${BASE_URL}/sitetags/${id}`);
+        await instance.delete(`/sitetags/${id}`);
         fetchTags();
       } catch (err) {
         console.error('Error deleting tag:', err);
@@ -163,7 +162,7 @@ const SiteTagsManager = () => {
 
   const handleToggleActive = async (tag) => {
     try {
-      await axios.put(`${BASE_URL}/sitetags/${tag._id}`, { ...tag, isActive: !tag.isActive });
+      await instance.put(`/sitetags/${tag._id}`, { ...tag, isActive: !tag.isActive });
       fetchTags();
     } catch (err) {
       console.error('Error updating status:', err);

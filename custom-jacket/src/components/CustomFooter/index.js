@@ -139,7 +139,8 @@ const CustomFooter = () => {
           {site?.socials?.length ? (
             <div className="ez-footer-socials">
               {site.socials.map((s) => (
-                <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`Easy Jackets on ${s.name}`} title={s.name} className="ez-footer-social">{s.abbr}</a>
+                // web addresses only (a "javascript:" link would run on click)
+                <a key={s.key} href={/^https?:\/\//i.test(s.url) ? s.url : undefined} target="_blank" rel="noopener noreferrer" aria-label={`Easy Jackets on ${s.name}`} title={s.name} className="ez-footer-social">{s.abbr}</a>
               ))}
             </div>
           ) : null}

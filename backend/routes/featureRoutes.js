@@ -42,6 +42,7 @@ import {
     startDeploymentStatusController,
 } from '../controllers/deploymentStatusController.js';
 import { requireSignin, isAdmin } from '../middlewares/authMiddleware.js';
+import { emailFormLimit } from '../middlewares/rateLimit.js';
 import { deleteSubscriber, listSubscribers, updateSubscriber } from '../controllers/newsletterSubscriberController.js';
 
 
@@ -95,8 +96,9 @@ router.post('/deployment-status/finish', finishDeploymentStatusController);
 
 // Feature Routes
 router.post('/', requireSignin, isAdmin, createOrUpdateFeatureController);
-router.post('/contact', SubmitContact);
-router.post('/subscribe', subscribeNewsletter);
+// these two send email (middlewares/rateLimit.js)
+router.post('/contact', emailFormLimit('contact'), SubmitContact);
+router.post('/subscribe', emailFormLimit('subscribe'), subscribeNewsletter);
 // People -> Subscribers (admin only)
 router.get('/subscribers', requireSignin, isAdmin, listSubscribers);
 router.put('/subscribers/:id', requireSignin, isAdmin, updateSubscriber);

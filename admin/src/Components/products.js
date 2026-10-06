@@ -49,6 +49,7 @@ import {
 import fileInstance from "../constant/filesInstance";
 import instance from "../constant/instance";
 import Editor from "react-simple-wysiwyg"
+import { cleanHtml } from "../utils/safeHtml";
 import { CUSTOM_URL, uploadUrl } from "../constant/url";
 import { toast } from "react-toastify";
 
@@ -360,8 +361,9 @@ function Products({ section = "jackets" }) {
       ...fullProduct,
       name: cleanSeoText(fullProduct?.name),
       sku: cleanSeoText(fullProduct?.sku),
-      description: detailDescription,
-      careInstructions: getProductCareInstructions(fullProduct),
+      // cleaned before the rich-text editors put them on the page (utils/safeHtml.js)
+      description: cleanHtml(detailDescription),
+      careInstructions: cleanHtml(getProductCareInstructions(fullProduct)),
       metaTitle: cleanSeoText(fullProduct?.metaTitle) || cleanProductTitle(fullProduct?.name),
       metaDescription: buildProductMetaDescription(fullProduct),
       imageAlt: cleanSeoText(fullProduct?.imageAlt) || cleanProductTitle(fullProduct?.name),
@@ -844,11 +846,21 @@ function Products({ section = "jackets" }) {
                         size="small"
                         disableElevation
                         startIcon={product.designId ? <Edit sx={{ fontSize: 15 }} /> : <AutoAwesome sx={{ fontSize: 15 }} />}
-                        onClick={() => {
+                        onClick={async () => {
                           const baseUrl = CUSTOM_URL;
+                          // the builder may save this product's design only with an admin's design ticket
+                          // (backend controllers/designController.js), fetched for this product first
+                          let ticket = '';
+                          try {
+                            const { data } = await instance.post('/custom/design-ticket', { productId: product._id });
+                            ticket = data?.ticket || '';
+                          } catch (error) {
+                            toast.error(error?.response?.data?.message || 'Could not open the builder for this product.');
+                            return;
+                          }
                           const url = product.designId
-                            ? `${baseUrl}/?id=${product.category?.code}&designedit=${product.designId}`
-                            : `${baseUrl}/?id=${product.category?.code}&product=${product._id}`;
+                            ? `${baseUrl}/?id=${product.category?.code}&designedit=${product.designId}&ticket=${encodeURIComponent(ticket)}`
+                            : `${baseUrl}/?id=${product.category?.code}&product=${product._id}&ticket=${encodeURIComponent(ticket)}`;
                           window.location.href = url;
                         }}
                         sx={{

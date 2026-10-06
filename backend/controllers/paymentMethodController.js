@@ -78,8 +78,14 @@ export const savePaymentMethod = async (req, res) => {
             return res.status(400).json({ error: "Payment method already saved" });
         }
 
-        // ✅ Handle customer mismatch by syncing local to Stripe
+        // ✅ Handle customer mismatch by syncing local to Stripe, only when that Stripe customer is this same
+        // account's (an older one: customers are created with the account's id in their metadata). A card of
+        // someone else's used to re-link this account to their Stripe customer, and so to their saved cards.
         if (stripePaymentMethod.customer && stripePaymentMethod.customer !== currentCustomerId) {
+            const owner = await stripe.customers.retrieve(stripePaymentMethod.customer).catch(() => null);
+            if (!owner || owner.deleted || owner.metadata?.userId !== String(req.user._id)) {
+                return res.status(403).json({ error: "This card belongs to another account." });
+            }
             console.warn(`♻️ Syncing local user to Stripe Customer ID: ${stripePaymentMethod.customer}`);
             await User.findByIdAndUpdate(req.user._id, { stripeCustomerId: stripePaymentMethod.customer });
             currentCustomerId = stripePaymentMethod.customer;

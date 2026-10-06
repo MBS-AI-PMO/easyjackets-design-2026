@@ -26,17 +26,21 @@ export default function Cart() {
   const itemsRef = useRef(cart.items);
   itemsRef.current = cart.items;
   const { add, updateDesign } = cart;
+  // ?keys=<each design's private key>, in the same order: kept on the line, its "Edit design" link needs it
+  const incomingKeys = params.get('keys') || '';
   useEffect(() => {
     if (!incoming || handled.current === incoming) return;
     handled.current = incoming;
     const ids = incoming.split(',').map((s) => s.trim()).filter(Boolean);
+    const keys = incomingKeys.split(',').map((s) => s.trim());
+    const keyFor = Object.fromEntries(ids.map((id, i) => [id, keys[i] || '']));
     fetchBuilderCarts(ids)
       .then((saved) => {
         const have = new Set(itemsRef.current.filter(isDesignLine).map((l) => l.designId));
         let added = 0;
         for (const c of saved) {
           if (have.has(c.designId._id)) continue;
-          add(designLine(c.designId), Math.max(1, Number(c.product_qty) || 1));
+          add({ ...designLine(c.designId), editKey: keyFor[c._id] || '' }, Math.max(1, Number(c.product_qty) || 1));
           added += 1;
         }
         setBuilderNotice(added
@@ -44,8 +48,8 @@ export default function Cart() {
           : { tone: 'ok', text: saved.length ? 'Those jackets are already in your cart.' : 'We could not find those jackets. Please use Add to cart in the design lab again.' });
       })
       .catch(() => setBuilderNotice({ tone: 'error', text: 'We could not load your jackets from the design lab. Please use Add to cart there again.' }))
-      .finally(() => setParams((p) => { const next = new URLSearchParams(p); next.delete('index'); return next; }, { replace: true }));
-  }, [incoming, add, setParams]);
+      .finally(() => setParams((p) => { const next = new URLSearchParams(p); next.delete('index'); next.delete('keys'); return next; }, { replace: true }));
+  }, [incoming, incomingKeys, add, setParams]);
 
   // A design edited in the builder (Edit design -> Update cart) comes back here with a new price,
   // size or image: reread every design line on arrival and whenever the tab is shown again.

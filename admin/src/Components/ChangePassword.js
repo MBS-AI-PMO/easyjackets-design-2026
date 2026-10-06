@@ -63,6 +63,13 @@ function ChangePassword() {
         try {
             const { data } = await instance.put("/auth/change-password", formData);
             if (data.success) {
+                // the change ended every other session; this one continues with the fresh token
+                if (data.token) {
+                    try {
+                        const auth = JSON.parse(sessionStorage.getItem("auth")) || {};
+                        sessionStorage.setItem("auth", JSON.stringify({ ...auth, token: data.token }));
+                    } catch { /* keep the old one: the next request will ask to sign in again */ }
+                }
                 toast.success(data.message || "Password changed successfully!");
                 setFormData({
                     currentPassword: "",

@@ -55,14 +55,15 @@ export default function Checkout() {
     if (!formDetails.firstName || !formDetails.email || !formDetails.address || !formDetails.city || !formDetails.zip) { setError('Please fill in your name, email and shipping address.'); return; }
     setBusy(true);
     try {
+      // kept for the confirmation page, which shows the order to the email it was placed with
+      try { sessionStorage.setItem('ej-checkout', JSON.stringify(formDetails)); } catch { /* private mode */ }
       if (pay === 'cod') {
-        const orderId = await createCodOrder({ products, user, formDetails });
+        const orderId = await createCodOrder({ products, user, formDetails, country: form.country });
         cart.clear();
         navigate(`/order-confirmation?order=${encodeURIComponent(orderId)}`, { replace: true });
       } else {
         // Stripe brings the visitor back to /success/:sessionId, where the order is created and the cart cleared.
-        try { sessionStorage.setItem('ej-checkout', JSON.stringify(formDetails)); } catch { /* private mode */ }
-        const url = await createStripeSession({ products, user });
+        const url = await createStripeSession({ products, user, country: form.country });
         window.location.assign(url);
       }
     } catch (err) {

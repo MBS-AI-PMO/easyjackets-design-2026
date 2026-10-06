@@ -40,6 +40,7 @@ import { toast } from 'react-toastify';
 import instance from '../constant/instance';
 import BlogRichTextEditor from './BlogRichTextEditor';
 import { autoCategory, categorySuggestions, groupedPageLabel, isGroupedPage } from './faqCategories';
+import { cleanHtml } from '../utils/safeHtml';
 
 const FAQ_ENDPOINT = '/features/page-faqs';
 const ROUTES_ENDPOINT = '/metadata/available-routes';
@@ -102,7 +103,7 @@ const RichText = ({ html, sx }) => (
             },
             ...sx,
         }}
-        dangerouslySetInnerHTML={{ __html: String(html || '') }}
+        dangerouslySetInnerHTML={{ __html: cleanHtml(html) }}
     />
 );
 

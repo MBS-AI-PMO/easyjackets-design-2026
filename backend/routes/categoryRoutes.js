@@ -22,6 +22,8 @@ router.post(
 //update category
 router.put(
   "/update-category/:id",
+  requireSignin,
+  isAdmin,
   updateCategoryController
 );
 

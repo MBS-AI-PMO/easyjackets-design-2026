@@ -358,7 +358,7 @@ export const getProduct = (id, product) => {
 
 export const getSetProduct = (designId) => {
   return async (dispatch) => {
-    const res = await axiosInstance.get(`/custom/getDesign/${designId}`)
+    const res = await axiosInstance.get(`/custom/getDesign/${encodeURIComponent(designId)}`) // an id from the link, never a path
     const obj = res.data.data
     const { data } = await axiosInstance.get(`/custom/get-properties?code=${obj.categoryCode}`)
 
@@ -401,7 +401,7 @@ export const getSetProduct = (designId) => {
 
 export const setProduct = (designId) => {
   return async (dispatch) => {
-    const res = await axiosInstance.get(`/custom/getDesign/${designId}`)
+    const res = await axiosInstance.get(`/custom/getDesign/${encodeURIComponent(designId)}`) // an id from the link, never a path
     const obj = res.data.data
     const { data } = await axiosInstance.get(`/custom/get-properties?code=${obj.categoryCode}`)
 

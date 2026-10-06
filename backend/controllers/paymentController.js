@@ -24,6 +24,9 @@ import { getAdminEmail } from '../helpers/emailSettings.js';
 import { extractCardLast4 } from '../helpers/stripeHelper.js';
 import design from '../models/design.js';
 import productModel from '../models/productModel.js';
+import { CartError, priceCart } from '../helpers/cartPricing.js';
+import { isOneEmail } from '../helpers/emailAddress.js';
+import { readSignedInUser } from '../middlewares/authMiddleware.js';
 
 /**
  * Helper: Get or create Stripe customer for user
@@ -114,40 +117,34 @@ const enrichCartData = async (cartItems) => {
 /**
  * Shared logic for creating Stripe sessions
  */
-const createStripeSession = async (products, customerId, userId = null, extraMetadata = {}, shippingData = null) => {
+/**
+ * A Stripe Checkout session for a cart priced here (helpers/cartPricing.js priceCart: { lines, shipping }),
+ * never at the prices the browser sends.
+ */
+const createStripeSession = async (priced, customerId, userId = null) => {
   console.log(`📦 Building session for Customer: ${customerId || 'GUEST'}`);
 
-  const lineItems = products.map((product, index) => {
-    // Robust price parsing: Remove commas or currency symbols if any
-    let priceStr = String(product.price).replace(/[^0-9.]/g, '');
-    const unitPriceUSD = parseFloat(priceStr);
-
-    console.log(`💰 Item ${index + 1}: "${product.name}" -> $${unitPriceUSD}`);
-
-    // Safety check: Don't allow zero or negative prices
-    if (isNaN(unitPriceUSD) || unitPriceUSD <= 0) {
-      console.error(`❌ Invalid price for product "${product.name}":`, product.price);
-      throw new Error(`Invalid price for item: ${product.name}. Make sure it has a numeric price.`);
-    }
-
-    return {
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: product.name,
-        },
-        unit_amount: Math.round(unitPriceUSD * 100), // convert to cents
-      },
-      quantity: product.quantity,
-    };
-  });
+  const lineItems = priced.lines.map((line) => ({
+    price_data: {
+      currency: 'usd',
+      product_data: { name: String(line.name || 'Item').slice(0, 250) },
+      unit_amount: Math.round(line.price * 100), // cents
+    },
+    quantity: line.quantity,
+  }));
+  if (priced.shipping > 0) {
+    lineItems.push({
+      price_data: { currency: 'usd', product_data: { name: 'Shipping & Handling' }, unit_amount: Math.round(priced.shipping * 100) },
+      quantity: 1,
+    });
+  }
 
   // Use CLIENT_URL from environment
   let clientUrl = storefrontUrl(); // the new storefront (CLIENT_URL), never the live site
 
   // Store cart data in session metadata (Stripe has 500 char limit per metadata value)
   // We'll store a minimal version with short names to fit the limit
-  const minimalCart = products.map(p => ({
+  const minimalCart = priced.lines.map(p => ({
     id: p.id,
     designId: p.designId || null,
     name: (p.name || '').substring(0, 50), // Truncate names to save space (increased from 30)
@@ -159,7 +156,7 @@ const createStripeSession = async (products, customerId, userId = null, extraMet
   let cartString = JSON.stringify(minimalCart);
   if (cartString.length > 500) {
     // If still too long, just store essential data (keeping designId as 'd')
-    const essentialCart = products.map(p => ({
+    const essentialCart = priced.lines.map(p => ({
       id: p.id,
       d: p.designId || null, // 'd' for designId - important for custom orders
       n: (p.name || '').substring(0, 30), // Increased from 15
@@ -222,7 +219,7 @@ const createStripeSession = async (products, customerId, userId = null, extraMet
 };
 
 export const create_payment_session = async (req, res) => {
-  const { products } = req.body;
+  const { products, country } = req.body; // country: the checkout form's, for the shipping rate
 
   if (!products || !Array.isArray(products) || products.length === 0) {
     return res.status(400).json({ error: "Cart is empty or invalid products provided." });
@@ -264,10 +261,12 @@ export const create_payment_session = async (req, res) => {
       console.error('⚠️ Failed to list payment methods:', pmErr.message);
     }
 
-    const session = await createStripeSession(products, customerId, user._id);
+    const priced = await priceCart(products, { country });
+    const session = await createStripeSession(priced, customerId, user._id);
     console.log('✅ Session Created:', session.id);
     res.json({ id: session.id, url: session.url });
   } catch (error) {
+    if (error instanceof CartError) return res.status(400).json({ error: error.message });
     console.error('❌ Authenticated Checkout Crash:', error);
     res.status(500).json({
       error: error.message,
@@ -276,8 +275,11 @@ export const create_payment_session = async (req, res) => {
   }
 };
 
+// A guest's checkout: no account, so no saved cards. (It used to take any account's id from the request
+// and open that account's Stripe customer, showing its saved cards to whoever asked; a signed-in customer
+// checks out through create_payment_session, which takes the account from the login.)
 export const create_guest_payment_session = async (req, res) => {
-  const { products, userId } = req.body; // userId is optional for guest, or passed if known
+  const { products, country } = req.body; // country: the checkout form's, for the shipping rate
 
   if (!products || !Array.isArray(products) || products.length === 0) {
     return res.status(400).json({ error: "Cart is empty or invalid products provided." });
@@ -285,26 +287,14 @@ export const create_guest_payment_session = async (req, res) => {
 
   console.log('--- GUEST CHECKOUT START ---');
   console.log('Products received:', products?.length);
-  console.log('User ID (optional):', userId);
 
   try {
-    let customerId = null;
-
-    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      console.log('Checking for existing user...', userId);
-      const user = await User.findById(userId);
-      if (user) {
-        customerId = await getOrCreateStripeCustomer(user);
-      }
-    } else if (userId) {
-      console.log('⚠️ userId provided but is not a valid ObjectId:', userId);
-    }
-
-    console.log('Starting Session Build for:', customerId || 'GUEST');
-    const session = await createStripeSession(products, customerId, userId);
+    const priced = await priceCart(products, { country });
+    const session = await createStripeSession(priced, null, null);
     console.log('✅ Guest Session Created:', session.id);
     res.json({ id: session.id, url: session.url });
   } catch (error) {
+    if (error instanceof CartError) return res.status(400).json({ error: error.message });
     console.error('❌ Guest Checkout Crash:', error);
     res.status(500).json({
       error: error.message,
@@ -347,8 +337,15 @@ export const triggerWebhook = async (req, res) => {
   let event;
 
   try {
-    // the signing secret of the mode chosen in Settings -> Payment Configuration
+    // the signing secret of the mode chosen in Settings -> Payment Configuration. Without one a message
+    // signed with an empty key would pass, so anyone could report a "paid" order: refused instead (the
+    // success page still records paid orders, checking each with Stripe).
     const webhookSecret = await getStripeWebhookSecret();
+    if (!webhookSecret) {
+      console.error('⚠️ Stripe webhook refused: no webhook signing secret in Settings -> Payment Configuration');
+      res.status(503).send('Webhook signing secret is not configured');
+      return;
+    }
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error('⚠️ Webhook signature verification failed:', err.message);
@@ -649,7 +646,11 @@ const confirmSessionAndCreateOrder = async (req, res) => {
   }
 };
 
-// Get single order by ID or orderId
+// Get single order by ID or orderId: the confirmation page. Only for whoever placed it: the email it was
+// placed with (?email=, kept by the checkout in that browser), or the signed-in buyer, or an admin. (It used
+// to give anyone with an order number the buyer's name, address, phone and email.)
+const sameEmail = (a, b) => Boolean(a) && Boolean(b) && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+
 export const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -664,6 +665,17 @@ export const getOrderById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
+    const email = typeof req.query.email === 'string' ? req.query.email : '';
+    const orderEmails = [order.shipping_details?.[0]?.email, order.billing_Details?.[0]?.email, order.buyer?.email];
+    let allowed = orderEmails.some((e) => sameEmail(e, email));
+    if (!allowed) {
+      const viewer = await readSignedInUser(req);
+      allowed = Boolean(viewer) && (viewer.role === 1 || String(order.buyer?._id || order.buyer || '') === String(viewer._id));
+    }
+    if (!allowed) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
     res.status(200).json({ success: true, order });
   } catch (error) {
     console.error('❌ Get Order Error:', error);
@@ -672,42 +684,24 @@ export const getOrderById = async (req, res) => {
 };
 
 export const create_cod_order = async (req, res) => {
-  const { products, user, formDetails } = req.body;
+  const { products, user, formDetails, country } = req.body; // country: the checkout form's, for the shipping rate
 
   if (!products || !Array.isArray(products) || products.length === 0) {
     return res.status(400).json({ error: "Cart is empty or invalid products provided." });
+  }
+  if (!formDetails || typeof formDetails !== 'object' || !isOneEmail(formDetails.email)) {
+    return res.status(400).json({ error: "Please enter one valid email address." });
   }
 
   console.log('--- COD CHECKOUT START ---');
 
   try {
-    // 1. Normalize and Enrich Cart Data
-    let cartData = products.map(item => ({
-      id: item.id || null, // ensure valid ID or null
-      designId: item.designId || null,
-      name: item.name || 'Unknown Product',
-      quantity: item.quantity || 1,
-      price: item.price || 0
-    }));
+    // 1. The cart priced here (the prices and shipping line the browser sends are not used)
+    const priced = await priceCart(products, { country: country || formDetails.country });
+    let cartData = await enrichCartData(priced.lines);
 
-    // Filter out non-product items if any (though usually passed cleanly from frontend)
-    const isValidObjectId = (id) => {
-      if (!id) return true;
-      return typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
-    };
-
-    cartData = cartData.filter(item => {
-      const id = item.id;
-      if (id && !isValidObjectId(id)) {
-        return false;
-      }
-      return true;
-    });
-
-    cartData = await enrichCartData(cartData);
-
-    // 2. Calculate Token Amount
-    const totalAmount = products.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // 2. The amount to collect: the priced cart and its shipping
+    const totalAmount = priced.total;
 
     const randomId = Math.random().toString(36).substr(2, 8).toUpperCase();
     const timestamp = Date.now().toString().slice(-5);
@@ -762,6 +756,7 @@ export const create_cod_order = async (req, res) => {
     res.status(200).json({ success: true, orderId: newOrder.orderId });
 
   } catch (error) {
+    if (error instanceof CartError) return res.status(400).json({ error: error.message });
     console.error('❌ COD Checkout Error:', error);
     res.status(500).json({ error: error.message });
   }

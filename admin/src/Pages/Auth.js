@@ -20,18 +20,22 @@ const Auth = () => {
 
       const { data } = await instance.post('/auth/login', { email, password })
 
-      sessionStorage.setItem('auth', JSON.stringify(data))
-
-      if (data.success) {
-        if (data.user.role === 0) {
-          navigate('/')
-        }
-        toast.success("login successfully")
-        login()
-      }
-      else {
+      if (!data.success) {
         toast.error("please check you credentials")
+        return
       }
+      // the admin is for admins: a customer account signs in on the storefront, never here (its token used
+      // to be kept and every admin screen shown)
+      if (data.user?.role !== 1) {
+        sessionStorage.removeItem('auth')
+        toast.error("you are not authorised as admin")
+        navigate('/')
+        return
+      }
+
+      sessionStorage.setItem('auth', JSON.stringify(data))
+      toast.success("login successfully")
+      login()
     }
     catch (error) {
       toast.error("you are not authorised as admin")

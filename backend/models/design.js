@@ -62,6 +62,12 @@ const designSchema = new Schema(
     custom_image_right: {
         type: String,
     },
+    // a cart design's private key (controllers/designController.js): given only to the browser that added it
+    // to the cart, and needed to change it; never sent back when a design is read
+    editKey: {
+        type: String,
+        select: false,
+    },
     // advanceCart: {
     //     type: String, // Storing the JSON string or object
     //     required: true

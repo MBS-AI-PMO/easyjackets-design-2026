@@ -1044,7 +1044,7 @@ const OrderDetails = () => {
 
               // 1. Extract main label (text) - prioritized order matching UI
               let mainLabel = '';
-              const symbolType = patchData.symbol?.type || '';
+              const symbolType = String(patchData.symbol?.type || '');
               const symbolId = patchData.symbol?.flag || patchData.symbol?.id || '';
 
               // Check for mascot/flag type first
@@ -1768,7 +1768,7 @@ const OrderDetails = () => {
                             // 1. Determine main label and extract images (for mascots/flags first)
                             if (value.symbol?.type) {
                               mainLabel = value.symbol.type;
-                              const typeLower = value.symbol.type.toLowerCase();
+                              const typeLower = String(value.symbol.type).toLowerCase(); // a damaged design must not blank the page
                               const id = value.symbol.flag || value.symbol.id;
                               if (typeLower === 'mascots' && id) {
                                 imageContent = `/assets/images/mascots/${id}.svg`;

@@ -29,8 +29,11 @@ export const designLine = (d) => ({
 
 export const isDesignLine = (line) => Boolean(line?.designId && !line?.id);
 
-/** Reopen the visitor's own cart design in the builder; "Update cart" there saves it in place. */
-export const editDesignUrl = (line) => builderUrl({ code: line.categoryCode, designedit: line.designId });
+/**
+ * Reopen the visitor's own cart design in the builder; "Update cart" there saves it in place. The line's
+ * private key goes along: the API lets only its holder change the design.
+ */
+export const editDesignUrl = (line) => builderUrl({ code: line.categoryCode, designedit: line.designId, key: line.editKey });
 /** Start a new jacket from a saved design (the builder's Add to cart saves a copy). */
 export const startFromDesignUrl = (d) => builderUrl({ code: d.categoryCode, design: d._id });
 

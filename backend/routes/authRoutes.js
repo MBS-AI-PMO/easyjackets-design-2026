@@ -2,6 +2,7 @@ import express from "express";
 import {
   encryptUser,
   forgotPasswordController,
+  resetPasswordController,
   getAllOrdersController,
   getAllUsers,
   getAllAdmins,
@@ -15,15 +16,22 @@ import {
   changePasswordController,
   testController,
   updateProfileController,
-  userHideOrderController
+  userHideOrderController,
+  logoutController
 } from "../controllers/authController.js";
 import { isAdmin, requireSignin } from "../middlewares/authMiddleware.js";
+import { emailFormLimit, rateLimit } from "../middlewares/rateLimit.js";
+
+// sign-in and sign-up per visitor (a wrong password also locks that one account for a while: authController)
+const TEN_MINUTES = 10 * 60 * 1000;
+const loginLimit = rateLimit({ name: "login", max: 30, windowMs: TEN_MINUTES, message: "Too many sign-in attempts. Please wait a few minutes." });
+const registerLimit = rateLimit({ name: "register", max: 10, windowMs: TEN_MINUTES, message: "Too many sign-ups. Please wait a few minutes." });
 
 const router = express.Router();
 
 // Register || Method Post
 
-router.post("/register", registerController);
+router.post("/register", registerLimit, registerController);
 
 // Register Admin - Protected route (only admins can create admins)
 router.post("/register-admin", requireSignin, isAdmin, registerAdminController);
@@ -31,16 +39,22 @@ router.post("/register-admin", requireSignin, isAdmin, registerAdminController);
 
 //LOGIN || POST
 
-router.post("/login", loginController);
+router.post("/login", loginLimit, loginController);
+
+// logging out ends this session on the server too (controllers/authController.js)
+router.post("/logout", requireSignin, logoutController);
 
 
-router.post("/forgot-password", forgotPasswordController);
+// password reset by an emailed one-time link (controllers/authController.js)
+router.post("/forgot-password", emailFormLimit("forgot-password"), forgotPasswordController);
+router.post("/reset-password", resetPasswordController);
 
 router.get("/encrypt", requireSignin, encryptUser);
 
 router.get("/test", requireSignin, isAdmin, testController);
 
-router.get("/allusers", getAllUsers);
+// the customer list (names, emails, phones, addresses): admins only
+router.get("/allusers", requireSignin, isAdmin, getAllUsers);
 
 // Get all admins (role: 1)
 router.get("/alladmins", requireSignin, isAdmin, getAllAdmins);

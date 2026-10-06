@@ -22,6 +22,51 @@ import moment from "moment/moment.js";
 import { sendFileEmail } from "../helpers/fileEmail.js";
 import { designReviewUrl, resumeDesignUrl } from "../helpers/customJacketUrl.js";
 import formidable from "formidable";
+import crypto from "crypto";
+import Order from "../models/orderModel.js";
+import { isOneEmail } from "../helpers/emailAddress.js";
+
+// Who may change a saved design (they used to be open to anyone, even after the jacket was ordered):
+//   - a cart design: the browser that added it to the cart, which got its private editKey (sent back as
+//     the x-design-key header by the builder's "Update cart"); never once an order has it
+//   - a catalogue product's design: an admin, through a design ticket the admin's Products screen gets
+//     (x-design-ticket), valid DESIGN_TICKET_LIFETIME for that product
+const DESIGN_TICKET_LIFETIME = '4h';
+const newEditKey = () => crypto.randomBytes(18).toString('hex');
+const sameSecret = (a, b) => {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  return left.length > 0 && left.length === right.length && crypto.timingSafeEqual(left, right);
+};
+const readDesignTicket = (req) => {
+  try {
+    const ticket = JWT.verify(String(req.get('x-design-ticket') || ''), process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    return ticket?.purpose === 'design-ticket' ? ticket : null;
+  } catch {
+    return null;
+  }
+};
+
+// Admin: a ticket for designing a catalogue product in the builder (Products → Design / Edit design).
+export const createDesignTicket = async (req, res) => {
+  try {
+    const productId = String(req.body?.productId || '');
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: 'A product is required.' });
+    }
+    const product = await productModel.findById(productId).select('_id designId').lean();
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found.' });
+    const ticket = JWT.sign(
+      { purpose: 'design-ticket', productId, designId: product.designId ? String(product.designId) : null },
+      process.env.JWT_SECRET,
+      { expiresIn: DESIGN_TICKET_LIFETIME }
+    );
+    return res.status(200).json({ success: true, ticket });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: 'Could not prepare the builder.' });
+  }
+};
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -160,10 +205,15 @@ export const save_design_to_cart = async (req, res) => {
     custom_image_left = await bufferToS3(custom_image_left)
     custom_image_right = await bufferToS3(custom_image_right)
 
+    // the cart design's private key, given to this browser only (it is needed to change the design)
+    const editKey = newEditKey()
+    delete rest.editKey
+
     const save_design = await Design.create({
       categoryCode,
       ...designImageUrls(req, { custom_image, custom_image_back, custom_image_left, custom_image_right }),
-      ...rest
+      ...rest,
+      editKey
     })
 
     const addTocart = await CustomCart.create({
@@ -176,7 +226,8 @@ export const save_design_to_cart = async (req, res) => {
     return res.status(200).json({
       success: 'true',
       message: 'add to cart',
-      id: addTocart._id
+      id: addTocart._id,
+      editKey
     })
   }
   catch (error) {
@@ -189,15 +240,23 @@ export const save_design_to_cart = async (req, res) => {
   }
 }
 
+// The builder's customer pictures (no login): one image, at most 15 MB. Images are re-encoded to WebP
+// (helpers/fileUpload.js), so anything that is not really a picture is refused instead of stored (an
+// uploaded web page used to be kept as it was and served from this site).
+const MAX_PICTURE_BYTES = 15 * 1024 * 1024;
+
 export const save_images = async (req, res) => {
 
-  const form = formidable({});
+  const form = formidable({ maxFiles: 1, maxFileSize: MAX_PICTURE_BYTES });
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      return res.status(500).send('Error parsing the files.');
+      return res.status(400).send({ success: false, message: 'Please upload one picture of at most 15 MB.' });
     }
     try {
-      const file = files.file[0];
+      const file = files.file?.[0];
+      if (!file || !String(file.mimetype || '').startsWith('image/')) {
+        return res.status(400).send({ success: false, message: 'Please upload a picture (JPG, PNG, WebP, GIF or SVG).' });
+      }
       const url = await uploadToS3(file)
       return res.status(200).json({
         success: 'true',
@@ -238,6 +297,16 @@ export const save_design_to_product = async (req, res) => {
         message: 'Valid productId is required to save this custom design.'
       });
     }
+
+    // only an admin (a design ticket for this product) may set a catalogue product's design
+    const ticket = readDesignTicket(req);
+    if (!ticket || ticket.productId !== String(productId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Open the builder from the admin Products screen to design this product.'
+      });
+    }
+    delete rest.editKey;
 
     const product = await productModel.findById(productId).select('_id');
     if (!product) {
@@ -303,30 +372,8 @@ export const getCartById = async (req, res) => {
   }
 }
 
-// update Cart 
-
-export const updateCart = async (req, res) => {
-  try {
-    const { cartId } = req.params
-
-    const findCart = await CustomCart.findOne({ _id: cartId })
-
-    const updateDesign = await Design.findOneAndUpdate({ _id: findCart.designId }, { ...req.body }, { runValidators: true })
-
-    return res.status(200).json({
-      success: 'true',
-      message: 'update Cart',
-      data: updateDesign
-    })
-  }
-  catch (err) {
-    return res.status(500).send({
-      success: false,
-      message: "Eror while saving design",
-      err,
-    });
-  }
-}
+// (updateCart, PUT /custom/updateCart/:cartId, was removed: nothing used it, and it let anyone overwrite
+// any design with anything)
 // Every jacket in `jackets` carries the four rendered views as base64 on top of
 // the configuration, which is roughly 250 KB of the ~280 KB this endpoint used
 // to return. Nothing reads them back: the storefront shows custom_image*, and
@@ -355,8 +402,33 @@ export const updateDesign = async (req, res) => {
   try {
     const { designId } = req.params
     let { custom_image, custom_image_back, custom_image_left, custom_image_right, ...rest } = req.body
+    delete rest.editKey
 
-    const findDesign = await Design.findOne({ _id: designId })
+    if (!mongoose.Types.ObjectId.isValid(String(designId))) {
+      return res.status(404).json({ success: false, message: 'Design not found.' })
+    }
+    const findDesign = await Design.findOne({ _id: designId }).select('+editKey')
+    if (!findDesign) {
+      return res.status(404).json({ success: false, message: 'Design not found.' })
+    }
+
+    // who may change it (see the top of this file)
+    const ticket = readDesignTicket(req)
+    let allowed = Boolean(ticket && ticket.designId && ticket.designId === String(designId))
+    if (!allowed) {
+      const [ordered, catalogue] = await Promise.all([
+        Order.exists({ $or: [{ 'cartData.designId': designId }, { products: designId }] }),
+        productModel.exists({ designId }),
+      ])
+      if (ordered) {
+        return res.status(409).json({ success: false, message: 'This jacket has been ordered, so its design can no longer be changed. Contact us for any change.' })
+      }
+      // a cart design saved before keys existed has none: still the customer's to change
+      allowed = !catalogue && (findDesign.editKey ? sameSecret(req.get('x-design-key'), findDesign.editKey) : true)
+    }
+    if (!allowed) {
+      return res.status(403).json({ success: false, message: 'This design can only be changed from the cart it was added to.' })
+    }
     custom_image = await bufferToS3(custom_image, findDesign.custom_image)
     custom_image_back = await bufferToS3(custom_image_back, findDesign.custom_image_back)
     custom_image_left = await bufferToS3(custom_image_left, findDesign.custom_image_left)
@@ -459,6 +531,10 @@ const snapshotSharedDesign = async (req, design = {}) => {
 export const shareDesign = async (req, res) => {
   try {
     const { name, email, design } = req.body
+    // one address (a list would send the design, and its PDF, to many people at once)
+    if (!isOneEmail(email)) {
+      return res.status(400).json({ success: false, error: 'Please enter one valid email address.', message: 'Please enter one valid email address.' })
+    }
 
     // A failed snapshot costs the resume link, not the email - fall back to the
     // studio landing page and still send the design.

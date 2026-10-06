@@ -1,7 +1,11 @@
 import userModel from "../models/userModel.js";
 import orderModel from "../models/orderModel.js";
 import { hashPassword, comparePassword } from "../helpers/authHelper.js";
+import { sendEmailInBackground } from "../helpers/email.js";
+import { storefrontUrl } from "../helpers/customJacketUrl.js";
+import crypto from "crypto";
 import JWT from "jsonwebtoken";
+import RevokedToken from "../models/revokedToken.js";
 // import { compare } from "bcrypt";
 const serializeUser = (user) => ({
   _id: user._id,
@@ -14,7 +18,7 @@ const serializeUser = (user) => ({
 
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, phone, address, answer } = req.body;
+    const { name, email, password, phone, address } = req.body;
     if (!name) {
       return res.send({ message: "Name is Required" });
     }
@@ -45,13 +49,12 @@ export const registerController = async (req, res) => {
       phone,
       address,
       password: hashedPassword,
-      answer,
     }).save();
 
     res.status(201).send({
       success: true,
       message: "User Registered Successfully",
-      user,
+      user: serializeUser(user), // never the password hash
     });
   } catch (err) {
     console.log(err);
@@ -123,36 +126,83 @@ export const registerAdminController = async (req, res) => {
 };
 
 
+// A sign-in token: the user, their tokenVersion (raised by a password change or reset, which ends older
+// sessions) and its own id (jti, so logging out can end this one session). 7 days, as before.
+const signLoginToken = (user) => JWT.sign(
+  { _id: String(user._id), v: user.tokenVersion || 0, jti: crypto.randomBytes(12).toString("hex") },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
+
+// After LOCK_AFTER wrong passwords for one account within LOCK_MINUTES, that account's sign-in waits
+// LOCK_MINUTES (guessing passwords one after another stops working). Kept in memory.
+const LOCK_AFTER = 10;
+const LOCK_MINUTES = 15;
+const LOCKED_MESSAGE = `Too many wrong passwords. Please wait ${LOCK_MINUTES} minutes, or reset your password.`;
+const failedLogins = new Map(); // email -> { count, firstAt, lockedUntil }
+const isLockedOut = (key) => (failedLogins.get(key)?.lockedUntil || 0) > Date.now();
+const noteFailedLogin = (key) => {
+  const now = Date.now();
+  const entry = failedLogins.get(key);
+  const fresh = !entry || now - entry.firstAt > LOCK_MINUTES * 60 * 1000;
+  const next = fresh ? { count: 1, firstAt: now, lockedUntil: 0 } : { ...entry, count: entry.count + 1 };
+  if (next.count >= LOCK_AFTER) next.lockedUntil = now + LOCK_MINUTES * 60 * 1000;
+  failedLogins.set(key, next);
+};
+const clearFailedLogins = (key) => failedLogins.delete(key);
+setInterval(() => {
+  const cutoff = Date.now() - LOCK_MINUTES * 60 * 1000;
+  for (const [key, entry] of failedLogins) if (entry.firstAt < cutoff && (entry.lockedUntil || 0) < Date.now()) failedLogins.delete(key);
+}, 10 * 60 * 1000).unref();
+
+// Logging out ends this session on the server too (the token stops working at once, not after 7 days).
+export const logoutController = async (req, res) => {
+  try {
+    if (req.user?.jti && req.user?.exp) {
+      await RevokedToken.updateOne(
+        { jti: req.user.jti },
+        { jti: req.user.jti, expiresAt: new Date(req.user.exp * 1000) },
+        { upsert: true }
+      );
+    }
+    return res.status(200).send({ success: true, message: "Signed out" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ success: false, message: "Something went wrong" });
+  }
+};
+
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
+    // text only: an object here (e.g. {"$regex": "^a"}) would be a database query, not an email
+    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
       return res.status(404).send({
         success: false,
         message: "Invalid email or Password",
       });
     }
+    const lockKey = email.trim().toLowerCase();
+    if (isLockedOut(lockKey)) {
+      return res.status(429).send({ success: false, message: LOCKED_MESSAGE });
+    }
+
     const user = await userModel.findOne({
       email,
     });
 
-    if (!user) {
+    // one answer for a wrong email and a wrong password, so the form does not tell which emails have accounts
+    const match = user ? await comparePassword(password, user.password) : false;
+    if (!user || !match) {
+      noteFailedLogin(lockKey);
       return res.status(200).send({
         success: false,
-        message: "Email Not Registered",
+        message: "Invalid email or password",
       });
     }
-    const match = await comparePassword(password, user.password);
-    if (!match) {
-      return res.status(200).send({
-        success: false,
-        message: "Invalid Password",
-      });
-    }
+    clearFailedLogins(lockKey);
 
-    const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = signLoginToken(user);
     res.status(200).send({
       success: true,
       message: "Login Successfully",
@@ -169,39 +219,63 @@ export const loginController = async (req, res) => {
   }
 };
 
+// Password reset by email. Step 1 (forgot-password): the account's email gets a one-time link
+// (storefront /account?reset=<token>), valid RESET_MINUTES; only the token's sha256 is stored. The answer is
+// the same whether or not the email has an account, so the form does not tell which emails exist.
+// Step 2 (reset-password): the token and a new password. (It used to reset any account given a "security
+// answer" that was never stored, so any value, or a query operator, matched: anyone could take over any
+// account.)
+const RESET_MINUTES = 60;
+const RESET_SENT = "If an account exists for that email, we have sent a link to reset its password. Check your inbox.";
+const sha256 = (value) => crypto.createHash("sha256").update(String(value)).digest("hex");
+
 export const forgotPasswordController = async (req, res) => {
   try {
-    const { email, newPassword, answer } = req.body;
+    const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
     if (!email) {
-      res.status(400).send({ message: "Email is required" });
+      return res.status(400).send({ success: false, message: "Email is required" });
     }
-    if (!answer) {
-      res.status(400).send({ message: "answer is required" });
+    const user = await userModel.findOne({ email });
+    if (user) {
+      const token = crypto.randomBytes(32).toString("hex");
+      await userModel.updateOne(
+        { _id: user._id },
+        { resetPasswordHash: sha256(token), resetPasswordExpires: new Date(Date.now() + RESET_MINUTES * 60 * 1000) }
+      );
+      const link = `${storefrontUrl()}/account?reset=${token}`;
+      sendEmailInBackground("Reset your Easy Jackets password", user.email, { name: user.name, link, minutes: RESET_MINUTES }, "/views/passwordReset.ejs");
     }
-    if (!newPassword) {
-      res.status(400).send({ message: "New Password is required" });
-    }
-    const user = await userModel.findOne({ email, answer });
-    //validation
-    if (!user) {
-      return res.status(404).send({
-        success: false,
-        message: "Wrong Email Or Answer",
-      });
-    }
-    const hashed = await hashPassword(newPassword);
-    await userModel.findByIdAndUpdate(user._id, { password: hashed });
-    res.status(200).send({
-      success: true,
-      message: "Password Reset Successfully",
-    });
+    return res.status(200).send({ success: true, message: RESET_SENT });
   } catch (err) {
     console.log(err);
-    res.status(500).send({
-      success: false,
-      message: "Something went wrong",
-      err,
-    });
+    return res.status(500).send({ success: false, message: "Something went wrong" });
+  }
+};
+
+export const resetPasswordController = async (req, res) => {
+  try {
+    const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
+    const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+    if (!/^[a-f0-9]{64}$/.test(token)) {
+      return res.status(400).send({ success: false, message: "This reset link is not valid. Ask for a new one." });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).send({ success: false, message: "Use a new password of at least 6 characters." });
+    }
+    const user = await userModel.findOne({ resetPasswordHash: sha256(token), resetPasswordExpires: { $gt: new Date() } });
+    if (!user) {
+      return res.status(400).send({ success: false, message: "This reset link has expired or was already used. Ask for a new one." });
+    }
+    // the new password ends every session signed in with the old one
+    await userModel.updateOne(
+      { _id: user._id },
+      { password: await hashPassword(newPassword), resetPasswordHash: null, resetPasswordExpires: null, $inc: { tokenVersion: 1 } }
+    );
+    clearFailedLogins(String(user.email || "").trim().toLowerCase());
+    return res.status(200).send({ success: true, message: "Password changed. Sign in with your new password." });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -281,6 +355,19 @@ export const updateProfileController = async (req, res) => {
 
     const normalizedEmail = email?.trim().toLowerCase();
 
+    // a new email or password needs the current password: a stolen session alone must not be able to take
+    // the account over (a new email then gets the password reset link)
+    const emailChanges = Boolean(normalizedEmail) && normalizedEmail !== String(user.email || '').trim().toLowerCase();
+    if (emailChanges || password) {
+      const current = typeof req.body.currentPassword === "string" ? req.body.currentPassword : "";
+      if (!current || !(await comparePassword(current, user.password))) {
+        return res.status(401).send({
+          success: false,
+          message: emailChanges ? "Enter your current password to change your email." : "Enter your current password to change your password.",
+        });
+      }
+    }
+
     if (normalizedEmail && normalizedEmail !== user.email) {
       const existingUser = await userModel.findOne({
         email: normalizedEmail,
@@ -308,6 +395,8 @@ export const updateProfileController = async (req, res) => {
         password: hashedPassword || user.password,
         phone: phone?.trim() || user.phone,
         address: address || user.address,
+        // a new password ends every other session; this one gets a fresh token
+        ...(hashedPassword ? { $inc: { tokenVersion: 1 } } : {}),
       },
       { new: true }
     );
@@ -316,6 +405,7 @@ export const updateProfileController = async (req, res) => {
       message: "Profile Updated SUccessfully",
       user: serializeUser(updatedUser),
       updatedUser: serializeUser(updatedUser),
+      ...(hashedPassword ? { token: signLoginToken(updatedUser) } : {}),
     });
   } catch (error) {
     console.log(error);
@@ -574,12 +664,17 @@ export const changePasswordController = async (req, res) => {
       });
     }
 
-    // Hash new password and update
+    // Hash new password and update; every other session ends, this one gets a fresh token (`token`)
     const hashedPassword = await hashPassword(newPassword);
-    await userModel.findByIdAndUpdate(req.user._id, { password: hashedPassword });
+    const updated = await userModel.findByIdAndUpdate(
+      req.user._id,
+      { password: hashedPassword, $inc: { tokenVersion: 1 } },
+      { new: true }
+    );
 
     res.status(200).send({
       success: true,
+      token: signLoginToken(updated),
       message: "Password changed successfully",
     });
   } catch (error) {

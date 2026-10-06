@@ -12,6 +12,7 @@ import { getProduct, getSetProduct, setProduct } from "./store/actions";
 import "./css/index.scss";
 import "./css/scrollbars.css";
 import App from "./App";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { loadSiteFavicon } from "./utils/favicon";
 
 // the admin's favicon, requested before the builder itself loads
@@ -72,7 +73,10 @@ window.mount = (
     root.render(
       <React.StrictMode>
         <Provider store={store}>
-          <App />
+          {/* a design that cannot be drawn shows a message, not a blank page */}
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
         </Provider>
       </React.StrictMode>
     );

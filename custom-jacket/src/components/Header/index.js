@@ -315,6 +315,7 @@ const Header = ({
 
     let images = [];
     let ids = []
+    let keys = [] // each saved design's private key: the cart needs it to change the design later
     for (let index = 0; index < store.getState().jackets.length; index++) {
       let svgResult = await getSvg(index);
       images.push(svgResult);
@@ -352,6 +353,7 @@ const Header = ({
 
         if (result.status === 200) {
           ids.push(result.data.id)
+          keys.push(result.data.editKey || '')
         }
         promises.push(result);
       }
@@ -362,7 +364,7 @@ const Header = ({
           //     window.onbeforeunload = function () {};
           //     window.parent.postMessage({data: JSON.stringify(data) , result: JSON.stringify(res) }, '*');
           window.onbeforeunload = null;
-          window.location.href = frontendUrl(`/cart?index=${ids.join(',')}`);
+          window.location.href = frontendUrl(`/cart?index=${ids.join(',')}&keys=${keys.join(',')}`);
         }, 0);
       });
     });

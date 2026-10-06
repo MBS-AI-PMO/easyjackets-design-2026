@@ -59,6 +59,10 @@ RUN cp deploy-status.sh /usr/local/bin/deploy-status && sed -i 's/\r$//' /usr/lo
 ENV DEPLOY_SERVICE=node-backend
 ENV DEPLOY_STATUS_API=http://127.0.0.1:8080
 
+# The API runs as the "node" user, not root (docker-entrypoint.sh hands it the uploads volume first)
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+
 EXPOSE 8080
 
 CMD ["node", "server.mjs"]

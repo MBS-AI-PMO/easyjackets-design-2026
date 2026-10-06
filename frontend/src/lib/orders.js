@@ -96,15 +96,15 @@ export const checkoutProducts = (lines, shippingCost) => {
 };
 
 /** Cash on delivery: the order is created at once. */
-export const createCodOrder = async ({ products, user, formDetails }) => {
-  const r = await api.post('/payment/cod-order', { products, user: user || null, formDetails }, { auth: false });
+export const createCodOrder = async ({ products, user, formDetails, country }) => {
+  const r = await api.post('/payment/cod-order', { products, user: user || null, formDetails, country }, { auth: false });
   return r.orderId;
 };
 
 /** Card: a Stripe Checkout session; the browser is sent to its URL and comes back to /success/:sessionId. */
-export const createStripeSession = async ({ products, user }) => {
+export const createStripeSession = async ({ products, user, country }) => {
   const path = user ? '/payment/create-checkout-session' : '/payment/create-guest-checkout-session';
-  const r = await api.post(path, { products, userId: user?._id }, { auth: !!user });
+  const r = await api.post(path, { products, userId: user?._id, country }, { auth: !!user });
   const url = r?.url || r?.sessionUrl || r?.session?.url;
   if (!url) throw new Error('The payment page could not be opened. Please try again.');
   return url;
@@ -178,8 +178,16 @@ export function normalizeOrder(o) {
   };
 }
 
-/** The confirmation page: an order by its number or database id (public, as on the current site). */
-export const fetchOrderById = async (id, signal) => normalizeOrder((await api.get(`/payment/order/${encodeURIComponent(id)}`, { auth: false, signal })).order);
+/**
+ * The confirmation page: an order by its number or database id. The API shows an order only to whoever
+ * placed it: the email it was placed with (kept by the checkout in this browser, sessionStorage
+ * 'ej-checkout') or the signed-in buyer.
+ */
+export const fetchOrderById = async (id, signal) => {
+  let email = '';
+  try { email = JSON.parse(sessionStorage.getItem('ej-checkout') || 'null')?.email || ''; } catch { /* private mode */ }
+  return normalizeOrder((await api.get(`/payment/order/${encodeURIComponent(id)}`, { params: { email }, signal })).order);
+};
 
 /** Guest tracking: order number + the email the order was placed with. */
 export const trackOrder = async (orderId, email, signal) => normalizeOrder((await api.get('/order/track', { params: { orderId, email }, auth: false, signal })).order);

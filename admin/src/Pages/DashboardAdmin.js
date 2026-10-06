@@ -20,6 +20,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../Context/authContext';
 import OrderNotifications from '../Components/OrderNotifications';
+import instance from '../constant/instance';
+import PageErrorBoundary from '../Components/PageErrorBoundary';
 
 const drawerWidth = 280;
 const collapsedDrawerWidth = 76;
@@ -415,6 +417,10 @@ const DashboardAdmin = () => {
           <Tooltip title={collapsed ? 'Logout' : ''} placement="right" arrow>
           <ListItemButton
             onClick={() => {
+              // the API ends this session too (the token stops working at once), then the admin forgets it
+              let token = '';
+              try { token = JSON.parse(sessionStorage.getItem('auth'))?.token || ''; } catch { token = ''; }
+              if (token) instance.post('/auth/logout', null, { headers: { Authorization: token } }).catch(() => {});
               sessionStorage.clear();
               logout();
               navigate('/')
@@ -540,7 +546,10 @@ const DashboardAdmin = () => {
           }}
         >
           <Toolbar />
-          <Outlet />
+          {/* one failing screen shows a message, not a blank admin */}
+          <PageErrorBoundary key={location.pathname}>
+            <Outlet />
+          </PageErrorBoundary>
         </Box>
       </Box>
     </ThemeProvider>
