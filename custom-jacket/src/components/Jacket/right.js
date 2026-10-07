@@ -953,10 +953,11 @@ const JacketRight = ({
           {designs["Right Sleeve"]?.letters && (
             <>
               {designs["Right Sleeve"]?.letters.type === 'Ready To Use' && designs["Right Sleeve"]?.letters.path && (
-                <g transform="translate(-207, 174)">
+                <g transform="translate(-204.5, 175)">
+                  {/* a square the size of the patch: a wide letter is fitted inside it (config/sleevePatches.js) */}
                   <svg
-                    width="90"
-                    height="87"
+                    width="85"
+                    height="85"
                     viewBox={designs["Right Sleeve"]?.letters.path.match(/viewBox="(.*?)"/)[1]}
                     xmlns="http://www.w3.org/2000/svg"
                   >
@@ -1173,10 +1174,11 @@ const JacketRight = ({
           {designs["Right Mid Sleeve Upper"]?.letters && (
             <>
               {designs["Right Mid Sleeve Upper"]?.letters.type === 'Ready To Use' && designs["Right Mid Sleeve Upper"]?.letters.path && (
-                <g transform="translate(-213, 274)">
+                <g transform="translate(-200.5, 272)">
+                  {/* a square the size of the patch: a wide letter is fitted inside it (config/sleevePatches.js) */}
                   <svg
-                    width="90"
-                    height="61"
+                    width="65"
+                    height="65"
                     viewBox={designs["Right Mid Sleeve Upper"]?.letters.path.match(/viewBox="(.*?)"/)[1]}
                     xmlns="http://www.w3.org/2000/svg"
                   >
@@ -1383,9 +1385,12 @@ const JacketRight = ({
             <>
               {designs["Right Mid Sleeve Lower"]?.letters.type === 'Ready To Use' && designs["Right Mid Sleeve Lower"]?.letters.path && (
                 <g transform="translate(-201, 384) rotate(-28)">
+                  {/* a square the size of the patch: a wide letter is fitted inside it (config/sleevePatches.js) */}
                   <svg
-                    width="82"
-                    height="53"
+                    x="13.5"
+                    y="-1"
+                    width="55"
+                    height="55"
                     viewBox={designs["Right Mid Sleeve Lower"]?.letters.path.match(/viewBox="(.*?)"/)[1]}
                     xmlns="http://www.w3.org/2000/svg"
                   >
@@ -1598,10 +1603,11 @@ const JacketRight = ({
             {designs["Right Sleeve End"]?.letters && (
               <>
                 {designs["Right Sleeve End"]?.letters.type === 'Ready To Use' && designs["Right Sleeve End"]?.letters.path && (
-                  <g transform="translate(-155, 429)">
+                  <g transform="translate(-141, 428.5)">
+                    {/* a square the size of the patch: a wide letter is fitted inside it (config/sleevePatches.js) */}
                     <svg
-                      width="75"
-                      height="46"
+                      width="47"
+                      height="47"
                       viewBox={designs["Right Sleeve End"]?.letters.path.match(/viewBox="(.*?)"/)[1]}
                       xmlns="http://www.w3.org/2000/svg"
                     >

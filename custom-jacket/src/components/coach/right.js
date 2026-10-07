@@ -566,9 +566,12 @@ const CoachRight = ({
             <>
               {designs["Right Sleeve End"]?.letters.type === 'Ready To Use' && designs["Right Sleeve End"]?.letters.path && (
                 <g transform="translate(-148, 489) rotate(11)">
+                  {/* a square the size of the patch: a wide letter is fitted inside it (config/sleevePatches.js) */}
                   <svg
-                    width="83"
-                    height="49"
+                    x="16.5"
+                    y="-0.5"
+                    width="50"
+                    height="50"
                     viewBox={designs["Right Sleeve End"]?.letters.path.match(/viewBox="(.*?)"/)[1]}
                     xmlns="http://www.w3.org/2000/svg"
                   >
