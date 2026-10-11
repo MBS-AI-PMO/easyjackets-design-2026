@@ -49,6 +49,8 @@ export default function Shop() {
   const viewQuery = () => Object.fromEntries(['sort', 'max', 'q'].filter((k) => params.get(k)).map((k) => [k, params.get(k)]));
   const filterHref = (type, value) => shopPath({ ...filters, [type]: filters[type] === slugify(value) ? '' : value }, viewQuery());
   const tabHref = (slug) => shopPath({ ...filters, category: slug }, viewQuery());
+  // a link that would combine two or more filters leads to a noindex page: crawlers are told not to follow it (N-A4)
+  const relFor = (href) => (href.startsWith('/shop/filter/') ? 'nofollow' : undefined);
   const sort = SORTS.some(([v]) => v === params.get('sort')) ? params.get('sort') : 'popular';
   const maxPrice = Number(params.get('max')) || PRICE_MAX;
   const query = params.get('q') || '';
@@ -98,6 +100,8 @@ export default function Shop() {
     const top = listRef.current ? listRef.current.getBoundingClientRect().top + window.scrollY - 96 : 0;
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }, [setParams]);
+  // each page number is a real link (?page=N, the rest of the query kept) so crawlers reach every product (N-A8)
+  const pageHref = (n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', String(n)); else next.delete('page'); const qs = next.toString(); return `${pathname}${qs ? `?${qs}` : ''}`; };
   // a page beyond the last one (a filter narrowed the list) goes back to the first
   useEffect(() => { if (total != null && page > 1 && (page - 1) * PAGE_SIZE >= total) goToPage(1); }, [total, page, goToPage]);
 
@@ -136,21 +140,23 @@ export default function Shop() {
   return (
     <div className="pg-shop">
       <Nav active="/shop" cta="cart" />
+      <main id="main">
       {/* Listing header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
+        {/* breadcrumb trail (N-A1) */}
+        <nav aria-label="Breadcrumb" style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
           <A href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Home</A>
-          <span>/</span>
+          <span aria-hidden="true">/</span>
           {activeCategory?.slug ? (
             <>
               <A href="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>Jackets</A>
-              <span>/</span>
-              <span style={{ color: 'var(--ink)', fontWeight: '600' }}>{activeCategory.label}</span>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page" style={{ color: 'var(--ink)', fontWeight: '600' }}>{activeCategory.label}</span>
             </>
           ) : (
-            <span style={{ color: 'var(--ink)', fontWeight: '600' }}>Jackets</span>
+            <span aria-current="page" style={{ color: 'var(--ink)', fontWeight: '600' }}>Jackets</span>
           )}
-        </div>
+        </nav>
         <div className="ez-head" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(280px,420px)', gap: '20px clamp(24px,4vw,64px)', alignItems: 'center', marginTop: '16px' }}>
           <div>
             <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)', marginBottom: '12px' }}>Easy Jackets collection</div>
@@ -184,7 +190,7 @@ export default function Shop() {
         {/* type tabs */}
         <div id="picks" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '32px', borderBottom: '2px solid var(--ink)', paddingBottom: '16px' }}>
           {typeTabs.map((t) => (
-            <A key={t.slug} href={tabHref(t.slug)} className="ez-chip" aria-current={t.slug === category ? 'page' : undefined} style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '18px', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 16px' }}>
+            <A key={t.slug} href={tabHref(t.slug)} rel={relFor(tabHref(t.slug))} className="ez-chip" aria-current={t.slug === category ? 'page' : undefined} style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '18px', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 16px' }}>
               {t.label}{' '}
               <span style={{ fontFamily: 'var(--body)', fontWeight: '500', fontSize: '12px', opacity: '0.7' }}>{t.count}</span>
             </A>
@@ -213,7 +219,7 @@ export default function Shop() {
           <div className="ez-side-types">
             <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>Jacket type</div>
             {typeTabs.map((t) => (
-              <A key={t.slug || 'all'} href={tabHref(t.slug)} className="ez-chip" aria-current={t.slug === category ? 'page' : undefined} onClick={() => setFiltersOpen(false)}>
+              <A key={t.slug || 'all'} href={tabHref(t.slug)} rel={relFor(tabHref(t.slug))} className="ez-chip" aria-current={t.slug === category ? 'page' : undefined} onClick={() => setFiltersOpen(false)}>
                 {t.label}<span>{t.count}</span>
               </A>
             ))}
@@ -224,7 +230,7 @@ export default function Shop() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '8px' }}>
               {(materials || []).map((m) => (
-                <A key={m.id} href={filterHref('material', m.name)} className="ez-chip" aria-current={material === slugify(m.name) ? 'page' : undefined} onClick={() => setFiltersOpen(false)}>{m.name}</A>
+                <A key={m.id} href={filterHref('material', m.name)} rel={relFor(filterHref('material', m.name))} className="ez-chip" aria-current={material === slugify(m.name) ? 'page' : undefined} onClick={() => setFiltersOpen(false)}>{m.name}</A>
               ))}
             </div>
           </div>
@@ -234,7 +240,7 @@ export default function Shop() {
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {(colors || []).map((c) => (
-                <A key={c.id} href={filterHref('color', c.name)} className="ez-swatch" aria-current={color === slugify(c.name) ? 'page' : undefined} onClick={() => setFiltersOpen(false)} title={c.name} aria-label={c.name} style={{ background: c.code }} />
+                <A key={c.id} href={filterHref('color', c.name)} rel={relFor(filterHref('color', c.name))} className="ez-swatch" aria-current={color === slugify(c.name) ? 'page' : undefined} onClick={() => setFiltersOpen(false)} title={c.name} aria-label={c.name} style={{ background: c.code }} />
               ))}
             </div>
           </div>
@@ -276,6 +282,8 @@ export default function Shop() {
               </div>
             </div>
           </div>
+          {/* the product names below are h3s: this h2 sits between them and the page's h1 (N-O4); read out, not shown */}
+          <h2 className="ez-sr-only">{profile.h1}{total != null ? `: ${total} jackets` : ''}</h2>
           {error ? (
             <div style={{ padding: '40px 20px', textAlign: 'center', border: '1.5px dashed var(--cream-2)', borderRadius: '4px' }}>
               <p style={{ color: 'var(--muted)', margin: '0 0 16px' }}>The catalogue could not be loaded ({error.message}).</p>
@@ -307,10 +315,11 @@ export default function Shop() {
               <A href="/design-custom-jacket" className="ez-btn ez-btn-ink">Design your own</A>
             </div>
           ) : null}
-          <Pagination page={page} pages={pages} onChange={goToPage} disabled={loading} label="Product pages" />
+          <Pagination page={page} pages={pages} onChange={goToPage} disabled={loading} label="Product pages" hrefFor={pageHref} />
         </div>
       </section>
       <CatalogGuide title={profile.h1} quickAnswer={profile.quickAnswer} />
+      </main>
       <Footer faq={faqBlock} />
     </div>
   );

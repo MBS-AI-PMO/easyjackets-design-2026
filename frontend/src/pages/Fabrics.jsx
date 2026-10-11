@@ -68,6 +68,7 @@ export default function Fabrics() {
   return (
     <div className="pg-fabrics">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {/* header */}
       {/* Fabrics header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -242,6 +243,7 @@ export default function Fabrics() {
         </div>
       </section>
       <Lightbox items={viewer?.items} index={viewer ? viewer.index : null} onClose={() => setViewer(null)} onIndex={(n) => setViewer((v) => ({ ...v, index: n }))} label="Fabric swatch" />
+      </main>
       <Footer />
     </div>
   );

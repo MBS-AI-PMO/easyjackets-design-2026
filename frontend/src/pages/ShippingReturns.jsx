@@ -2,8 +2,10 @@
 // (GET /shipping-rates/public, the admin's Shipping Rates screen); the rest
 // is the policy copy from the design.
 import A from '../components/A';
+import AnswerBox from '../components/AnswerBox';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
+import ReturnsPolicy from '../components/ReturnsPolicy';
 import { fetchShippingRates, freeShippingLabel, money, shippingRateRows } from '../lib/materials';
 import { useAsync } from '../lib/useAsync';
 import { usePageTitle } from '../lib/usePageTitle';
@@ -11,7 +13,7 @@ import { usePageTitle } from '../lib/usePageTitle';
 const rate = (v) => (v === null ? 'Quoted at checkout' : v === 0 ? 'Free' : money(v));
 
 export default function ShippingReturns() {
-  usePageTitle('Shipping & Returns', 'Production times, delivery rates to the US and worldwide, duties, tracking, size exchanges, refunds and remakes for custom varsity jackets.');
+  usePageTitle('Shipping & Returns', 'Production times, delivery rates to the US and worldwide, duties, tracking, returns, refunds and damaged items for custom varsity jackets.');
   const { data: rates, loading, error } = useAsync(fetchShippingRates, []);
   const rows = rates ? shippingRateRows(rates) : [];
   const free = freeShippingLabel(rates);
@@ -19,6 +21,7 @@ export default function ShippingReturns() {
   return (
     <div className="pg-shipping-returns">
       <Nav cta="cart" />
+      <main id="main">
       {/* Shipping header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
@@ -48,12 +51,14 @@ export default function ShippingReturns() {
           <A href="#rates">Delivery & rates</A>
           <A href="#duties">Duties & taxes</A>
           <A href="#tracking">Tracking</A>
-          <A href="#exchanges">Size exchanges</A>
+          <A href="#exchanges">Returns & exchanges</A>
           <A href="#refunds">Refunds</A>
-          <A href="#faults">Faults & remakes</A>
+          <A href="#faults">Damaged items</A>
           <A href="#cancel">Cancellations</A>
         </aside>
         <div className="ez-prose">
+          {/* how long it takes, answered first (data/answers.js, G-3) */}
+          <AnswerBox path="/shipping" />
           <h2 id="times">Production times</h2>
           <p>Every jacket is made to order after you approve your digital proof. Production begins on approval, not at checkout.</p>
           <ul>
@@ -125,25 +130,8 @@ export default function ShippingReturns() {
             <A href="/track-order">order tracking page</A>
             {' '}or from your account dashboard.
           </p>
-          <h2 id="exchanges">Size exchanges</h2>
-          <p>
-            Every custom jacket includes{' '}
-            <strong>one free size exchange</strong>
-            . Email us within 14 days of delivery with a photo of the jacket and your measurements. We confirm the new size, make it, and ship it once the original is on its way back to us. You cover return postage; we cover the remake and the outbound shipping.
-          </p>
-          <p>Jackets must be unworn, unwashed and free of alterations, with all tags attached.</p>
-          <h2 id="refunds">Refunds</h2>
-          <p>
-            Custom jackets are made to your specification and cannot be returned for a refund. Ready-made, non-customized items may be returned unworn within 30 days for a refund less shipping. Sale items are exchange-only. Approved refunds are issued to the original payment method within 5–7 business days.
-          </p>
-          <h2 id="faults">Faults & remakes</h2>
-          <p>
-            If your jacket does not match the proof you approved, or arrives damaged or defective, we remake or repair it at our cost, including shipping both ways. Send photographs within 14 days of delivery and we will arrange it immediately.
-          </p>
-          <h2 id="cancel">Cancellations</h2>
-          <p>
-            Cancel for a full refund any time before you approve your proof. Once the proof is approved, materials are cut and the order can no longer be cancelled, although size changes may still be possible within 48 hours.
-          </p>
+          {/* exchanges, refunds, faults, cancellations: shared with /return-policy */}
+          <ReturnsPolicy />
         </div>
       </section>
       {/* Related */}
@@ -166,6 +154,7 @@ export default function ShippingReturns() {
           </A>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

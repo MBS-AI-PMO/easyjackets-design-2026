@@ -4,6 +4,7 @@ import {
   backgroundRemovalStatusController,
   createDraftProduct,
   createProductController,
+  productPriceRangesController,
   backfillProductSeoController,
   deleteProductController,
   duplicateProduct,
@@ -90,6 +91,8 @@ router.get("/product-filters", productFiltersController);
 
 router.get("/product-count", productCountController);
 router.get("/category-counts", productCategoryCountsController);
+// today's price range per style, at checkout prices (the storefront's cost answer)
+router.get("/price-ranges", productPriceRangesController);
 router.get("/filter-options", productFilterOptionsController);
 router.get("/cutouts", productCutoutsController);
 router.get("/landing", landingController);

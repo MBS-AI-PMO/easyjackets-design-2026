@@ -77,6 +77,7 @@ export default function Checkout() {
   return (
     <div className="pg-checkout">
       <Nav cta="cart" />
+      <main id="main">
       {/* Checkout */}
       <section className="ez-two" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 96px', display: 'grid', gridTemplateColumns: 'minmax(0,7fr) minmax(300px,4fr)', gap: '40px clamp(24px,5vw,72px)', alignItems: 'start' }}>
         <div>
@@ -238,10 +239,11 @@ export default function Checkout() {
           </div>
           <div style={{ display: 'grid', gap: '8px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.5' }}>
             <div>🔒 Secure checkout · SSL encrypted</div>
-            <div>✓ Free digital proof · one free size exchange</div>
+            <div>✓ Free digital proof · custom made is final sale</div>
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

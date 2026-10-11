@@ -12,7 +12,10 @@ const RADIUS = { rect: 0, rounded: '12px', circle: '50%', pill: '9999px' };
  * screens) instead of at the original's full resolution. The slot caption is
  * the fallback if the source cannot be fetched.
  */
-export default function ImageSlot({ slot, src, width, placeholder = '', shape = 'rounded', fit, radius, eager = false, knockout = false, className, style, ...rest }) {
+// the widths the API's resizer makes (backend helpers/imageResize.js RESIZE_WIDTHS)
+const RESIZE_WIDTHS = [320, 480, 640, 768, 960, 1280];
+
+export default function ImageSlot({ slot, src, width, sizes, placeholder = '', shape = 'rounded', fit, radius, eager = false, knockout = false, className, style, ...rest }) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const ref = useRef(null);
@@ -26,6 +29,11 @@ export default function ImageSlot({ slot, src, width, placeholder = '', shape = 
   const version = cutout && !knockout ? cutoutVersion(src) : 0;
   const resolved = knockout ? knocked || '' : withVersion(width ? imageUrl(src, width) : src, version);
   const retina = !knockout && width && imageUrl(src, width) !== src ? withVersion(imageUrl(src, width * 2), version) : null;
+  // `sizes` (how wide the picture is shown, e.g. "(max-width: 520px) 100vw, 300px"): every width the API makes
+  // is offered and the browser takes the smallest that is sharp enough, instead of 1x/2x of `width` (B-T4)
+  const responsive = !knockout && sizes && width && imageUrl(src, width) !== src
+    ? RESIZE_WIDTHS.map((w) => `${withVersion(imageUrl(src, w), version)} ${w}w`).join(', ')
+    : null;
 
   useEffect(() => {
     setFailed(false);
@@ -51,7 +59,8 @@ export default function ImageSlot({ slot, src, width, placeholder = '', shape = 
       className={`${cls} ez-slot-img${loaded ? ' is-loaded' : ''}`}
       data-cutout={cutout ? 'true' : undefined}
       src={resolved}
-      srcSet={retina ? `${resolved} 1x, ${retina} 2x` : undefined}
+      srcSet={responsive || (retina ? `${resolved} 1x, ${retina} 2x` : undefined)}
+      sizes={responsive ? sizes : undefined}
       alt={rest['aria-label'] ?? placeholder}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"

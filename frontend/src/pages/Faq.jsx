@@ -10,6 +10,7 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { faqSchema } from '../components/Faq';
 import FaqGroups from '../components/FaqGroups';
+import { ANSWER_LINKS } from '../data/answers';
 import { fetchPageFaqs } from '../lib/content';
 import { stripHtml } from '../lib/html';
 import { FAQ_PAGE_GROUPS, groupFaqs } from '../lib/faqGroups';
@@ -32,6 +33,7 @@ export default function FaqPage() {
   return (
     <div className="pg-faq">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {schema ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} /> : null}
       {/* FAQ header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -42,14 +44,24 @@ export default function FaqPage() {
         </div>
         <div className="ez-head" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(280px,420px)', gap: '20px clamp(24px,4vw,64px)', alignItems: 'center', marginTop: '16px' }}>
           <div>
-            <h1 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(56px,8vw,112px)', lineHeight: '0.88', textTransform: 'uppercase', margin: '0' }}>
+            {/* the H1 names the page (N-O9); the big line is its subheading */}
+            <h1 style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)', margin: '0 0 10px' }}>
+              Custom jacket FAQs
+            </h1>
+            <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(56px,8vw,112px)', lineHeight: '0.88', textTransform: 'uppercase', margin: '0' }}>
               Questions,
               <br />
               answered
-            </h1>
+            </h2>
             <p style={{ maxWidth: '44ch', margin: '20px 0 0', color: 'var(--ink-2)', lineHeight: '1.6', fontSize: '16px' }}>
               Everything about ordering, designing, sizing, shipping and caring for a custom jacket. Can’t find it? Contact us and a jacket maker will reply within a day.
             </p>
+            {/* the quick-answer guides (data/answers.js, G-3) */}
+            <nav aria-label="Quick answers" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '20px' }}>
+              {ANSWER_LINKS.map(([label, href]) => (
+                <A key={href} href={href} className="ez-chip" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>{label}</A>
+              ))}
+            </nav>
           </div>
           {/* the shop page's campaign card */}
           <A href="/design-custom-jacket" className="ez-card" style={{ position: 'relative', display: 'block', aspectRatio: '1', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', textDecoration: 'none', color: 'var(--cream)' }}>
@@ -116,6 +128,7 @@ export default function FaqPage() {
           </div>
         </div>
       </section>
+      </main>
       <Footer faq={false} />
     </div>
   );

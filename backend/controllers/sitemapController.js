@@ -2,9 +2,11 @@ import productModel from "../models/productModel.js";
 import Blog from "../models/blogs.js";
 import Metadata from "../models/metaData.js";
 import { ACTIVE_PRODUCT_FILTER } from "../helpers/productSeo.js";
+import { stripApostrophes } from "../helpers/slugMatch.js";
 import {
   buildRequiredMetadataRoutes,
   normalizeRoute,
+  REDIRECTED_ROUTES,
   SYSTEM_ROUTES,
 } from "./metaDataController.js";
 
@@ -21,7 +23,7 @@ const sitemapIndexEntries = [
   { loc: "/category-sitemap.xml", type: "filter", filter: "category" },
   { loc: "/color-sitemap.xml", type: "filter", filter: "color" },
   { loc: "/material-sitemap.xml", type: "filter", filter: "material" },
-  { loc: "/size-sitemap.xml", type: "filter", filter: "size" },
+  // size pages are noindex (N-A6): /size-sitemap.xml still answers, empty, for anyone holding the address
 ];
 
 const escapeXml = (value = "") =>
@@ -53,19 +55,21 @@ const sendXml = (res, xml) => {
  * entirely on sites where it looks fabricated. Routes with no real modification
  * date are emitted without one rather than stamped with today's.
  */
-const urlEntry = ({ loc, lastmod, priority, changefreq }) => {
+const urlEntry = ({ loc, lastmod, priority, changefreq, images = [] }) => {
   const lines = [`    <loc>${escapeXml(loc)}</loc>`];
   if (lastmod) lines.push(`    <lastmod>${escapeXml(lastmod)}</lastmod>`);
   if (changefreq) lines.push(`    <changefreq>${escapeXml(changefreq)}</changefreq>`);
   if (priority !== undefined && priority !== null) {
     lines.push(`    <priority>${Number(priority).toFixed(1)}</priority>`);
   }
+  // product photos, so they can be found in image search (B-T2)
+  images.forEach((image) => lines.push(`    <image:image><image:loc>${escapeXml(image)}</image:loc></image:image>`));
   return `  <url>\n${lines.join("\n")}\n  </url>`;
 };
 
 const urlsetXml = (label, entries) => `<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <!-- EasyJackets live ${label}. URLs: ${entries.length} -->
 
 ${entries.join("\n\n")}
@@ -106,19 +110,21 @@ const collectRouteBuckets = async () => {
 
   discovered.forEach((entry) => {
     const route = normalizeRoute(entry.route);
-    if (!route || SYSTEM_ROUTES.has(route)) return;
+    if (!route || SYSTEM_ROUTES.has(route) || REDIRECTED_ROUTES.has(route)) return;
     routes.set(route, {
       route,
       priority: entry.sitemapPriority ?? 0.5,
       changefreq: entry.sitemapChangefreq || "monthly",
       lastmod: "",
-      excluded: false,
+      // generated routes can be noindexed or unlisted too (the state pages are both)
+      excluded: entry.noIndex === true || entry.sitemapEnabled === false,
     });
   });
 
   metadataDocs.forEach((doc) => {
     const route = normalizeRoute(doc.route);
-    if (!route || SYSTEM_ROUTES.has(route)) return;
+    // a saved row for an address the storefront now redirects (/design, /terms …) is not listed either
+    if (!route || SYSTEM_ROUTES.has(route) || REDIRECTED_ROUTES.has(route)) return;
     routes.set(route, {
       route,
       priority: doc.sitemapPriority ?? 0.5,
@@ -165,23 +171,33 @@ export const productSitemapController = async (req, res) => {
   try {
     const products = await productModel
       .find(productSitemapFilter)
-      .select("slug updatedAt createdAt")
+      .select("slug name updatedAt createdAt frontImage otherImages")
       .sort({ updatedAt: -1, createdAt: -1 })
       .lean();
+
+    // a "-2" copy of a product with the same name is not listed: its page names the original as canonical (B-O1)
+    const nameBySlug = new Map(products.map((p) => [String(p.slug).toLowerCase(), String(p.name || "").trim().toLowerCase()]));
+    const isCopy = (p) => {
+      const m = /^(.+)-\d+$/.exec(String(p.slug).toLowerCase());
+      return Boolean(m && nameBySlug.get(m[1]) && nameBySlug.get(m[1]) === String(p.name || "").trim().toLowerCase());
+    };
 
     // Slugs are not uniquely indexed on the collection, so a handful are shared by
     // two products. Both resolve to the same URL, and a repeated <loc> makes the
     // whole sitemap invalid — keep the first, which is the most recently updated.
     const seen = new Set();
     const entries = products.reduce((acc, product) => {
-      const slug = encodePathSegment(String(product.slug).toLowerCase());
-      if (!slug || seen.has(slug)) return acc;
+      const slug = encodePathSegment(stripApostrophes(String(product.slug)).toLowerCase());
+      if (!slug || seen.has(slug) || isCopy(product)) return acc;
       seen.add(slug);
       acc.push(urlEntry({
         loc: `${SITE_URL}/product/${slug}`,
         lastmod: toDateOnly(product.updatedAt || product.createdAt),
         changefreq: "weekly",
         priority: 0.7,
+        images: [product.frontImage, ...(product.otherImages || [])]
+          .filter((image) => /^https?:\/\//i.test(String(image || "")))
+          .slice(0, 6),
       }));
       return acc;
     }, []);

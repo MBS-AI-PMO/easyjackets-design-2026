@@ -15,6 +15,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="pg-privacy-policy">
       <Nav cta="cart" />
+      <main id="main">
       {/* Privacy header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
@@ -137,6 +138,7 @@ export default function PrivacyPolicy() {
           </A>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

@@ -12,7 +12,8 @@ export default function ProductCard({ product: p, slotPrefix = 'card', width = 4
         </span>
       ) : null}
       <div className="ez-product-photo" style={{ aspectRatio: '4/5', overflow: 'hidden', borderRadius: '4px' }}>
-        <ImageSlot slot={`${slotPrefix}-${p.id}`} shape="rect" src={p.image} width={width} placeholder={p.name} aria-label={p.imageAlt} />
+        {/* grids run 1 column on phones, 2–3 on tablets, ~300px cards on desktop: the browser picks the file (B-T4) */}
+        <ImageSlot slot={`${slotPrefix}-${p.id}`} shape="rect" src={p.image} width={width} sizes="(max-width: 520px) calc(100vw - 32px), (max-width: 1000px) 46vw, 300px" placeholder={p.name} aria-label={p.imageAlt} />
       </div>
       <div style={{ display: 'flex', gap: '6px', marginTop: '12px', minHeight: '14px' }}>
         {p.color?.code ? <span title={p.color.name} style={{ width: '14px', height: '14px', borderRadius: '50%', boxShadow: '0 0 0 1px var(--cream-2)', background: p.color.code }} /> : null}

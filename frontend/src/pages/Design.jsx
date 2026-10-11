@@ -3,6 +3,7 @@ import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
+import Testimonials from '../components/Testimonials';
 import Faq from '../components/Faq';
 import { builderUrl, fetchCategories } from '../lib/catalog';
 import { fetchPageFaqs } from '../lib/content';
@@ -42,15 +43,17 @@ export default function Design() {
   return (
     <div className="pg-design">
       <Nav active="/design-custom-jacket" cta="shop" />
+      <main id="main">
       {/* Select a style */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(48px,6vw,88px) clamp(16px,4vw,48px) clamp(56px,7vw,96px)', textAlign: 'center' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)' }}>
-          Choose your style
-        </div>
-        <h1 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(48px,7vw,96px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '12px 0 0' }}>
+        {/* the H1 names the page (N-O9); the big line is its subheading */}
+        <h1 style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)', margin: 0 }}>
+          Design your own custom varsity jacket
+        </h1>
+        <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(48px,7vw,96px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '12px 0 0' }}>
           Select a{' '}
           <span style={{ color: 'var(--gold-2)' }}>jacket style</span>
-        </h1>
+        </h2>
         <p style={{ margin: '18px auto 0', maxWidth: '48ch', color: 'var(--ink-2)', lineHeight: '1.6', fontSize: '16px' }}>
           Pick a style below and launch the design lab to fully customize it.
         </p>
@@ -145,6 +148,8 @@ export default function Design() {
           </div>
         </div>
       </section>
+      {/* what customers say (the admin's testimonials) */}
+      <Testimonials />
       {/* faq */}
       {/* FAQ */}
       <section id="faq" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '32px clamp(24px,4vw,72px)' }}>
@@ -163,6 +168,7 @@ export default function Design() {
           {faqItems ? <Faq items={faqItems} schema /> : <div style={{ borderTop: '1px solid var(--ink)' }} />}
         </div>
       </section>
+      </main>
       <Footer faq={false} />
     </div>
   );

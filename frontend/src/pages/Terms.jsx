@@ -10,6 +10,7 @@ export default function Terms() {
   return (
     <div className="pg-terms">
       <Nav cta="cart" />
+      <main id="main">
       {/* Terms header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
@@ -71,7 +72,7 @@ export default function Terms() {
           <p>
             You are responsible for the size or measurements you supply. Use the{' '}
             <A href="/sizechart">size chart</A>
-            {' '}and measure a jacket you already wear. Every custom jacket includes one free size exchange if the fit is wrong; see{' '}
+            {' '}and measure a jacket you already wear. Custom-made jackets are final sale and cannot be exchanged for a different size; see{' '}
             <A href="/shipping#exchanges">shipping & returns</A>
             .
           </p>
@@ -112,6 +113,7 @@ export default function Terms() {
           </A>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

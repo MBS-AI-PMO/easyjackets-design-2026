@@ -65,6 +65,7 @@ export default function SizeChart() {
   return (
     <div className="pg-size-chart">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {/* header */}
       {/* Size chart header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -245,7 +246,7 @@ export default function SizeChart() {
               Send us your measurements
             </h2>
             <p style={{ margin: '14px 0 0', color: 'rgba(244,239,230,0.8)', lineHeight: '1.6', fontSize: '15px', maxWidth: '48ch' }}>
-              Email the five numbers and your height and weight — we'll recommend a size within one business day. Wrong size on arrival? One free exchange.
+              Email the five numbers and your height and weight — we'll recommend a size within one business day. Custom-made jackets are final sale, so it pays to check first.
             </p>
           </div>
           <div className="ez-btn-pair" style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: 'flex-end' }}>
@@ -254,6 +255,7 @@ export default function SizeChart() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

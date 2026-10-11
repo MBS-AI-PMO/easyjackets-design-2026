@@ -287,7 +287,10 @@ export const updateBlogController = async (req, res) => {
                 featured: fields.featured ? fields.featured[0] === 'true' : blog.featured,
                 isActive: fields.isActive ? fields.isActive[0] === 'true' : blog.isActive,
                 readTime: fields.readTime ? parseInt(fields.readTime[0]) : blog.readTime,
-                excerpt: fields.excerpt ? fields.excerpt[0] : blog.excerpt
+                excerpt: fields.excerpt ? fields.excerpt[0] : blog.excerpt,
+                // the edit date (findByIdAndUpdate skips the model's save hook that sets it): the sitemap's
+                // lastmod and IndexNow use it (SEO audit B-T2, G-4)
+                updatedAt: new Date(),
             };
 
             const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, updatedData, { new: true });

@@ -10,11 +10,15 @@ import Faq from './Faq';
  * Renders nothing while loading and nothing when the page has no FAQs, which
  * is the case for most routes.
  */
-export default function PageFaqs({ pageKeys, values, title = 'Good to know', intro }) {
+export default function PageFaqs({ pageKeys, values, title = 'Good to know', intro, fallback }) {
   const keys = (pageKeys || []).filter(Boolean);
   const valuesKey = JSON.stringify(values || null);
-  const { data: items } = useAsync(() => (keys.length ? fetchFaqsFor(keys, values) : Promise.resolve([])), [keys.join('|'), valuesKey]);
+  const { data: found, loading } = useAsync(() => (keys.length ? fetchFaqsFor(keys, values) : Promise.resolve([])), [keys.join('|'), valuesKey]);
+  // `fallback`: the page's own built-in questions, shown when the admin has attached none
+  const items = found?.length ? found : !loading && fallback?.length ? fallback : null;
   if (!items?.length) return null;
+  // FAQ schema only for a page's own questions: a template repeated on 149 product pages is not (B-S3)
+  const schema = !found?.fromTemplate;
   return (
     <section className="ez-page-faqs" aria-labelledby="ez-page-faqs-title" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '32px clamp(24px,4vw,72px)' }}>
       <div>
@@ -22,7 +26,7 @@ export default function PageFaqs({ pageKeys, values, title = 'Good to know', int
         <h2 id="ez-page-faqs-title" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(44px,6vw,80px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '10px 0 0' }}>{title}</h2>
         {intro ? <p style={{ color: 'var(--muted)', lineHeight: '1.6', margin: '20px 0 0', maxWidth: '36ch' }}>{intro}</p> : null}
       </div>
-      <Faq items={items} schema />
+      <Faq items={items} schema={schema} />
     </section>
   );
 }

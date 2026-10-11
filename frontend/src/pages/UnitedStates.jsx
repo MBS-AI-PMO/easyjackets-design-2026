@@ -58,6 +58,7 @@ export default function UnitedStates() {
   return (
     <div className="pg-united-states">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {/* header */}
       {/* US header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -241,6 +242,7 @@ export default function UnitedStates() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

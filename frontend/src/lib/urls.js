@@ -3,7 +3,8 @@
 // /new-blog/:slug, /shop/category/:slug and so on. Build links with these helpers
 // rather than by hand, so a link never points at a redirect.
 
-export const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://easyjackets.com').replace(/\/+$/, '');
+// `import.meta.env` is Vite's; the storefront server (server.mjs) imports this file in plain Node, where it is undefined
+export const SITE_URL = ((import.meta.env || {}).VITE_SITE_URL || 'https://easyjackets.com').replace(/\/+$/, '');
 
 export const FILTER_TYPES = ['category', 'material', 'color', 'size'];
 
@@ -52,16 +53,23 @@ export const parseShopPath = (pathname = '', search = '') => {
   return filters;
 };
 
-/** Product pages live at /product/<lower-case slug>, as on the live site. */
+/** Product pages live at /product/<lower-case slug>, as on the live site, without apostrophes ("men's-…" → "mens-…"; the API finds either). */
 export const productPath = (slug = '') => {
-  const s = String(slug || '').trim().toLowerCase();
+  const s = String(slug || '').trim().toLowerCase().replace(/['’‘]/g, '');
   return s ? `/product/${encodeURIComponent(s)}` : '/shop';
 };
 
 export const blogPath = (slug = '') => `/new-blog/${encodeURIComponent(slug)}`;
 
-/** Routes that must never be indexed (account and checkout flow). */
-export const PRIVATE_ROUTES = [/^\/cart$/, /^\/checkout$/, /^\/account$/, /^\/dashboard$/, /^\/order-confirmation/, /^\/success\//, /^\/track-order$/];
+/** Routes that must never be indexed (account and checkout flow, the design reference, customers' saved designs). */
+export const PRIVATE_ROUTES = [/^\/cart$/, /^\/checkout$/, /^\/account$/, /^\/dashboard$/, /^\/order-confirmation/, /^\/success\//, /^\/track-order$/, /^\/style-guide$/, /^\/design\//];
+
+/**
+ * Indexable only when the admin's SEO screen has a row for that exact address: shop filter combinations
+ * (thousands of near-identical pages otherwise, N-A4) and the 50 state pages, which share one template (N-A2).
+ * The storefront server (server.mjs) applies the same rule to the HTML it sends.
+ */
+export const NOINDEX_UNLESS_LISTED = [/^\/shop\/filter\//, /^\/united-states\/[^/]+$/];
 
 /**
  * The canonical address of the page at `pathname` (+ `search`): the live-site path,

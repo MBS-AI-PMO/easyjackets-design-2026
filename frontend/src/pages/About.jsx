@@ -3,6 +3,7 @@ import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
+import Testimonials from '../components/Testimonials';
 import { usePageTitle } from '../lib/usePageTitle';
 
 const IMG = '/images/site';
@@ -26,6 +27,7 @@ export default function About() {
   return (
     <div className="pg-about">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {/* header */}
       {/* About header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -96,7 +98,7 @@ export default function About() {
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '28px 24px' }}>
           <div style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(48px,5vw,72px)', lineHeight: '1' }}>2016</div>
+            <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(48px,5vw,72px)', lineHeight: '1' }}>2017</div>
             <div style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '8px' }}>
               Founded
             </div>
@@ -173,6 +175,8 @@ export default function About() {
           ))}
         </div>
       </section>
+      {/* what customers say (the admin's testimonials) */}
+      <Testimonials />
       {/* CTA */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px' }}>
         <div style={{ background: 'var(--ink)', color: 'var(--cream)', borderRadius: '4px', padding: 'clamp(28px,4vw,48px)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '24px clamp(24px,4vw,64px)', alignItems: 'center' }}>
@@ -193,6 +197,7 @@ export default function About() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

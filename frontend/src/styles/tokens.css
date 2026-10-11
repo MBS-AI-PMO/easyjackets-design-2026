@@ -5,7 +5,7 @@
   --cream: #f4efe6;
   --cream-2: #e9e1d2;
   --gold: #c9a227;
-  --gold-2: #a8861c;
+  --gold-2: #846810; /* text gold: 4.6:1 on cream, 5.3:1 on white (was #a8861c, 3.4:1, failed contrast, N-O6) */
   --muted: #6b635a;
   --display: "Big Shoulders Display", Impact, sans-serif;
   --body: "Instrument Sans", system-ui, sans-serif;

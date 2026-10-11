@@ -195,6 +195,7 @@ export default function Home() {
         </div>
       ) : null}
       <Nav cta={{ label: primary.label, href: primary.href }} />
+      <main id="main">
       <div id="top" />
       {/* Hero */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
@@ -203,7 +204,7 @@ export default function Home() {
           <div style={{ animation: 'rise .7s ease both' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>
               <span style={{ width: '28px', height: '6px', background: 'repeating-linear-gradient(90deg,var(--gold) 0 8px,var(--ink) 8px 12px)' }} />
-              Since 2020 · Made to order · Ships worldwide
+              Since 2017 · Made to order · Ships worldwide
             </div>
             <h1 className="ez-hero-title" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(48px,6.4vw,92px)', lineHeight: '0.88', letterSpacing: '-0.005em', textTransform: 'uppercase', margin: '16px 0 0' }}>
               <span style={{ display: 'block' }}>Custom</span>
@@ -615,6 +616,7 @@ export default function Home() {
         </div>
         <div style={{ height: '12px', background: 'repeating-linear-gradient(90deg,var(--gold) 0 40px,var(--cream) 40px 48px,var(--gold) 48px 88px,var(--ink) 88px 120px)' }} />
       </section>
+      </main>
       <Footer faq={false} />
     </div>
   );

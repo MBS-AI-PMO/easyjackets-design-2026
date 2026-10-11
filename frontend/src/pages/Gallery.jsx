@@ -33,6 +33,7 @@ export default function Gallery() {
   return (
     <div className="pg-gallery">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {/* header */}
       {/* Photo gallery header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -136,6 +137,7 @@ export default function Gallery() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

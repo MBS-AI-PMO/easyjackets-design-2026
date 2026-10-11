@@ -1,11 +1,13 @@
 import { useId, useState } from 'react';
 import { safeHtml, stripHtml } from '../lib/html';
+import { serverWroteFaq } from '../lib/serverSchema';
 import './faq.css';
 
 const hasMarkup = (s) => /<[a-z][\s\S]*>/i.test(s);
 
 /** FAQPage structured data for search engines, built from the list that is on screen. */
 export function faqSchema(items) {
+  if (serverWroteFaq()) return null; // the server already put this page's FAQPage in the head
   const entities = (items || [])
     .filter((f) => f.q && stripHtml(String(f.a || '')))
     .map((f) => ({ '@type': 'Question', name: stripHtml(f.q), acceptedAnswer: { '@type': 'Answer', text: stripHtml(String(f.a)) } }));

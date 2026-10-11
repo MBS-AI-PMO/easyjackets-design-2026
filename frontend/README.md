@@ -95,8 +95,24 @@ Big Shoulders Display and Instrument Sans are self-hosted (`public/fonts/`, rule
 
 ## Deploy
 
-`Dockerfile` builds the app and serves `dist/` with nginx (`nginx.conf`, SPA
-fallback to `index.html`, except `*.txt` and `/.well-known/`, which are the real file or a 404). Coolify: Dockerfile build pack, port 80.
+`Dockerfile` builds the app and serves it with `server.mjs` (Node, no packages), which replaced nginx.
+Coolify: Dockerfile build pack, port 80, no setting changed. Per request the server:
+
+- writes the page's own title, description, canonical, robots, Open Graph/Twitter tags, JSON-LD and main
+  text (inside `#root`, replaced by the app when it starts) from the backend's `/api/v1/seo-render`, so
+  crawlers and AI answer engines that do not run JavaScript see each page; product pages also get a
+  preload for the main photo;
+- answers addresses that are not pages with a real 404 (`server-data/route-table.json`, written from
+  `App.jsx` by `npm run build`), and old ones with one 301: http and www to `https://easyjackets.com`,
+  trailing slashes, capitals, the `<Navigate>` aliases in `App.jsx`, and `src/data/redirects.js`;
+- forwards `/sitemap.xml` and the child sitemaps to the backend;
+- sends `X-Robots-Tag: noindex` on every host not in `INDEXABLE_HOSTS` (default `easyjackets.com`), so
+  the sslip.io staging address is never indexed;
+- writes the admin's site tags (verification metas and the like) into the head;
+- caches `/assets/` for a year, fonts and site images for 30 days, `.txt`/`.xml` for an hour, and
+  compresses text (brotli or gzip). `*.txt` and `/.well-known/` are the real file or a 404.
+
+Local check: `npm run build && PORT=5180 SEO_API_URL=http://127.0.0.1:8080 node server.mjs`.
 
 ## AI agents (Lighthouse "Agentic Browsing")
 

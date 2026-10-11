@@ -73,6 +73,7 @@ export default function Cart() {
   return (
     <div className="pg-cart">
       <Nav cta="cart" />
+      <main id="main">
       {/* Cart header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
@@ -201,11 +202,12 @@ export default function Cart() {
           )}
           <div style={{ display: 'grid', gap: '8px', fontSize: '13px', color: 'var(--muted)', lineHeight: '1.5' }}>
             <div>✓ Free digital proof before production</div>
-            <div>✓ One free size exchange</div>
+            <div>✓ Plain stock jackets: 10-day returns · custom made is final sale</div>
             <div>✓ Ten jackets or more? <A href="/bulk-order" style={{ color: 'inherit', fontWeight: '600' }}>Get team pricing →</A></div>
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

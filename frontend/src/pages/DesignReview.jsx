@@ -170,6 +170,7 @@ export default function DesignReview() {
   return (
     <div className="pg-design-review">
       <Nav cta="cart" />
+      <main id="main">
       <div className="dr-wrap">
         <div className="dr-crumbs">
           <A href="/">Home</A>
@@ -275,6 +276,7 @@ export default function DesignReview() {
         )}
       </div>
       {sharing && design ? <ShareDialog design={design} onClose={() => setSharing(false)} /> : null}
+      </main>
       <Footer />
     </div>
   );

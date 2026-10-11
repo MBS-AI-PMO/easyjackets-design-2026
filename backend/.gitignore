@@ -34,3 +34,9 @@ scripts/.product-photo-backup-*.json
 scripts/.patch-seed-*.json
 # live-server address backups (scripts/moveOffLiveServer.mjs)
 scripts/.live-address-backup-*.json
+# copyMissingBlogsFromLive.mjs: ids of the posts it inserted
+scripts/.blog-copy-*.json
+# applySeoAuditMetadata.mjs: the values it replaced
+scripts/.seo-metadata-backup-*.json
+# consolidateBlogPosts.mjs: the posts it unpublished
+scripts/.blog-consolidation-*.json

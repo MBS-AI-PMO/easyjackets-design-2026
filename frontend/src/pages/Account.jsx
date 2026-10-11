@@ -72,6 +72,7 @@ export default function Account() {
   return (
     <div className="pg-account">
       <Nav cta="cart" />
+      <main id="main">
       {/* Account */}
       <section className="ez-two" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(48px,6vw,88px) clamp(16px,4vw,48px) 96px', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(320px,480px)', gap: '40px clamp(24px,5vw,80px)', alignItems: 'center' }}>
         <div>
@@ -176,6 +177,7 @@ export default function Account() {
           </form>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

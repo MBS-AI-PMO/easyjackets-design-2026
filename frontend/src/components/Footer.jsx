@@ -6,12 +6,20 @@ import { fetchWebsiteDetails, isEmail, subscribeNewsletter, telHref } from '../l
 import { useAsync } from '../lib/useAsync';
 import { imageUrl } from '../lib/api';
 import { FALLBACK_FOOTER_LOGO, useSiteIdentity } from '../lib/siteIdentity';
+import { ANSWER_LINKS } from '../data/answers';
 import './footer.css';
 
+// each style goes to its own collection, and the keyword pages are linked from every page (SEO audit N-A6)
 const COLUMNS = [
-  { title: 'Shop', links: [['Varsity Jackets', '/shop'], ['Bomber Jackets', '/shop'], ['Fleece Hoodies', '/shop'], ['Coach Jackets', '/shop'], ['Bestsellers', '/#bestsellers']] },
+  { title: 'Shop', links: [['Varsity Jackets', '/shop/category/varsity-jackets'], ['Letterman Jackets', '/letterman-jackets'], ['Bomber Jackets', '/shop/category/bomber-jackets'], ['Fleece Hoodies', '/shop/category/hoodies'], ['Coach Jackets', '/shop/category/coach-jackets'], ['Bestsellers', '/#bestsellers']] },
   { title: 'Custom', links: [['Design Your Own', '/design-custom-jacket'], ['Materials & Colors', '/material-colors'], ['Patches & Embroidery', '/embroidery-and-patches'], ['Bulk & Team Orders', '/bulk-order'], ['Size Guide', '/sizechart']] },
-  { title: 'Help', links: [['FAQ', '/faq'], ['Track Order', '/track-order'], ['Shipping & Returns', '/shipping'], ['Contact Us', '/contact-us'], ['Blog', '/new-blog']] },
+  { title: 'Help', links: [['FAQ', '/faq'], ['Track Order', '/track-order'], ['Shipping & Returns', '/shipping'], ['Reviews', '/reviews'], ['Contact Us', '/contact-us'], ['Blog', '/new-blog']] },
+];
+const POPULAR = [
+  ['School jackets', '/school-jackets'], ['Senior jackets', '/senior-jackets'], ['Team jackets', '/team-jackets'],
+  ["Men's varsity jackets", '/mens-varsity-jackets'], ["Women's varsity jackets", '/womens-varsity-jackets'],
+  ['Leather varsity jackets', '/leather-varsity-jackets'], ['Wool & leather varsity jackets', '/wool-and-leather-varsity-jackets'],
+  ['Satin bomber jackets', '/satin-bomber-jackets'], ['Hooded varsity jackets', '/hooded-varsity-jackets'],
 ];
 
 const link = { textDecoration: 'none', color: 'rgba(244,239,230,0.8)' };
@@ -123,6 +131,16 @@ export default function Footer({ faq }) {
           </div>
         </div>
 
+        {/* the keyword pages (data/landingPages.js), each one click from every page (N-A6, N-A7) */}
+        <nav className="ez-footer-popular" aria-label="Popular jackets">
+          <span>Popular</span>
+          {POPULAR.map(([label, href]) => <A key={href} href={href}>{label}</A>)}
+        </nav>
+        {/* the quick-answer guides (data/answers.js, G-3) */}
+        <nav className="ez-footer-popular" aria-label="Guides">
+          <span>Guides</span>
+          {ANSWER_LINKS.map(([label, href]) => <A key={href} href={href}>{label}</A>)}
+        </nav>
         <div className="ez-footer-legal">
           <span>© 2020–2026 Easy Jackets. All rights reserved.</span>
           <span style={{ display: 'flex', gap: '20px' }}>

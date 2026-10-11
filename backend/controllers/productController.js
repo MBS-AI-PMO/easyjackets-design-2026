@@ -12,6 +12,9 @@ import formidable from "formidable";
 import uploadToS3 from "../helpers/fileUpload.js";
 import addWatermark from "../helpers/watermark.js";
 import { backgroundRemovalStatus, queueProductCutout } from "../helpers/backgroundRemoval.js";
+import { slugIgnoringApostrophes } from "../helpers/slugMatch.js";
+import crypto from "node:crypto";
+import { priceProduct } from "../helpers/cartPricing.js";
 
 const escapeRegex = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const isObjectId = (value = "") => /^[0-9a-fA-F]{24}$/.test(value);
@@ -22,6 +25,13 @@ const resolveCategoryId = async (categoryValue) => {
   if (!trimmed) return null;
 
   if (isObjectId(trimmed)) return trimmed;
+
+  // "Ladies varsity jackets" is the live site's name for the cropped collection (category code 4893), the
+  // same rule as the `slug` parameter below; without it /shop/category/ladies-varsity-jackets listed nothing
+  if (trimmed.toLowerCase() === 'ladies-varsity-jackets') {
+    const cropped = await CategoryModel.findOne({ code: 4893 }).select('_id');
+    if (cropped) return cropped._id;
+  }
 
   const category = await CategoryModel.findOne({
     $or: [
@@ -474,6 +484,14 @@ export const getSingleProductController = async (req, res) => {
         .populate("color");
     }
 
+    // the address without its apostrophes (helpers/slugMatch.js)
+    if (!product && param.length > 2) {
+      product = await productModel
+        .findOne({ slug: slugIgnoringApostrophes(param) })
+        .populate("category")
+        .populate("color");
+    }
+
     // Fall back to ObjectId lookup so legacy /product/<id> URLs resolve
     // and the frontend can 301 them to the slug-based canonical.
     if (!product && /^[a-f\d]{24}$/i.test(param)) {
@@ -784,6 +802,44 @@ export const productCategoryCountsController = async (req, res) => {
   }
 };
 
+// What each style costs today, at the checkout's own prices (priceProduct: the size's price with the
+// discount taken off): the lowest and highest size price per category and the typical starting price.
+// For the storefront's "how much does a custom varsity jacket cost" answer (SEO audit G-3), so the figures
+// follow every price change and sale. Kept for 10 minutes.
+let priceRangeCache = { at: 0, body: null };
+export const productPriceRangesController = async (req, res) => {
+  try {
+    if (!priceRangeCache.body || Date.now() - priceRangeCache.at > 10 * 60 * 1000) {
+      const products = await productModel.find({ isActive: { $ne: false } }).select('category standardPrice discountPrice sizes').lean();
+      const cats = await CategoryModel.find({}).select('name slug section serial').lean();
+      const byId = new Map(cats.map((c) => [String(c._id), c]));
+      const groups = new Map();
+      for (const p of products) {
+        const c = byId.get(String(p.category));
+        if (!c) continue;
+        const prices = (p.sizes || []).filter((s) => s?.size).map((s) => priceProduct(p, s.size)).filter((n) => n > 0);
+        const list = prices.length ? prices : [priceProduct(p)].filter((n) => n > 0);
+        if (!list.length) continue;
+        const g = groups.get(String(c._id)) || { name: c.name, slug: c.slug, section: c.section || 'jackets', serial: c.serial || 0, products: 0, low: Infinity, high: 0, from: [] };
+        g.products += 1;
+        g.low = Math.min(g.low, ...list);
+        g.high = Math.max(g.high, ...list);
+        g.from.push(Math.min(...list));
+        groups.set(String(c._id), g);
+      }
+      const ranges = [...groups.values()]
+        .map(({ from, ...g }) => ({ ...g, typicalFrom: from.sort((a, b) => a - b)[Math.floor(from.length / 2)] }))
+        .sort((a, b) => a.serial - b.serial || b.products - a.products);
+      priceRangeCache = { at: Date.now(), body: { success: true, currency: 'USD', ranges } };
+    }
+    res.set('Cache-Control', 'public, max-age=600');
+    res.status(200).send(priceRangeCache.body);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ success: false, message: 'Error reading price ranges' });
+  }
+};
+
 export const productFiltersController = async (req, res) => {
   try {
     const { page, limit, category, color, slug, search, material, size } = req.query
@@ -1013,12 +1069,24 @@ export const realtedProductController = async (req, res) => {
   try {
     const { pid, cid } = req.params;
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 4, 1), 12); // the storefront shows a row of four
-    // a fresh random set from the same category on every request (not always its first few)
-    const products = await productModel.aggregate([
-      { $match: { category: new mongoose.Types.ObjectId(String(cid)), _id: { $ne: new mongoose.Types.ObjectId(String(pid)) } } },
-      { $sample: { size: limit } },
+    // The closest jackets in the same category: same body and sleeve material, same colour, then the most
+    // viewed. Each product gets its own set (not always the category's first few), and the same set on every
+    // visit, so search engines see stable links between products (SEO audit N-A3; it was random per request).
+    const self = await productModel.findById(pid).select("material color").lean();
+    const candidates = await productModel.aggregate([
+      { $match: { category: new mongoose.Types.ObjectId(String(cid)), _id: { $ne: new mongoose.Types.ObjectId(String(pid)) }, isActive: { $ne: false } } },
       { $project: { photo: 0 } },
     ]);
+    const pairKey = (id) => crypto.createHash("md5").update(`${pid}:${id}`).digest().readUInt32BE(0);
+    const score = (p) => (p.material?.body && p.material.body === self?.material?.body ? 4 : 0)
+      + (p.material?.sleeves && p.material.sleeves === self?.material?.sleeves ? 2 : 0)
+      + (p.color && self?.color && String(p.color) === String(self.color) ? 1 : 0);
+    const popularity = (p) => (Number(p.views) || 0) + 3 * (Number(p.clicks) || 0);
+    const products = candidates
+      .map((p) => ({ p, s: score(p), pop: popularity(p), k: pairKey(p._id) }))
+      .sort((a, b) => b.s - a.s || b.pop - a.pop || a.k - b.k)
+      .slice(0, limit)
+      .map(({ p }) => p);
     await productModel.populate(products, { path: "category" });
     res.status(200).send({
       success: true,
@@ -1062,7 +1130,8 @@ export const recordProductView = async (req, res) => {
     const product = await productModel.findByIdAndUpdate(
       req.params.id,
       { $inc: { views: 1 } },
-      { new: true }
+      // a view is not an edit: updatedAt stays the date the product last changed (sitemap lastmod, B-T2)
+      { new: true, timestamps: false }
     ).populate("category", "name").populate("color");
 
     if (!product) {
@@ -1082,7 +1151,7 @@ export const recordProductClick = async (req, res) => {
     const product = await productModel.findByIdAndUpdate(
       req.params.id,
       { $inc: { clicks: 1 } },
-      { new: true }
+      { new: true, timestamps: false }
     ).populate("category", "name").populate("color");
 
     if (!product) {

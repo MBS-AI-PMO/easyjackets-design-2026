@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { fetchMeta, metaPath, setMeta } from '../lib/usePageTitle';
-import { PRIVATE_ROUTES, SITE_URL, canonicalPath } from '../lib/urls';
+import { fetchMeta, metaPath, missingPages, setMeta, withBrand } from '../lib/usePageTitle';
+import { NOINDEX_UNLESS_LISTED, PRIVATE_ROUTES, SITE_URL, canonicalPath } from '../lib/urls';
 
 const setHeadTag = (selector, create, attr, value) => {
   let tag = document.head.querySelector(selector);
@@ -34,20 +34,38 @@ export default function Seo() {
   }, [pathname, search, hash, canonicalBare, navigate]);
 
   useEffect(() => {
+    // The storefront server already wrote this page's canonical, and it can know better (a "-2" copy of a
+    // product names its original, B-O1): on the page it was written for, it stays. After the first
+    // navigation the marker goes and the app sets the canonical itself.
+    const written = document.head.querySelector('link[rel="canonical"][data-ssr-path]');
+    if (written) {
+      if (written.getAttribute('data-ssr-path') === canonical.split('?')[0]) return;
+      written.removeAttribute('data-ssr-path');
+    }
     const href = `${SITE_URL}${canonical === '/' ? '/' : canonical}`;
     setCanonical(href);
     setOgUrl(href);
   }, [canonical]);
 
+  // the same robots rule the storefront server writes into the HTML (server.mjs), so the rendered page
+  // never contradicts it: private pages never; filter combinations and state pages only with an SEO-screen
+  // row of their own; a page with nothing to show (useNoIndex) never; otherwise the row's noindex flag
   useEffect(() => {
     let alive = true;
-    setMeta('robots', isPrivate ? 'noindex, nofollow' : '');
-    fetchMeta(metaPath(canonicalBare)).then((m) => {
+    const path = metaPath(canonicalBare);
+    const robotsFor = (m) => {
+      if (isPrivate) return 'noindex, nofollow';
+      if (missingPages.has(path)) return 'noindex, follow';
+      if (m) return m.noIndex ? 'noindex, follow' : '';
+      return NOINDEX_UNLESS_LISTED.some((re) => re.test(canonicalBare)) ? 'noindex, follow' : '';
+    };
+    setMeta('robots', robotsFor(null));
+    fetchMeta(path).then((m) => {
       if (!alive) return;
-      if (m?.title) document.title = m.title;
+      if (m?.title) document.title = withBrand(m.title);
       if (m?.description) setMeta('description', m.description);
       if (m?.keywords) setMeta('keywords', m.keywords);
-      setMeta('robots', isPrivate || m?.noIndex ? 'noindex, nofollow' : '');
+      setMeta('robots', robotsFor(m));
     });
     return () => { alive = false; };
   }, [canonicalBare, isPrivate]);

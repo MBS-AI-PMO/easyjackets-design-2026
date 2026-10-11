@@ -75,6 +75,7 @@ export default function HowToDesign() {
   return (
     <div className="pg-how-to-design">
       <Nav cta="cart" />
+      <main id="main">
       {/* Header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
@@ -195,6 +196,7 @@ export default function HowToDesign() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

@@ -16,7 +16,7 @@ const STEPS = [
   ['Proof in 2 days', 'A digital illustration of your exact jacket lands in your inbox. Reply with changes or approve.'],
   ['Cutting & stitching', '2–3 weeks in the workshop. We send a photo when it comes off the bench.'],
   ['Shipped & tracked', 'Courier delivery with a tracking number by email and on the tracking page.'],
-  ['Wear it', 'Wrong size? One free exchange. Tag @easyjackets to be featured in the gallery.'],
+  ['Wear it', 'Tag @easyjackets to be featured in the gallery.'],
 ];
 
 export default function OrderConfirmation() {
@@ -40,6 +40,7 @@ export default function OrderConfirmation() {
   return (
     <div className="pg-order-confirmation">
       <Nav cta="cart" />
+      <main id="main">
       {/* Confirmation */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(48px,6vw,88px) clamp(16px,4vw,48px) 0' }}>
         {loading ? (
@@ -156,6 +157,7 @@ export default function OrderConfirmation() {
           ))}
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

@@ -19,7 +19,7 @@ const PASTE_ATTRS = ['style', 'dir', 'class', 'lang', 'align', 'width', 'height'
 // the cleaned html as an element to tidy (its innerHTML is what the page gets)
 const parse = (html) => (typeof window === 'undefined' ? null : { body: DOMPurify.sanitize(String(html || ''), PURIFY) });
 
-function scrub(doc, { stripStyles = false } = {}) {
+function scrub(doc, { stripStyles = false, stripColors = false } = {}) {
   for (const tag of BLOCKED_TAGS) for (const el of [...doc.body.querySelectorAll(tag)]) el.remove();
   for (const el of doc.body.querySelectorAll('*')) {
     for (const attr of [...el.attributes]) {
@@ -27,8 +27,16 @@ function scrub(doc, { stripStyles = false } = {}) {
       if (name.startsWith('on') || ((name === 'href' || name === 'src') && /^\s*javascript:/i.test(attr.value))) el.removeAttribute(attr.name);
       else if (stripStyles && (PASTE_ATTRS.includes(name) || (name === 'id' && /^docs-internal/.test(attr.value)))) el.removeAttribute(attr.name);
     }
+    // `stripColors`: pasted text and background colours go (a pale grey failed contrast, N-O6); other styling stays
+    if (stripColors && !stripStyles) {
+      el.removeAttribute('color');
+      if (el.style?.length) { el.style.removeProperty('color'); el.style.removeProperty('background-color'); el.style.removeProperty('background'); }
+      if (el.getAttribute('style') === '') el.removeAttribute('style');
+    }
     if (el.tagName === 'A' && /^https?:/i.test(el.getAttribute('href') || '') && !el.getAttribute('href').includes(location.host)) { el.setAttribute('rel', 'noopener noreferrer'); el.setAttribute('target', '_blank'); }
     if (el.tagName === 'IMG') {
+      // a picture on the old Amazon S3 storage, which no longer exists: left out rather than an empty box (L-T20)
+      if (/^https?:\/\/[^/]*amazonaws\.com\//i.test(el.getAttribute('src') || '')) { el.remove(); continue; }
       el.setAttribute('loading', 'lazy');
       el.setAttribute('decoding', 'async');
       // uploaded images (the API's /uploads, on the api or api2 address) load from the API this site
@@ -62,6 +70,19 @@ export function prepareArticle(html) {
   const doc = parse(html);
   if (!doc) return { html: '', toc: [] };
   scrub(doc, { stripStyles: true });
+  // the post's title is the page's one H1: an H1 inside the article becomes an H2 (B-O6)
+  // and levels never skip (an H4 straight after an H2 becomes an H3, N-O4): each heading is at most one
+  // level below the one before it, starting under the title
+  let previous = 1;
+  for (const h of [...doc.body.querySelectorAll('h1, h2, h3, h4, h5, h6')]) {
+    const level = Math.max(2, Math.min(Number(h.tagName[1]), previous + 1));
+    if (`H${level}` !== h.tagName) {
+      const next = document.createElement(`h${level}`);
+      next.innerHTML = h.innerHTML;
+      h.replaceWith(next);
+    }
+    previous = level;
+  }
   const toc = [];
   const seen = new Set();
   for (const h of doc.body.querySelectorAll('h2')) {

@@ -143,6 +143,7 @@ export default function BulkOrders() {
   return (
     <div className="pg-bulk-orders">
       <Nav active="/bulk-order" cta="shop" />
+      <main id="main">
       {/* hero + form */}
       {/* Bulk hero */}
       <section className="ez-bulk" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0', display: 'grid', gridTemplateColumns: 'minmax(0,6fr) minmax(0,5fr)', gap: '40px clamp(24px,5vw,80px)', alignItems: 'start' }}>
@@ -361,6 +362,18 @@ export default function BulkOrders() {
           ))}
         </div>
       </section>
+      {/* who makes the jackets: "varsity jacket manufacturer" searches already find this site at position 5.6 (SEO audit B-O7) */}
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(48px,6vw,80px) clamp(16px,4vw,48px) 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '20px clamp(24px,4vw,72px)', alignItems: 'start' }}>
+          <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(36px,4.5vw,60px)', lineHeight: '0.9', textTransform: 'uppercase', margin: 0 }}>
+            A varsity jacket manufacturer, not a reseller
+          </h2>
+          <div style={{ color: 'var(--ink-2)', lineHeight: '1.7', fontSize: '16px' }}>
+            <p style={{ margin: '0 0 14px' }}>Every Easy Jackets jacket is cut, sewn and decorated to order in our own workshop in Sialkot, then shipped by DHL Express or FedEx, tracked and insured. You deal directly with the people who make the jacket, from the free design proof to delivery.</p>
+            <p style={{ margin: 0 }}>Schools, sports teams, clubs and brands order the same way, from one sample jacket to a full team run, with each jacket&apos;s name, number and size kept separate. Production takes 10–12 business days after the proof is approved.</p>
+          </div>
+        </div>
+      </section>
       {/* pricing tiers */}
       {/* Pricing */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '32px clamp(24px,4vw,72px)', alignItems: 'start' }}>
@@ -459,6 +472,7 @@ export default function BulkOrders() {
           </>
         )}
       />
+      </main>
       <Footer faq={false} />
     </div>
   );

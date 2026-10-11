@@ -48,6 +48,12 @@ ENV UPLOADS_PUBLIC_BASE_URL=https://api2.easyjackets.com/uploads
 ENV LEGACY_UPLOADS_URL=
 ENV BG_REMOVER_MODEL=birefnet-general
 ENV AUTO_REMOVE_BG=true
+# sitemaps list https://easyjackets.com addresses whatever host serves them (SEO audit N-T2)
+ENV SITEMAP_SITE_URL=https://easyjackets.com
+# IndexNow (helpers/indexNow.js): the key is public by design (frontend/public/<key>.txt); set
+# INDEXNOW_ENABLED=true in Coolify on launch day, when this API serves easyjackets.com
+ENV INDEXNOW_KEY=198b40b4227a077556ef4b2e1471f9b9
+ENV INDEXNOW_ENABLED=false
 
 RUN mkdir -p /app/uploads/products /app/uploads/site
 VOLUME ["/app/uploads"]

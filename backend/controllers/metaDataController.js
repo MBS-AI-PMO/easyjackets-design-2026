@@ -181,9 +181,9 @@ const staticMetadataRoutes = [
   },
   {
     route: '/how-to-design-jacket',
-    title: 'How to Design Your Own Custom Jacket',
+    title: 'How to Design a Varsity Jacket in 6 Steps',
     h1: 'How to Design Your Custom Jacket',
-    description: 'Learn how to design a custom varsity or letterman jacket with the right style, materials, colors, patches, embroidery and sizing.',
+    description: 'Design your own varsity jacket in 6 steps: choose the material and style, set the options and colors, add names, patches and logos, then review your free proof and order.',
     keywords: 'how to design jacket, design varsity jacket, custom jacket guide',
     sitemapOrder: 30,
     sitemapPriority: 0.7,
@@ -203,9 +203,10 @@ const staticMetadataRoutes = [
   },
   {
     route: '/sizechart',
-    title: 'Varsity Jacket Size Chart & Sizing Guide',
+    // answers the search directly (B-O8): applySeoAuditMetadata.mjs wrote the same into the saved row
+    title: 'Varsity Jacket Size Chart (Inches & CM)',
     h1: 'Varsity Jacket Size Chart',
-    description: 'Check the Easy Jackets varsity jacket size chart and measurement guide to choose the right custom jacket fit before ordering.',
+    description: 'Varsity and letterman jacket size chart in inches and centimetres, XXS to 6XL, with youth, cropped and coach jacket sizes and how to measure for the right fit.',
     keywords: 'varsity jacket size chart, letterman jacket size chart, jacket sizing guide',
     sitemapOrder: 31,
     sitemapPriority: 0.7,
@@ -257,11 +258,13 @@ const staticMetadataRoutes = [
     routeType: 'Static Page',
   },
   {
+    // 301s to /gallery on the 2026 storefront (REDIRECTED_ROUTES); kept so the admin's SEO screen still lists it
     route: '/photo-gallery',
     title: 'Customer Photo Gallery',
     h1: 'Customer Photo Gallery',
     description: 'See real customer photos and completed custom varsity jackets from Easy Jackets.',
     keywords: 'customer jacket photos, varsity jacket photo gallery',
+    sitemapEnabled: false,
     sitemapOrder: 42,
     sitemapPriority: 0.6,
     sitemapChangefreq: 'monthly',
@@ -443,7 +446,84 @@ const staticMetadataRoutes = [
     sitemapChangefreq: 'weekly',
     routeType: 'Keyword Landing Page',
   },
+  {
+    route: '/hooded-varsity-jackets',
+    title: 'Hooded Varsity Jackets',
+    h1: 'Hooded Varsity Jackets',
+    description: 'Custom hooded varsity jackets: melton wool bodies, cowhide leather sleeves and an attached hood, made to order with your colors, letters, names and numbers.',
+    keywords: 'hooded varsity jacket, varsity jacket with hood, hooded letterman jacket',
+    sitemapOrder: 59,
+    sitemapPriority: 0.75,
+    sitemapChangefreq: 'weekly',
+    routeType: 'Keyword Landing Page',
+  },
+  // Pages only the 2026 storefront has. Without an entry here seo-render answered them with the default
+  // title and noindex, which would have hidden them from Google once the server writes its tags (N-T16).
+  {
+    route: '/reviews',
+    title: 'Customer Reviews of Our Custom Jackets',
+    h1: 'Customer Reviews',
+    description: 'Read reviews from teams, schools and customers who ordered custom varsity, letterman and bomber jackets from Easy Jackets, with photos of the finished jackets.',
+    keywords: 'easy jackets reviews, custom varsity jacket reviews, letterman jacket reviews',
+    sitemapOrder: 43,
+    sitemapPriority: 0.6,
+    sitemapChangefreq: 'weekly',
+    routeType: 'Static Page',
+  },
+  {
+    route: '/embroidery-and-patches',
+    title: 'Chenille Patches & Custom Embroidery',
+    h1: 'Embroidery & Patches',
+    description: 'Custom chenille patches, embroidered names, numbers and logos for varsity jackets: the techniques, threads and finished work from our workshop.',
+    keywords: 'chenille patches, custom chenille patches, varsity jacket patches, custom embroidery',
+    sitemapOrder: 44,
+    sitemapPriority: 0.7,
+    sitemapChangefreq: 'monthly',
+    routeType: 'Static Page',
+  },
+  {
+    route: '/united-states',
+    title: 'Custom Varsity Jackets Shipped Across the US',
+    h1: 'Custom Varsity Jackets Across the United States',
+    description: 'Custom varsity and letterman jackets delivered to all 50 states by DHL Express and FedEx: 4–5 business days in transit, tracked and insured.',
+    keywords: 'custom varsity jackets usa, letterman jackets united states',
+    sitemapOrder: 45,
+    sitemapPriority: 0.5,
+    sitemapChangefreq: 'monthly',
+    routeType: 'Static Page',
+  },
 ];
+
+// Addresses that answer with a 301 to another page on the 2026 storefront (the <Navigate> aliases in its
+// App.jsx): never listed in a sitemap, even when an older Metadata row for them exists.
+export const REDIRECTED_ROUTES = new Set([
+  '/photo-gallery', '/design', '/terms', '/product', '/products', '/how-to-design', '/guide', '/bulk-orders', '/bulkorder',
+  '/blog', '/size-chart', '/about', '/aboutus', '/contact', '/contactus', '/shipping-returns', '/privacy-policy',
+  '/payment-success', '/login', '/sign-up', '/home', '/cancel',
+  // no sports products on either site: the sports pages 301 to /team-jackets (N-T17)
+  '/sports-spirit-wears',
+  // the ladies collection 301s to /womens-varsity-jackets
+  '/shop/category/ladies-varsity-jackets',
+]);
+
+// The 50 state pages (/united-states/<state>) share one template with only the state, its cities and its
+// neighbours changed, so they are kept out of the index and the sitemap (noindex, follow) until each has
+// something of its own (N-A2). Same slug rule as the storefront's lib/states.js.
+const US_STATES = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'];
+const stateSlug = (name = '') => String(name).toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
+const stateMetadataRoutes = () => US_STATES.map((name) => ({
+  route: `/united-states/${stateSlug(name)}`,
+  title: `Custom Varsity Jackets in ${name}`,
+  h1: `Custom Varsity Jackets in ${name}`,
+  description: `Custom varsity and letterman jackets for teams, schools and clubs in ${name}, made to order and shipped by DHL Express or FedEx in 4–5 business days.`,
+  keywords: `custom varsity jackets ${name.toLowerCase()}, letterman jackets ${name.toLowerCase()}`,
+  noIndex: true,
+  sitemapEnabled: false,
+  sitemapOrder: 300,
+  sitemapPriority: 0.3,
+  sitemapChangefreq: 'yearly',
+  routeType: 'State Page',
+}));
 
 const catalogBasePath = (section = 'jackets') =>
   section === 'sports' ? '/sports-spirit-wears' : '/shop';
@@ -477,6 +557,8 @@ const addFilterRoute = (routes, seen, section, type, rawValue, labelValue = rawV
     sitemapPriority: 0.6,
     sitemapChangefreq: 'weekly',
     routeType: `${typeTitle} Filter`,
+    // every product comes in every size, so a size page repeats the shop: kept out of the index (N-A6)
+    ...(type === 'size' ? { noIndex: true, sitemapEnabled: false } : {}),
   });
 };
 
@@ -515,9 +597,23 @@ const buildFilterMetadataRoutes = async () => {
  * frozen copies, so product pages are surfaced through
  * `buildProductMetadataRoutes` instead, which nothing seeds from.
  */
+// Discovery reads every active product, and seo-render asks for it on each static page the storefront
+// server renders, so the filter routes are kept for a minute (a new colour shows up within that minute).
+const FILTER_ROUTES_TTL_MS = 60 * 1000;
+let filterRoutesCache = { at: 0, routes: null, pending: null };
+const cachedFilterMetadataRoutes = async () => {
+  if (filterRoutesCache.routes && Date.now() - filterRoutesCache.at < FILTER_ROUTES_TTL_MS) return filterRoutesCache.routes;
+  if (!filterRoutesCache.pending) {
+    filterRoutesCache.pending = buildFilterMetadataRoutes()
+      .then((routes) => { filterRoutesCache = { at: Date.now(), routes, pending: null }; return routes; })
+      .catch((error) => { filterRoutesCache.pending = null; throw error; });
+  }
+  return filterRoutesCache.pending;
+};
+
 export const buildRequiredMetadataRoutes = async () => {
-  const filterRoutes = await buildFilterMetadataRoutes();
-  return [...staticMetadataRoutes, ...filterRoutes].map((entry, index) => ({
+  const filterRoutes = await cachedFilterMetadataRoutes();
+  return [...staticMetadataRoutes, ...stateMetadataRoutes(), ...filterRoutes].map((entry, index) => ({
     sitemapEnabled: true,
     sitemapPriority: 0.5,
     sitemapChangefreq: 'monthly',

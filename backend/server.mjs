@@ -44,6 +44,7 @@ import { uploadMirror } from './helpers/uploadMirror.js'
 import { getStorageDriver } from './helpers/fileUpload.js'
 import { backgroundRemovalEnabled } from './helpers/backgroundRemoval.js'
 import { embeddedAllowed, startBgRemover } from './helpers/bgRemoverProcess.js'
+import { indexNowWatcher } from './helpers/indexNow.js'
 import fs from 'fs/promises'
 // const path = require("path");
 
@@ -159,6 +160,8 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1", sitemapRoutes);
 app.use("/api/v1", seoRenderRoutes);
 app.use("/api/v1/category", categoryRoutes);
+// a product or post saved in the admin is sent to IndexNow a minute later (helpers/indexNow.js, off unless enabled)
+app.use(["/api/v1/product", "/api/v1/features"], indexNowWatcher);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/payment", paymentRoutes)
 app.use("/api/v1/payment-methods", paymentMethodRoutes)

@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { productPath } from './lib/urls';
 import AgentTools from './components/AgentTools';
+import Analytics from './components/Analytics';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollManager from './components/ScrollManager';
 import Seo from './components/Seo';
@@ -27,6 +28,7 @@ const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Reviews = lazy(() => import('./pages/Reviews'));
 const ShippingReturns = lazy(() => import('./pages/ShippingReturns'));
+const ReturnPolicy = lazy(() => import('./pages/ReturnPolicy'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const TrackOrder = lazy(() => import('./pages/TrackOrder'));
@@ -38,6 +40,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const UnitedStates = lazy(() => import('./pages/UnitedStates'));
 const StatePage = lazy(() => import('./pages/StatePage'));
 const StyleGuide = lazy(() => import('./pages/StyleGuide'));
+const KeywordLanding = lazy(() => import('./pages/KeywordLanding'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 /** Redirect built from the matched route's parameters (keeps the query string). */
@@ -54,6 +57,8 @@ export default function App() {
     <>
       <ScrollManager />
       <Seo />
+      {/* Google Analytics (deferred), visitor tracking, real-user speed: lib/analytics.js */}
+      <Analytics />
       {/* WebMCP tools for AI agents in the visitor's browser (only where the browser supports them) */}
       <AgentTools />
       <ErrorBoundary key={pathname}>
@@ -80,6 +85,7 @@ export default function App() {
           <Route path="/contact-us" element={<Contact />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/shipping" element={<ShippingReturns />} />
+          <Route path="/return-policy" element={<ReturnPolicy />} />
           <Route path="/privacypolicy" element={<PrivacyPolicy />} />
           <Route path="/terms-and-conditions" element={<Terms />} />
           <Route path="/track-order" element={<TrackOrder />} />
@@ -93,6 +99,18 @@ export default function App() {
           <Route path="/united-states" element={<UnitedStates />} />
           <Route path="/united-states/:state" element={<StatePage />} />
           <Route path="/style-guide" element={<StyleGuide />} />
+          {/* the live site's keyword landing pages (data/landingPages.js); listed one by one so the
+              storefront server's route table (tools/route-table.mjs) knows each address */}
+          <Route path="/letterman-jackets" element={<KeywordLanding />} />
+          <Route path="/school-jackets" element={<KeywordLanding />} />
+          <Route path="/senior-jackets" element={<KeywordLanding />} />
+          <Route path="/team-jackets" element={<KeywordLanding />} />
+          <Route path="/mens-varsity-jackets" element={<KeywordLanding />} />
+          <Route path="/womens-varsity-jackets" element={<KeywordLanding />} />
+          <Route path="/leather-varsity-jackets" element={<KeywordLanding />} />
+          <Route path="/wool-and-leather-varsity-jackets" element={<KeywordLanding />} />
+          <Route path="/satin-bomber-jackets" element={<KeywordLanding />} />
+          <Route path="/hooded-varsity-jackets" element={<KeywordLanding />} />
 
           {/* Other addresses for the same pages: the live site's aliases and the first 2026 paths */}
           <Route path="/product" element={<Navigate to="/shop" replace />} />
@@ -113,7 +131,6 @@ export default function App() {
           <Route path="/contact" element={<Navigate to="/contact-us" replace />} />
           <Route path="/contactus" element={<Navigate to="/contact-us" replace />} />
           <Route path="/shipping-returns" element={<Navigate to="/shipping" replace />} />
-          <Route path="/return-policy" element={<Navigate to="/shipping#exchanges" replace />} />
           <Route path="/privacy-policy" element={<Navigate to="/privacypolicy" replace />} />
           <Route path="/terms" element={<Navigate to="/terms-and-conditions" replace />} />
           <Route path="/order-confirmation/:orderId" element={<ParamRedirect to={(p) => `/order-confirmation?order=${encodeURIComponent(p.orderId)}`} />} />

@@ -66,6 +66,7 @@ export default function Contact() {
   return (
     <div className="pg-contact">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {/* header */}
       {/* Contact header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -261,11 +262,12 @@ export default function Contact() {
               Returns & exchanges
             </div>
             <p style={{ margin: '8px 0 0', fontSize: '14px', color: 'var(--muted)', lineHeight: '1.5' }}>
-              One free size exchange on every custom jacket.
+              Custom made is final sale; plain stock jackets within 10 days.
             </p>
           </A>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

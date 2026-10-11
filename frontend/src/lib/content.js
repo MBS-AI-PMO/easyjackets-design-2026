@@ -71,7 +71,11 @@ export const applyFaqTemplate = (text = '', values = {}) =>
 export const fetchFaqsFor = async (pageKeys, values) => {
   for (const key of (pageKeys || []).filter(Boolean)) {
     const list = await fetchPageFaqs(key);
-    if (list.length) return values ? list.map((f) => ({ ...f, q: applyFaqTemplate(f.q, values), a: applyFaqTemplate(f.a, values) })) : list;
+    if (list.length) {
+      const items = values ? list.map((f) => ({ ...f, q: applyFaqTemplate(f.q, values), a: applyFaqTemplate(f.a, values) })) : list;
+      // which list answered: a shared template ('product-template', 'catalog-template') is not this page's own
+      return Object.assign(items, { fromTemplate: /-template$/.test(key) });
+    }
   }
   return [];
 };

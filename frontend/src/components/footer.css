@@ -30,3 +30,8 @@
 .ez-footer-hours { font-size: 13px; color: rgba(244,239,230,0.6); }
 .ez-footer-addr { margin-top: 4px; font-size: 13px; line-height: 1.55; color: rgba(244,239,230,0.72); }
 .ez-footer-addr-label { margin-bottom: 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+/* "Popular" row: the keyword landing pages, small, above the legal line */
+.ez-footer-popular { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 18px; padding-top: 4px; font-size: 13px; }
+.ez-footer-popular > span { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-right: 4px; }
+.ez-footer-popular a { display: inline-flex; align-items: center; min-height: 24px; color: rgba(244,239,230,0.72); text-decoration: none; transition: color .15s; } /* 24px tall: a comfortable tap target */
+.ez-footer-popular a:hover { color: var(--cream); }

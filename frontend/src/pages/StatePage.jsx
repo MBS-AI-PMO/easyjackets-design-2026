@@ -47,6 +47,7 @@ export default function StatePage() {
   return (
     <div className="pg-state-page">
       <Nav active="/faq" cta="shop" />
+      <main id="main">
       {/* header */}
       {/* State header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
@@ -231,6 +232,7 @@ export default function StatePage() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

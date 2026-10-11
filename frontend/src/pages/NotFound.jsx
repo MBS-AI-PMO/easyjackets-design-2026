@@ -3,14 +3,16 @@ import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
-import { usePageTitle } from '../lib/usePageTitle';
+import { useNoIndex, usePageTitle } from '../lib/usePageTitle';
 
 export default function NotFound() {
   usePageTitle('Page Not Found', 'The link is broken or the page has moved. Shop ready-made varsity jackets or design your own.');
+  useNoIndex(true); // the server answers these addresses 404 as well (server.mjs)
 
   return (
     <div className="pg-not-found">
       <Nav cta="cart" />
+      <main id="main">
       {/* 404 */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(64px,10vw,140px) clamp(16px,4vw,48px) 120px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '40px clamp(24px,5vw,80px)', alignItems: 'center' }}>
         <div>
@@ -38,6 +40,7 @@ export default function NotFound() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

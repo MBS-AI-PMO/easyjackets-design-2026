@@ -1,0 +1,48 @@
+# Easy Jackets: custom varsity and letterman jackets. https://easyjackets.com
+# Cart, checkout, account and saved-design pages are kept out; everything else may be crawled.
+
+User-agent: *
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /dashboard
+Disallow: /order-confirmation
+Disallow: /success/
+Disallow: /payment-success
+Disallow: /cancel
+Disallow: /design/
+Disallow: /style-guide
+Disallow: /login
+Disallow: /sign-up
+Disallow: /user/
+
+# AI answer engines and AI search: welcome, so answers about custom varsity jackets can cite this site.
+# (A crawler that matches a named group reads only that group, so the private pages are repeated.)
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: ClaudeBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Bingbot
+User-agent: CCBot
+Allow: /
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /dashboard
+Disallow: /order-confirmation
+Disallow: /success/
+Disallow: /payment-success
+Disallow: /cancel
+Disallow: /design/
+Disallow: /style-guide
+Disallow: /login
+Disallow: /sign-up
+Disallow: /user/
+
+Sitemap: https://easyjackets.com/sitemap.xml

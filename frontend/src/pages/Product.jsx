@@ -1,6 +1,7 @@
 // A catalogue product, loaded by slug from the API.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
+import { legacyTarget } from '../data/redirects';
 import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import ProductCard from '../components/ProductCard';
@@ -10,15 +11,15 @@ import { useCart } from '../lib/cart';
 import { customizerUrl, fetchProduct, fetchRelated, fetchReviewSummary, fetchReviews, money, submitReview, trackView } from '../lib/catalog';
 import { safeHtml, stripHtml } from '../lib/html';
 import { useAsync } from '../lib/useAsync';
-import { usePageTitle } from '../lib/usePageTitle';
+import { useNoIndex, usePageTitle } from '../lib/usePageTitle';
 import './Product.css';
-import { shopPath } from '../lib/urls';
+import { productPath, shopPath } from '../lib/urls';
 
 const FAQS = [
   { q: 'Can I add patches after I receive it?', a: 'Yes. Chenille and embroidered patches can be sewn on by any local tailor; we also sell matching patches separately.' },
   { q: 'Is the leather real?', a: 'Cowhide sleeves are full-grain leather. Choose vegan leather in the Design Studio for an animal-free build.' },
   { q: 'How does sizing run?', a: 'True to the chart above, cut to layer over a hoodie. Between sizes, go up.' },
-  { q: 'Can I return a custom jacket?', a: 'Custom jackets are made to your spec, so returns are for defects or a size that does not match your order — in which case we remake it.' },
+  { q: 'Can I return a custom jacket?', a: 'No. A custom jacket is made to your spec, so it is final sale. Plain, non-decorated stock jackets can be returned within 10 days of delivery, and a damaged or defective jacket can be claimed within 10 days.' },
 ];
 const SIZE_CHART = [
   ['Chest', 38, 40, 42, 44, 46, 49, 52],
@@ -88,12 +89,17 @@ export default function Product() {
   const { data: related } = useAsync((signal) => (productId && categoryId ? fetchRelated(productId, categoryId, signal) : []), [productId, categoryId], { live: false }); // random per visit
   useEffect(() => { if (productId) trackView(productId); }, [productId]);
   usePageTitle(product?.name, product ? stripHtml(product.shortDescription || product.description).slice(0, 160) : undefined);
+  // an unknown or retired product: the "not found" view below is never indexed (N-T6)
+  useNoIndex(!loading && (!!error || !product));
 
   // the jacket's name never takes more than three lines: long names get a smaller size
   const titleRef = useRef(null);
   useFitLines(titleRef, product?.name);
 
   const [img, setImg] = useState(0);
+  // gallery photos already shown or asked for (pointed at / focused): they stay in the frame for the crossfade
+  const [revealed, setRevealed] = useState(() => new Set([0]));
+  const reveal = (i) => setRevealed((prev) => (prev.has(i) ? prev : new Set(prev).add(i)));
   const [tab, setTab] = useState('fixed');
   // "As shown" is a phone-only tab: on desktop the Customize tab stands alone
   const isPhone = useIsPhone();
@@ -115,7 +121,7 @@ export default function Product() {
   const [qty, setQty] = useState(1);
   const [needSize, setNeedSize] = useState(false);
   const [added, setAdded] = useState(false);
-  useEffect(() => { setImg(0); setSize(''); setQty(1); setNeedSize(false); setAdded(false); setTab('fixed'); }, [slug]);
+  useEffect(() => { setImg(0); setRevealed(new Set([0])); setSize(''); setQty(1); setNeedSize(false); setAdded(false); setTab('fixed'); }, [slug]);
 
   const sizes = product?.sizes || [];
   const chosen = sizes.find((s) => s.size === size) || null;
@@ -156,9 +162,13 @@ export default function Product() {
   const count = summary?.reviewCount || 0;
 
   if (!loading && (error || !product)) {
+    // a renamed product (data/redirects.js): go to its current page, as the server's 301 does
+    const moved = legacyTarget(`/product/${slug}`);
+    if (moved) return <Navigate to={moved} replace />;
     return (
       <div className="pg-product">
         <Nav cta="cart" />
+        <main id="main">
         <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px', textAlign: 'center' }}>
           <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(40px,5vw,72px)', textTransform: 'uppercase', lineHeight: '0.9' }}>
             {error?.status === 404 || !error ? 'That jacket is not here' : 'The jacket could not be loaded'}
@@ -166,6 +176,7 @@ export default function Product() {
           <p style={{ color: 'var(--muted)', margin: '16px 0 28px' }}>{error && error.status !== 404 ? error.message : 'It may have been renamed or retired.'}</p>
           <A href="/shop" className="ez-btn ez-btn-ink">Browse all jackets</A>
         </section>
+        </main>
         <Footer faq={false} />
       </div>
     );
@@ -174,24 +185,27 @@ export default function Product() {
   return (
     <div className="pg-product">
       <Nav cta="cart" />
+      <main id="main">
       {/* Product */}
       <section className="ez-pdp" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(24px,3vw,40px) clamp(16px,4vw,48px) 0', display: 'grid', gridTemplateColumns: 'minmax(0,7fr) minmax(0,5fr)', gap: '40px clamp(24px,4vw,64px)', alignItems: 'start' }}>
         {/* gallery */}
         <div className="pdp-gallery">
           {/* one line whatever the name: a long name wrapping once it loaded pushed the photo and the buy box
               down (a layout shift); it ends in "…" instead, and is shown in full as the heading */}
-          <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px', marginBottom: '16px', whiteSpace: 'nowrap' }}>
+          {/* the trail the BreadcrumbList schema describes: Home › category › product (N-A1) */}
+          <nav aria-label="Breadcrumb" style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px', marginBottom: '16px', whiteSpace: 'nowrap' }}>
             <A href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Home</A>
-            <span>/</span>
+            <span aria-hidden="true">/</span>
             <A href={catHref} style={{ textDecoration: 'none', color: 'inherit' }}>{product?.category?.name || 'Jackets'}</A>
-            <span>/</span>
-            <span style={{ color: 'var(--ink)', fontWeight: '600', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{product?.name || '…'}</span>
-          </div>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page" style={{ color: 'var(--ink)', fontWeight: '600', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{product?.name || '…'}</span>
+          </nav>
           <div style={{ display: 'grid', gridTemplateColumns: '72px minmax(0,1fr)', gap: '14px' }}>
             <div style={{ display: 'grid', gap: '10px', alignContent: 'start' }}>
               {(product?.images || []).map((src, i) => (
-                <button key={src} type="button" className="ez-thumb" aria-pressed={img === i} onClick={() => setImg(i)} aria-label={`View ${i + 1}`}>
-                  <ImageSlot slot={`pdp-thumb-${i}`} shape="rect" src={src} width={320} placeholder="" style={{ pointerEvents: 'none' }} />
+                <button key={src} type="button" className="ez-thumb" aria-pressed={img === i} onClick={() => { setImg(i); reveal(i); }} onPointerEnter={() => reveal(i)} onFocus={() => reveal(i)} aria-label={`View ${i + 1}`}>
+                  {/* 72 px wide: asked for at 160 (320 on sharp screens), not 640 (B-T4) */}
+                  <ImageSlot slot={`pdp-thumb-${i}`} shape="rect" src={src} width={160} placeholder="" style={{ pointerEvents: 'none' }} />
                 </button>
               ))}
             </div>
@@ -201,7 +215,10 @@ export default function Product() {
                 <div className="pdp-stage">
                   {(product.images?.length ? product.images : [product.image]).map((src, i) => (
                     <div key={src} className={`pdp-layer${i === img ? ' is-on' : ''}`} aria-hidden={i === img ? undefined : 'true'}>
-                      <ImageSlot slot={`pdp-main-${i}`} shape="rect" src={src} width={1280} placeholder="Product photo" role="img" aria-label={product.imageAlt} eager={i === 0} />
+                      {/* a photo loads once it is shown, pointed at or focused: the first paint fetches only the main one (N-T9) */}
+                      {i === img || revealed.has(i) ? (
+                        <ImageSlot slot={`pdp-main-${i}`} shape="rect" src={src} width={1280} placeholder="Product photo" role="img" aria-label={product.imageAlt} eager={i === 0} />
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -242,11 +259,11 @@ export default function Product() {
             {product?.description ? (
               <div>
                 <h2 style={h2Style}>About this jacket</h2>
-                <div className="ez-prose" dangerouslySetInnerHTML={{ __html: safeHtml(product.description) }} />
+                <div className="ez-prose" dangerouslySetInnerHTML={{ __html: safeHtml(product.description, { stripColors: true }) }} />
                 {product.care ? (
                   <details style={{ borderTop: '1px solid var(--ink)', padding: '14px 0', marginTop: '20px' }}>
                     <summary style={{ cursor: 'pointer', listStyle: 'none', fontWeight: '600', fontSize: '16px' }}>Care instructions</summary>
-                    <div className="ez-prose" style={{ marginTop: '10px' }} dangerouslySetInnerHTML={{ __html: safeHtml(product.care) }} />
+                    <div className="ez-prose" style={{ marginTop: '10px' }} dangerouslySetInnerHTML={{ __html: safeHtml(product.care, { stripColors: true }) }} />
                   </details>
                 ) : null}
               </div>
@@ -393,7 +410,7 @@ export default function Product() {
               <div key={shownTab} className="ez-tab-panel" role={isPhone ? 'tabpanel' : undefined}>
               {shownTab === 'fixed' ? (
                 <div style={{ margin: '20px 0 0', color: 'var(--ink-2)', lineHeight: '1.6', fontSize: '15px' }}>
-                  {product.shortDescription ? <div dangerouslySetInnerHTML={{ __html: safeHtml(product.shortDescription) }} /> : <p style={{ margin: 0 }}>Exactly as photographed{product.color?.name ? ` in ${product.color.name}` : ''}. Blank — ready for your patches, or add your letter later.</p>}
+                  {product.shortDescription ? <div dangerouslySetInnerHTML={{ __html: safeHtml(product.shortDescription, { stripColors: true }) }} /> : <p style={{ margin: 0 }}>Exactly as photographed{product.color?.name ? ` in ${product.color.name}` : ''}. Blank — ready for your patches, or add your letter later.</p>}
                 </div>
               ) : (
                 <div style={{ display: 'grid', gap: '16px', marginTop: isPhone ? '22px' : '8px' }}>
@@ -441,7 +458,7 @@ export default function Product() {
                 {[
                   { lead: '2–3 wks', title: 'Made to order', text: 'Production, then 4–5 business days tracked shipping. Rush at checkout.' },
                   { lead: 'Free', title: 'Design proof', text: 'A digital proof within two business days. Nothing is cut until you approve.' },
-                  { lead: 'Fit', title: 'Guaranteed', text: 'Wrong size as specified? We remake it at no charge.' },
+                  { lead: '10 days', title: 'Returns', text: 'Plain stock jackets within 10 days of delivery. Custom made is final sale.' },
                   { lead: '10+', title: 'Team pricing', text: 'Ordering for a team, school or company? Get bulk pricing →', href: '/bulk-order' },
                 ].map(({ lead, title, text, href }) => {
                   const inner = (
@@ -477,7 +494,8 @@ export default function Product() {
           </div>
         </section>
       ) : <div style={{ height: '64px' }} />}
-      <Footer faq={product ? { pageKeys: ['product-template'], values: { productName: product.name }, title: 'About this jacket' } : false} />
+      </main>
+      <Footer faq={product ? { pageKeys: [productPath(product.slug), 'product-template'], values: { productName: product.name }, title: 'About this jacket' } : false} />
     </div>
   );
 }

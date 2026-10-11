@@ -15,6 +15,7 @@ export default function StyleGuide() {
   return (
     <div className="pg-style-guide">
       <Nav cta="cart" cartCount={cartCount} />
+      <main id="main">
       {/* Style guide header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
@@ -862,6 +863,7 @@ export default function StyleGuide() {
           </div>
         </div>
       </section>
+      </main>
       <Footer />
     </div>
   );

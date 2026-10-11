@@ -262,7 +262,7 @@ export function createAgentTools(live) {
     },
     {
       name: 'get_shipping_and_returns',
-      description: 'Shipping rates in US dollars by number of jackets (United States and the rest of the world), with the cost for a given quantity and destination, plus production times, delivery times, duties, size exchanges, refunds and cancellations.',
+      description: 'Shipping rates in US dollars by number of jackets (United States and the rest of the world), with the cost for a given quantity and destination, plus production times, delivery times, duties, returns, refunds and cancellations.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -293,10 +293,10 @@ export function createAgentTools(live) {
               production: 'Made to order after the customer approves a free digital proof: about 10-12 business days for blank jackets, 2-3 weeks with chenille or embroidery; team orders of 25+ add 3-5 business days.',
               delivery: 'Shipped from the workshop in Sialkot by DHL Express or FedEx, tracked and insured: about 4-5 business days to the United States, 5-8 elsewhere.',
               duties: 'US orders under $800 clear duty-free; elsewhere local import duty or VAT may be due on delivery.',
-              size_exchange: 'One free size exchange per custom jacket, requested within 14 days of delivery; the jacket must be unworn.',
-              refunds: 'Custom jackets cannot be returned for a refund. Ready-made, non-customised items may be returned unworn within 30 days.',
-              faults: 'A jacket that does not match the approved proof, or arrives damaged, is remade or repaired at no cost (photos within 14 days).',
-              cancellation: 'Free cancellation before the proof is approved.',
+              returns: 'Custom-made jackets (designed in the Design Studio, or with names, numbers, patches, embroidery, custom colours or sizes) are final sale. Plain, non-decorated stock jackets can be returned or exchanged within 10 days of delivery, unworn and unaltered, with a return authorization number first.',
+              refunds: 'After the returned item passes inspection; return shipping is paid by the customer, plus a restocking fee of 15-25% or $35, whichever is greater.',
+              faults: 'Damaged or defective items: contact us within 10 days of receipt with the order number and photos; every claim is reviewed.',
+              cancellation: 'Within 24 hours of placing the order; after that the jacket is in production and the order cannot be cancelled or changed.',
             },
             policy_url: absolute(PAGES.shipping_and_returns),
           };

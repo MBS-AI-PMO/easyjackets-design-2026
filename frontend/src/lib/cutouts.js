@@ -7,8 +7,12 @@ import { api } from './api';
 
 const REFRESH_MS = 60000;
 const KEY_IN_SRC = new RegExp('/uploads/([^?#]+)');
-let keys = new Set();
-let versions = {};
+// The storefront server writes the current page's own cut-out versions into the HTML (server.mjs,
+// window.__EJ_CUTOUTS__), so the first render already asks for the same photo URLs it preloaded instead of
+// asking once without the version and again with it.
+const seed = typeof window !== 'undefined' ? window.__EJ_CUTOUTS__ : null;
+let keys = new Set(seed?.keys || []);
+let versions = { ...(seed?.versions || {}) };
 let loadedAt = 0;
 let inflight = null;
 let timer = null;

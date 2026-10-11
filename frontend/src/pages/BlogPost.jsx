@@ -1,7 +1,9 @@
 // A blog post, loaded by slug from the API.
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
+import { legacyTarget } from '../data/redirects';
 import A from '../components/A';
+import AnswerBox from '../components/AnswerBox';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -9,7 +11,7 @@ import { fetchProducts } from '../lib/catalog';
 import { fetchBlog, fetchBlogs } from '../lib/content';
 import { prepareArticle } from '../lib/html';
 import { useAsync } from '../lib/useAsync';
-import { usePageTitle } from '../lib/usePageTitle';
+import { useNoIndex, usePageTitle } from '../lib/usePageTitle';
 import './BlogPost.css';
 import { productPath } from '../lib/urls';
 
@@ -33,6 +35,8 @@ export default function BlogPost() {
     return jackets.length ? jackets[Math.floor(Math.random() * jackets.length)] : null;
   }), [slug, pickRound], { live: false });
   usePageTitle(post?.title, post?.excerpt?.slice(0, 160));
+  // an unknown or unpublished post: the "not found" view is never indexed (N-T6)
+  useNoIndex(!loading && (!!error || !post));
 
   const article = useMemo(() => (post ? prepareArticle(post.content) : { html: '', toc: [] }), [post]);
   const index = all && post ? all.findIndex((b) => b.slug === post.slug) : -1;
@@ -78,14 +82,19 @@ export default function BlogPost() {
   const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   if (!loading && (error || !post)) {
+    // a post merged into another (B-O3): go there, as the server's 301 does on a full page load
+    const moved = legacyTarget(`/new-blog/${slug}`);
+    if (moved) return <Navigate to={moved} replace />;
     return (
       <div className="pg-blog-post">
         <Nav active="/new-blog" cta="shop" />
+        <main id="main">
         <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px', textAlign: 'center' }}>
           <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(40px,5vw,72px)', textTransform: 'uppercase', lineHeight: '0.9' }}>That post is not here</div>
           <p style={{ color: 'var(--muted)', margin: '16px 0 28px' }}>{error && error.status !== 404 ? error.message : 'It may have been renamed or unpublished.'}</p>
           <A href="/new-blog" className="ez-btn ez-btn-ink">All posts</A>
         </section>
+        </main>
         <Footer />
       </div>
     );
@@ -94,25 +103,33 @@ export default function BlogPost() {
   return (
     <div className="pg-blog-post">
       <Nav active="/new-blog" cta="shop" />
+      <main id="main">
       {/* reading progress */}
       <div style={{ position: 'sticky', top: `${navHeight}px`, zIndex: '19', height: '3px', background: 'transparent' }}>
         <div style={{ height: '100%', background: 'var(--gold)', width: `${progress}%`, transition: 'width .1s linear' }} />
       </div>
       {/* Post header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {/* the trail the BreadcrumbList schema describes: Home › Blog › post (N-A1); the category is the line above the title */}
+        <nav aria-label="Breadcrumb" style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <A href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Home</A>
-          <span>/</span>
+          <span aria-hidden="true">/</span>
           <A href="/new-blog" style={{ textDecoration: 'none', color: 'inherit' }}>Blog</A>
-          <span>/</span>
-          <span style={{ color: 'var(--ink)', fontWeight: '600' }}>{post?.category || '…'}</span>
-        </div>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" style={{ color: 'var(--ink)', fontWeight: '600', maxWidth: '60ch', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post?.title || '…'}</span>
+        </nav>
         <div style={{ maxWidth: '900px', marginTop: '24px' }}>
           {loading ? (
-            <div style={{ display: 'grid', gap: '14px' }} aria-busy="true">
-              <div className="ez-skeleton" style={{ height: '14px', width: '30%' }} />
-              <div className="ez-skeleton" style={{ height: '80px' }} />
-              <div className="ez-skeleton" style={{ height: '48px', width: '80%' }} />
+            // the same blocks, at the same sizes, as the header below (category line, three title lines, two
+            // intro lines, author), so the photo and the article do not jump when the post arrives (N-T11)
+            <div aria-busy="true">
+              <div className="ez-skeleton" style={{ height: '15px', width: '34%' }} />
+              {[92, 88, 60].map((w) => <div key={w} className="ez-skeleton" style={{ height: 'calc(clamp(48px,6.5vw,92px) * 0.8)', width: `${w}%`, marginTop: '14px' }} />)}
+              {[96, 72].map((w) => <div key={w} className="ez-skeleton" style={{ height: '22px', width: `${w}%`, maxWidth: '60ch', marginTop: '14px' }} />)}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '28px' }}>
+                <div className="ez-skeleton" style={{ width: '44px', height: '44px', borderRadius: '50%' }} />
+                <div className="ez-skeleton" style={{ height: '14px', width: '160px' }} />
+              </div>
             </div>
           ) : (
             <>
@@ -149,6 +166,8 @@ export default function BlogPost() {
           ) : null}
         </aside>
         <article className="ez-prose" id="article">
+          {/* the question this guide answers, answered first (data/answers.js, G-3) */}
+          {!loading && post ? <AnswerBox path={`/new-blog/${post.slug}`} /> : null}
           {loading ? (
             <div style={{ display: 'grid', gap: '12px' }} aria-busy="true">{Array.from({ length: 8 }, (_, i) => <div key={i} className="ez-skeleton" style={{ height: '14px', width: `${95 - (i % 3) * 15}%` }} />)}</div>
           ) : (
@@ -230,6 +249,7 @@ export default function BlogPost() {
           </div>
         </section>
       ) : <div style={{ height: '96px' }} />}
+      </main>
       <Footer />
     </div>
   );

@@ -2,7 +2,7 @@
 // page title for /shop and every /shop/<type>/<value> page. Mirrors the live
 // site's catalog profiles (easyjackets/src/utils/catalogFilters.js) so the same
 // URLs keep the same wording, with a generated fallback for everything else.
-import { FILTER_TYPES, slugify, unslugify } from './urls';
+import { FILTER_TYPES, slugify, unslugify } from './urls.js';
 
 export const CATALOG_SEO_PROFILES = {
   'category:varsity-jackets': { title: 'Custom Varsity Jackets | Design Your Own', h1: 'Custom Varsity Jackets', description: 'Shop custom varsity jackets with wool, leather, satin, colors, embroidery, patches, names and numbers from Easy Jackets.' },

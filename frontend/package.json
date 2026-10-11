@@ -5,17 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node tools/postbuild.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "verify:app": "node tools/verify-app.mjs",
-    "check:images": "node tools/check-image-urls.mjs"
+    "check:images": "node tools/check-image-urls.mjs",
+    "start": "node server.mjs"
   },
   "dependencies": {
     "dompurify": "^3.4.16",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "web-vitals": "^4.2.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
