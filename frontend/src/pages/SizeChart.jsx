@@ -7,7 +7,7 @@ import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
-import { fetchSizes, inchRange, money, toCm } from '../lib/materials';
+import { fetchSizes, inchRange, toCm } from '../lib/materials';
 import { useAsync } from '../lib/useAsync';
 import { fetchProducts } from '../lib/catalog';
 import SizeGuides from '../components/SizeGuides';
@@ -54,7 +54,6 @@ export default function SizeChart() {
       size: s.size,
       cells: current.columns.map(([k]) => fmt(s[view][k])),
       fits: fmt(s.body.chest),
-      surcharge: s.surcharge ? `+${money(s.surcharge)}` : '—',
       hi: !!hi,
     };
   });
@@ -109,7 +108,10 @@ export default function SizeChart() {
       </section>
       {/* controls */}
       {/* Chart controls */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '36px clamp(16px,4vw,48px) 0', display: 'flex', flexWrap: 'wrap', gap: '16px 28px', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* the controls and the table share one narrower column, lined up with the heading: 7 short number
+          columns spread over the full 1280px read as a wide, empty table */}
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '36px clamp(16px,4vw,48px) 0' }}>
+        <div style={{ maxWidth: '960px', display: 'flex', flexWrap: 'wrap', gap: '16px 28px', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
           <div className="ez-seg">
             {fits.map((f) => (
@@ -127,10 +129,12 @@ export default function SizeChart() {
           <input type="number" placeholder={cm ? 'e.g. 102' : 'e.g. 40'} value={chest} onChange={(e) => setChest(e.target.value)} style={{ width: '90px', height: '44px', padding: '0 12px', border: '1.5px solid var(--cream-2)', borderRadius: '2px', background: '#fbf8f2', font: 'inherit', fontSize: '15px', color: 'var(--ink)' }} />
           <span style={{ fontWeight: '600', color: 'var(--ink)' }}>{unitLabel}</span>
         </label>
+        </div>
       </section>
       {/* table */}
       {/* Size table */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '20px clamp(16px,4vw,48px) 0' }}>
+        <div style={{ maxWidth: '960px' }}>
         {error ? <p style={{ color: 'var(--muted)', margin: '0 0 14px' }}>The size chart could not be loaded ({error.message}).</p> : null}
         <div className="ez-wrap">
           <table className="ez-table">
@@ -139,18 +143,16 @@ export default function SizeChart() {
                 <th>Size</th>
                 {current.columns.map(([k, label]) => <th key={k}>{label}</th>)}
                 {view === 'jacket' ? <th>Fits chest</th> : null}
-                <th>Surcharge</th>
               </tr>
             </thead>
             <tbody>
               {loading ? Array.from({ length: 8 }, (_, i) => (
-                <tr key={i}><td colSpan={current.columns.length + 3}><div className="ez-skeleton" style={{ height: '20px' }} /></td></tr>
+                <tr key={i}><td colSpan={current.columns.length + (view === 'jacket' ? 2 : 1)}><div className="ez-skeleton" style={{ height: '20px' }} /></td></tr>
               )) : rows.map((r) => (
                 <tr key={r.id} data-hi={r.hi}>
                   <td>{r.size}</td>
                   {r.cells.map((c, i) => <td key={i}>{c}</td>)}
                   {view === 'jacket' ? <td style={{ color: 'var(--muted)' }}>{r.fits}</td> : null}
-                  <td style={{ color: r.surcharge === '—' ? 'var(--muted)' : 'inherit' }}>{r.surcharge}</td>
                 </tr>
               ))}
             </tbody>
@@ -158,8 +160,9 @@ export default function SizeChart() {
         </div>
         {!loading && !error && !rows.length ? <p style={{ color: 'var(--muted)', margin: '14px 0 0' }}>No sizes have been published yet.</p> : null}
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '14px 0 0' }}>
-          Jacket measurements are of the finished jacket laid flat; chest is pit to pit. Tolerance ±0.5 in (1.3 cm). "Tall" sizes add length to the body and sleeves. Larger sizes carry the surcharge shown; youth sizes and custom measurements are available at checkout.
+          Jacket measurements are of the finished jacket laid flat; chest is pit to pit. Tolerance ±0.5 in (1.3 cm). "Tall" sizes add length to the body and sleeves. Youth sizes and custom measurements are available at checkout.
         </p>
+        </div>
       </section>
       {/* how to measure */}
       {/* How to measure */}

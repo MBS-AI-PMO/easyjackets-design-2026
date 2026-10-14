@@ -113,15 +113,17 @@ export default function BulkOrders() {
         { slot: 'seg-3', name: 'Businesses', desc: 'Branded jackets for staff, launches and gifting.', src: '/images/site/bulk-seg-businesses.webp', alt: 'An office team in matching branded white varsity jackets' },
         { slot: 'seg-4', name: 'Clubs', desc: 'Car clubs, fraternities, esports and alumni groups.', src: '/images/site/bulk-seg-clubs.jpg', alt: 'Club members in maroon and gold letterman jackets' },
       ],
-      tiers: [
-        { range: '10–24 jackets', note: 'Mixed sizes and colors', off: '10% off', from: '$135' },
-        { range: '25–49 jackets', note: 'Free physical sample', off: '15% off', from: '$127' },
-        { range: '50–99 jackets', note: 'Dedicated specialist', off: '20% off', from: '$120' },
-        { range: '100+ jackets', note: 'Pantone matching included', off: 'Up to 30% off', from: '$105' },
+      // what a team can customize: the Design Studio's own choices (pages/HowToDesign.jsx, pages/Fabrics.jsx)
+      options: [
+        { name: 'Materials', note: 'Melton wool, cowhide or vegan leather, satin and fleece', tag: 'Body & sleeves' },
+        { name: 'Style', note: 'Collar, sleeves, zipper or buttons, pockets, knit trim and lining', tag: '6 style choices' },
+        { name: 'Colors', note: 'Every part of the jacket in your school or team colors', tag: 'Every panel' },
+        { name: 'Patches & embroidery', note: 'Chenille letters, logos and patches on the chest, back, sleeves and collar', tag: 'Your artwork' },
+        { name: 'Names & numbers', note: 'Each jacket personalised from your roster sheet', tag: 'Per jacket' },
       ],
       faqs: [
         { q: 'What is the minimum for bulk pricing?', a: 'Ten jackets. Below that you can still order any quantity at regular price — there is no minimum order.' },
-        { q: 'Can everyone have a different size, name and number?', a: 'Yes. Send a roster sheet and each jacket is made and labelled individually. Mixed sizes and colors count toward the same volume tier.' },
+        { q: 'Can everyone have a different size, name and number?', a: 'Yes. Send a roster sheet and each jacket is made and labelled individually. Mixed sizes and colors are fine in one order.' },
         { q: 'Can you match our school colors exactly?', a: 'We stock 40+ wool and leather colors and can Pantone-match rib knit and lining on orders of 100+. Send a swatch or code and we will confirm the closest match on the mockup.' },
         { q: 'How long does a team order take?', a: 'Typically 3–4 weeks in production after mockup approval, plus 4–5 business days shipping. Tell us your deadline and we will confirm before you commit.' },
         { q: 'Do you offer samples?', a: 'A free digital mockup for every quote. A physical sample jacket is available on orders of 25 or more, credited back against the order.' },
@@ -130,7 +132,7 @@ export default function BulkOrders() {
     };
   }
 
-  const { error, faqs, locations, notSent, orgTypes, reset, segments, sending, sent, sentName, submit, tiers } = renderVals();
+  const { error, faqs, locations, notSent, orgTypes, reset, segments, sending, sent, sentName, submit, options } = renderVals();
   // front closure options come from the admin's closures list, as on the live site
   const { data: closures } = useAsync(fetchClosures, []);
   // FAQs from the admin's Storefront FAQs screen, as on the live site; the design's list only if the API is unreachable.
@@ -374,35 +376,32 @@ export default function BulkOrders() {
           </div>
         </div>
       </section>
-      {/* pricing tiers */}
-      {/* Pricing */}
+      {/* what can be customized (replaced the volume price table, which quoted fixed discounts) */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '32px clamp(24px,4vw,72px)', alignItems: 'start' }}>
         <div>
           <div style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)' }}>
-            Volume pricing
+            Make it yours
           </div>
           <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(44px,6vw,80px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '10px 0 0' }}>
-            More jackets, lower price
+            Every detail, your design
           </h2>
           <p style={{ color: 'var(--muted)', lineHeight: '1.6', margin: '20px 0 0', maxWidth: '40ch' }}>
-            Discounts apply to the whole order, mixed sizes and colors included. Names, numbers and patches are priced once per design, not per jacket.
+            Each team jacket is built in your colors, with your artwork. You see every choice on the free digital proof before anything is cut.
           </p>
+          <A href="/how-to-design-jacket" style={{ display: 'inline-block', marginTop: '18px', fontWeight: '600', fontSize: '15px', borderBottom: '2px solid var(--gold)', textDecoration: 'none' }}>
+            See the design guide →
+          </A>
         </div>
         <div style={{ display: 'grid', gap: '0' }}>
-          {tiers.map((t, tIdx) => (
-            <div key={tIdx} className="bo-tier" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto auto', gap: '16px 24px', alignItems: 'baseline', padding: '18px 0', borderTop: '1px solid var(--ink)' }}>
+          {options.map((o, oIdx) => (
+            <div key={oIdx} className="bo-option" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '16px 24px', alignItems: 'baseline', padding: '18px 0', borderTop: '1px solid var(--ink)' }}>
               <div>
-                <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '28px', lineHeight: '1', textTransform: 'uppercase' }}>
-                  {t.range}
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>{t.note}</div>
+                <h3 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '28px', lineHeight: '1', textTransform: 'uppercase', margin: 0 }}>
+                  {o.name}
+                </h3>
+                <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>{o.note}</div>
               </div>
-              <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '26px', color: 'var(--gold-2)' }}>{t.off}</div>
-              <div style={{ fontSize: '14px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                from{' '}
-                <strong style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '24px', color: 'var(--ink)' }}>{t.from}</strong>
-                /jacket
-              </div>
+              <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '22px', color: 'var(--gold-2)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{o.tag}</div>
             </div>
           ))}
           <div style={{ borderTop: '1px solid var(--ink)' }} />

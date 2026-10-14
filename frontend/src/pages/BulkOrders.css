@@ -82,7 +82,7 @@
   .pg-bulk-orders .bo-hero-frame { margin-right:14px; }
 }
 
-/* ---- hover: who-we-make-for cards, price tiers, process steps ---- */
+/* ---- hover: who-we-make-for cards, customization rows, process steps ---- */
 .pg-bulk-orders .bo-seg { transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s; }
 .pg-bulk-orders .bo-seg-img { transition: transform .6s cubic-bezier(.2,.7,.2,1), opacity .3s; }
 .pg-bulk-orders .bo-seg::after { content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 4px; background: var(--gold); transition: right .35s cubic-bezier(.2,.7,.2,1); }
@@ -90,11 +90,12 @@
 .pg-bulk-orders .bo-seg:hover .bo-seg-img { transform: scale(1.06); opacity: .95 !important; }
 .pg-bulk-orders .bo-seg:hover::after { right: 0; }
 
-.pg-bulk-orders .bo-tier { position: relative; transition: background .2s, box-shadow .2s; }
-.pg-bulk-orders .bo-tier > div { transition: transform .25s cubic-bezier(.2,.7,.2,1); }
-.pg-bulk-orders .bo-tier:hover { background: #fbf8f2; box-shadow: inset 4px 0 0 var(--gold); }
-.pg-bulk-orders .bo-tier:hover > div:first-child { transform: translateX(16px); }
-.pg-bulk-orders .bo-tier:hover > div:last-child { transform: translateX(-10px); }
+/* a gold line draws along the row's top rule and the name turns gold; nothing moves */
+.pg-bulk-orders .bo-option { position: relative; }
+.pg-bulk-orders .bo-option::before { content: ""; position: absolute; left: 0; top: -1px; width: 100%; height: 2px; background: var(--gold); transform: scaleX(0); transform-origin: left center; transition: transform .45s cubic-bezier(.2,.7,.2,1); }
+.pg-bulk-orders .bo-option h3 { transition: color .25s; }
+.pg-bulk-orders .bo-option:hover::before { transform: scaleX(1); }
+.pg-bulk-orders .bo-option:hover h3 { color: var(--gold-2); }
 
 .pg-bulk-orders .bo-step { transition: transform .25s cubic-bezier(.2,.7,.2,1), border-color .2s; }
 .pg-bulk-orders .bo-step-n { display: inline-block; transform-origin: left bottom; transition: transform .25s cubic-bezier(.2,.7,.2,1), color .2s; }
@@ -102,5 +103,5 @@
 .pg-bulk-orders .bo-step:hover .bo-step-n { transform: scale(1.12); color: var(--gold) !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .pg-bulk-orders .bo-seg, .pg-bulk-orders .bo-seg-img, .pg-bulk-orders .bo-tier > div, .pg-bulk-orders .bo-step, .pg-bulk-orders .bo-step-n { transition: none; }
+  .pg-bulk-orders .bo-seg, .pg-bulk-orders .bo-seg-img, .pg-bulk-orders .bo-option::before, .pg-bulk-orders .bo-option h3, .pg-bulk-orders .bo-step, .pg-bulk-orders .bo-step-n { transition: none; }
 }
