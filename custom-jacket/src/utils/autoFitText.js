@@ -1,12 +1,15 @@
 import { PATCH_NAME_FILL, PATCH_NAME_OUTLINE, PATCH_TYPED_STROKE } from '../config/sleevePatches';
 
+// Labels that are part of the drawing (the zipper hood's "HOOD OUTSIDE" over its small outside view)
+// carry data-no-fit: fitted like a name, that label was stretched into the Overhood box and drawn
+// behind whatever the customer typed there.
 const fittedTextSelector = [
   '#jacketFront text[font-family]',
   '#jacketBack text[font-family]',
   '#jacketRight text[font-family]',
   '#jacketLeft text[font-family]',
   '.cjd-name-area text',
-].join(',');
+].map((selector) => `${selector}:not([data-no-fit])`).join(',');
 
 const getSvgPoint = (svg, x, y, matrix) => {
   const point = svg.createSVGPoint();

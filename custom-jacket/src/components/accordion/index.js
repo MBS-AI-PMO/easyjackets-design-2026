@@ -64,7 +64,8 @@ class Accordion extends Component {
       //     {child.props.children}
       //   </AccordionSection>
       // ))
-      <p>{children}</p>
+      // a <div>, not a <p>: the sections hold block elements (dropdowns, lists); same 16px margins a <p> had
+      <div className="cjd-accordion-body" style={{ margin: "16px 0" }}>{children}</div>
     );
   }
 }

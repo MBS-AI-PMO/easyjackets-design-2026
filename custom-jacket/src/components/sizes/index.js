@@ -65,7 +65,6 @@ const Sizes = ({ defaults, sizes, selectSize }) => {
       <Select2
         data={transformedSizeArray}
         value={sizes.size ? sizes.size : 'M'}
-        open={(e) => console.log("Open", e)}
         update={(value) => selectSize("size", value)}
         isOpen={false}
         minCountForSearch={Infinity}

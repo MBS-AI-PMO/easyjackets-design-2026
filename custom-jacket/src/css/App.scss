@@ -112,6 +112,14 @@
   display: none;
 }
 
+// The zipper hood's "HOOD INSIDE" placeholder (components/Jacket/back.js) is display="none" in the
+// drawing and shown only by this rule. save-svg-as-png copies matching rules into the saved image
+// with the selector unchanged, and there is no .cjd-content-wrapper around the drawing in that
+// image, so the placeholder stays hidden in every saved or ordered design (Canvg copies no CSS).
+.cjd-content-wrapper .cjd-hood-placeholder {
+  display: inline;
+}
+
 .cjd-content-wrapper {
   position: relative;
   display: flex;

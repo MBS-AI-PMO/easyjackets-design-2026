@@ -100,6 +100,15 @@ export default function Product() {
   // gallery photos already shown or asked for (pointed at / focused): they stay in the frame for the crossfade
   const [revealed, setRevealed] = useState(() => new Set([0]));
   const reveal = (i) => setRevealed((prev) => (prev.has(i) ? prev : new Set(prev).add(i)));
+  // the first photo fades in the way a picked one does: the frame turns it on a frame after it is drawn
+  // (on at once, a preloaded photo just appeared; its own load fade had nothing to fade from)
+  const [stageOn, setStageOn] = useState(false);
+  useEffect(() => {
+    if (loading) { setStageOn(false); return undefined; }
+    let second = 0;
+    const first = requestAnimationFrame(() => { second = requestAnimationFrame(() => setStageOn(true)); });
+    return () => { cancelAnimationFrame(first); cancelAnimationFrame(second); };
+  }, [loading]);
   const [tab, setTab] = useState('fixed');
   // "As shown" is a phone-only tab: on desktop the Customize tab stands alone
   const isPhone = useIsPhone();
@@ -214,7 +223,7 @@ export default function Product() {
                 // every photo sits in the frame, stacked; picking a thumbnail crossfades to it
                 <div className="pdp-stage">
                   {(product.images?.length ? product.images : [product.image]).map((src, i) => (
-                    <div key={src} className={`pdp-layer${i === img ? ' is-on' : ''}`} aria-hidden={i === img ? undefined : 'true'}>
+                    <div key={src} className={`pdp-layer${i === img && stageOn ? ' is-on' : ''}`} aria-hidden={i === img ? undefined : 'true'}>
                       {/* a photo loads once it is shown, pointed at or focused: the first paint fetches only the main one (N-T9) */}
                       {i === img || revealed.has(i) ? (
                         <ImageSlot slot={`pdp-main-${i}`} shape="rect" src={src} width={1280} placeholder="Product photo" role="img" aria-label={product.imageAlt} eager={i === 0} />

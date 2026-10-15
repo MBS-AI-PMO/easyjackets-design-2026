@@ -1179,6 +1179,28 @@ const JacketBack = ({
               onClick={() => openModal("Back Top")}
             />
 
+            {/* With a zipper hood this box is the Overhood, drawn on the hood's inside. Until the
+                customer writes something there, it reads HOOD INSIDE so they know what the area is;
+                a click on it reaches the box above and opens the Overhood editor, and their text
+                replaces it. Shown on screen only: display="none" here and css/App.scss shows it
+                inside .cjd-content-wrapper, a rule the saved and ordered images (save-svg-as-png,
+                Canvg) never match, so it is never printed. */}
+            {styles.collar === "Zipper Hood" && !designs["Back Top"]?.done && (
+              <text
+                className="cjd-hood-placeholder"
+                display="none"
+                x="258"
+                y="132.5"
+                fontFamily="Baseball"
+                fontSize="34"
+                fill="#404041"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                HOOD INSIDE
+              </text>
+            )}
+
             {designs["Back Top"]?.done && designs["Back Top"]?.name && (
               <g transform="translate(258, 132.5)">
                 {/* Shifted down 5 from the panel centre, curvature unchanged
@@ -1205,7 +1227,8 @@ const JacketBack = ({
                   dominantBaseline="middle"
                   style={{ paintOrder: "stroke fill" }}
                 >
-                  {designs["Back Top"]?.name.appearance === "Arc" ? (
+                  {/* no arc on the Overhood (zipper hood): a name saved as an arc there is drawn straight */}
+                  {designs["Back Top"]?.name.appearance === "Arc" && styles.collar !== "Zipper Hood" ? (
                     <textPath
                       alignmentBaseline="middle"
                       xlinkHref="#backTopArc"

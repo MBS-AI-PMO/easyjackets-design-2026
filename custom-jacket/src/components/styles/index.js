@@ -44,7 +44,6 @@ const Styles = ({ globals, advance, styles, updateStyle, advanceOption }) => (
         <div
           parent={1}
           label="Collar Type"
-          isOpen={globals[1] === 'Collar Type'}
         >
           <div className="cjd-select-wrapper">
             {!globals.coach && (
@@ -123,7 +122,6 @@ const Styles = ({ globals, advance, styles, updateStyle, advanceOption }) => (
       <div
         parent={1}
         label="Sleeves Style"
-        isOpen={globals[1] === 'Sleeves Style'}
       >
         <div className="cjd-select-wrapper">
           <SelectBox
@@ -148,7 +146,6 @@ const Styles = ({ globals, advance, styles, updateStyle, advanceOption }) => (
         <div
           parent={1}
           label="Front Closure"
-          isOpen={globals[1] === 'Front Closure'}
         >
           <div className="cjd-select-wrapper">
             {globals.catName !== "Hoodies" && (
@@ -206,7 +203,6 @@ const Styles = ({ globals, advance, styles, updateStyle, advanceOption }) => (
         <div
           parent={1}
           label="Pocket Style"
-          isOpen={globals[1] === 'Pocket Style'}
         >
           <div className="cjd-select-wrapper">
             <SelectBox
@@ -279,7 +275,6 @@ const Styles = ({ globals, advance, styles, updateStyle, advanceOption }) => (
         <div
           parent={1}
           label="Knit / Trim"
-          isOpen={globals[1] === 'Knit / Trim'}
         >
           <div className="cjd-select-wrapper cjd-single">
             <SelectBox

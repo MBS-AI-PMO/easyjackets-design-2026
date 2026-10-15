@@ -40,7 +40,10 @@ const ZipperHood = ({ outside, inside, zipper, flip, lining, colorPicker }) => {
             id="hood-back"
             style={{ transform: 'translate(18px, 30px) scale(0.5)' }}
           >
+            {/* the label of this small view of the hood's outside: data-no-fit keeps it here
+                (utils/autoFitText.js would otherwise fit it into the Overhood box like a name) */}
             <text
+              data-no-fit="true"
               x="88"
               y="0"
               fontFamily="Baseball"

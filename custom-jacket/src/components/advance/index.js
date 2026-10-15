@@ -49,14 +49,14 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
           >
             <button
               data-style="Set-In"
-              class={`control-panel-btn ${chestPocket && "active"}`}
+              className={`control-panel-btn ${chestPocket && "active"}`}
               onClick={() => advanceOption("chestPocket", true)}
             >
               Yes
             </button>
             <button
               data-style="Raglan"
-              class={`control-panel-btn ${!chestPocket && "active"}`}
+              className={`control-panel-btn ${!chestPocket && "active"}`}
               onClick={() => advanceOption("chestPocket", false)}
             >
               No
@@ -68,7 +68,6 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
       {/*<Select2
         data={transformedSAdvanceSholderInsertArray}
         value={typeof inserts == 'boolean' ? sholderInserList[0]?.name : sholderInserList[inserts]?.name}
-        open={(e) => console.log("Open",   e)}
         update={(value) => advanceOption(sholderInserList.findIndex(item => item.name == value) == 0 ? "inserts" : "insertsCount", sholderInserList.findIndex(item => item.name == value))}
         isOpen={false}
       ></Select2>*/}
@@ -92,14 +91,14 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
               <button
                 data-style="shoulder-on"
-                class={`control-panel-btn ${inserts && "active"}`}
+                className={`control-panel-btn ${inserts && "active"}`}
                 onClick={() => advanceOption("inserts", true)}
               >
                 Yes
               </button>
               <button
                 data-style="shoulder-off"
-                class={`control-panel-btn ${!inserts && "active"}`}
+                className={`control-panel-btn ${!inserts && "active"}`}
                 onClick={() => advanceOption("inserts", false)}
               >
                 No
@@ -116,14 +115,14 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
           >
             <button
               data-style="Set-In"
-              class={`control-panel-btn ${insertsCount == 1 && "active"}`}
+              className={`control-panel-btn ${insertsCount == 1 && "active"}`}
               onClick={() => advanceOption("insertsCount", 1)}
             >
               Single
             </button>
             <button
               data-style="Raglan"
-              class={`control-panel-btn ${insertsCount == 2 && "active"}`}
+              className={`control-panel-btn ${insertsCount == 2 && "active"}`}
               onClick={() => advanceOption("insertsCount", 2)}
             >
               Double
@@ -142,14 +141,14 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
             >
               <button
                 data-style="Set-In"
-                class={`control-panel-btn ${stripes && "active"}`}
+                className={`control-panel-btn ${stripes && "active"}`}
                 onClick={() => advanceOption("stripes", true)}
               >
                 Yes
               </button>
               <button
                 data-style="Raglan"
-                class={`control-panel-btn ${!stripes && "active"}`}
+                className={`control-panel-btn ${!stripes && "active"}`}
                 onClick={() => advanceOption("stripes", false)}
               >
                 No
@@ -168,14 +167,14 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
             >
               <button
                 data-style="Set-In"
-                class={`control-panel-btn ${sleevesPiping && "active"}`}
+                className={`control-panel-btn ${sleevesPiping && "active"}`}
                 onClick={() => advanceOption("sleevesPiping", true)}
               >
                 Yes
               </button>
               <button
                 data-style="Raglan"
-                class={`control-panel-btn ${!sleevesPiping && "active"}`}
+                className={`control-panel-btn ${!sleevesPiping && "active"}`}
                 onClick={() => advanceOption("sleevesPiping", false)}
               >
                 No
@@ -200,14 +199,14 @@ const Advance = ({ globals, advance, styles, advanceOption }) => {
           >
             <button
               data-style="Set-In"
-              class={`control-panel-btn ${piping && "active"}`}
+              className={`control-panel-btn ${piping && "active"}`}
               onClick={() => advanceOption("piping", true)}
             >
               Yes
             </button>
             <button
               data-style="Raglan"
-              class={`control-panel-btn ${!piping && "active"}`}
+              className={`control-panel-btn ${!piping && "active"}`}
               onClick={() => advanceOption("piping", false)}
             >
               No

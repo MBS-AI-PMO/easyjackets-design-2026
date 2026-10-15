@@ -11,6 +11,7 @@ import { getGuideSize, getProductDesignAreaConfig, isWideDesignArea } from '../.
 const Name = ({
   defaults,
   globals,
+  styles,
   part,
   designs,
   colors,
@@ -18,6 +19,8 @@ const Name = ({
   updateColor,
   updateName,
 }) => {
+  // the Overhood (Back Top on a zipper hood) takes straight names only: no Arc choice there
+  const isOverhood = part === "Back Top" && styles?.collar === "Zipper Hood";
 
   if (Object.keys(designs).length === 4) {
     designs = {
@@ -56,7 +59,7 @@ const Name = ({
 
   const [name, setName] = useState(designs[part]?.name?.title);
   const [view, setView] = useState(
-    designs[part]?.name?.appearance || "Straight"
+    isOverhood ? "Straight" : designs[part]?.name?.appearance || "Straight"
   );
   const [cPanel, setCpanel] = useState(false);
   const [colPart, setColPart] = useState("fill");
@@ -266,7 +269,7 @@ const Name = ({
             />
           </div>
 
-          {hideNameApp.includes(part) && (
+          {hideNameApp.includes(part) && !isOverhood && (
             <div className="cjd-form-group cjd-btn-group">
               <label htmlFor="font">Appearance</label>
               <div
@@ -563,6 +566,7 @@ const Name = ({
 const mapStateToProps = (state) => ({
   defaults: state.defaults,
   globals: state.globals,
+  styles: state.styles,
   designs: state.designs,
   colors: state.colors,
   materials: state.materials,

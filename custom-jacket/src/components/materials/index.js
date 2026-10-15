@@ -153,14 +153,12 @@ const Materials = ({
         <div
           parent={0}
           label="Body Material"
-          isOpen={globals[0] === "Body Material"}
         >
           {/* <div className="cjd-select-wrapper "> */}
           <label className="select-label">Body Material</label>
           <Select2
             data={transformedMaterialBodyArray}
             value={materials.body}
-            open={(e) => console.log("Open", e)}
             update={(value) => updateMaterial("body", value)}
             isOpen={globals[0] === "Body Material"}
             minCountForSearch={Infinity}
@@ -170,7 +168,6 @@ const Materials = ({
           <Select2
             data={transformedMaterialSleeveArray}
             value={materials.sleeves}
-            open={(e) => console.log("Open", e)}
             update={(value) => updateMaterialSleeves("sleeves", value)}
             isOpen={globals[0] === "Sleeve Material"}
             minCountForSearch={Infinity}
@@ -183,7 +180,7 @@ const Materials = ({
           >
             <button
               data-style="Set-In"
-              class={`control-panel-btn ${styles.sleeves === "Set-In" && "active"
+              className={`control-panel-btn ${styles.sleeves === "Set-In" && "active"
                 }`}
               onClick={() => updateStyle("sleeves", "Set-In")}
             >
@@ -191,7 +188,7 @@ const Materials = ({
             </button>
             <button
               data-style="Raglan"
-              class={`control-panel-btn ${styles.sleeves === "Raglan" && "active"
+              className={`control-panel-btn ${styles.sleeves === "Raglan" && "active"
                 }`}
               onClick={() => updateStyle("sleeves", "Raglan")}
             >
@@ -204,7 +201,6 @@ const Materials = ({
               <Select2
                 data={transformedStylesCollarArray}
                 value={styles.collar}
-                open={(e) => console.log("Open", e)}
                 update={(value) => updateStyle("collar", value)}
                 isOpen={globals[1] === "Collar Type"}
                 minCountForSearch={Infinity}
@@ -218,7 +214,6 @@ const Materials = ({
               <Select2
                 data={transformedStylesPocketArray}
                 value={styles.pocket}
-                open={(e) => console.log("Open", e)}
                 update={(value) => updateStyle("pocket", value)}
                 minCountForSearch={Infinity}
               ></Select2>
@@ -232,7 +227,6 @@ const Materials = ({
               <div
                 parent={1}
                 label="Knit / Trim"
-                isOpen={globals[1] === "Knit / Trim"}
               >
                 <div className="cjd-select-wrapper cjd-single">
                   <SelectBox
@@ -292,7 +286,7 @@ const Materials = ({
                 >
                   <button
                     data-style="Buttons"
-                    class={`control-panel-btn ${styles.closure === "Buttons" && "active"
+                    className={`control-panel-btn ${styles.closure === "Buttons" && "active"
                       }`}
                     onClick={() => updateStyle("closure", "Buttons")}
                   >
@@ -300,7 +294,7 @@ const Materials = ({
                   </button>
                   <button
                     data-style="Zipper"
-                    class={`control-panel-btn ${styles.closure === "Zipper" && "active"
+                    className={`control-panel-btn ${styles.closure === "Zipper" && "active"
                       }`}
                     onClick={() => updateStyle("closure", "Zipper")}
                   >
@@ -314,14 +308,14 @@ const Materials = ({
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                       <button
                         data-style="flap-on"
-                        class={`control-panel-btn ${styles.flap && "active"}`}
+                        className={`control-panel-btn ${styles.flap && "active"}`}
                         onClick={() => updateStyle("flap", true)}
                       >
                         Yes
                       </button>
                       <button
                         data-style="flap-off"
-                        class={`control-panel-btn ${!styles.flap && "active"}`}
+                        className={`control-panel-btn ${!styles.flap && "active"}`}
                         onClick={() => updateStyle("flap", false)}
                       >
                         No
@@ -343,7 +337,6 @@ const Materials = ({
               <Select2
                 data={transformedStylesLiningArray}
                 value={styles.lining}
-                open={(e) => console.log("Open", e)}
                 update={(value) => updateStyle("lining", value)}
                 isOpen={globals[1] === "Lining"}
                 minCountForSearch={Infinity}
@@ -407,7 +400,6 @@ const Materials = ({
         {/* <div
         parent={0}
         label="Sleeve Material"
-        isOpen={globals[0] === 'Sleeve Material'}
       >
         <div className="cjd-select-wrapper">
           {defaults.materials.map((val) => {
