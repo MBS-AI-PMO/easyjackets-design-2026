@@ -17,6 +17,11 @@ import BadgeTemp from "./badge";
 // Sleeves
 import { SetIn, Raglan } from "./sleeves";
 
+// With a zipper hood (Varsity and Bomber) the hood comes down to y≈200 on the back, over the top of
+// the Back Middle box (175 to 365). Only then, these two guides and what is drawn in them move down,
+// into the room above the waistband (it starts at y≈455). Drawing units, positive = down.
+const ZIPPER_HOOD_SHIFT = { middle: 32, bottom: 16 };
+
 const JacketBack = ({
   globals,
   modalState,
@@ -675,7 +680,9 @@ const JacketBack = ({
             transform={
               globals.catName === "Hoodies"
                 ? "translate(0, 65)"
-                : "translate(0, 0)"
+                : styles.collar === "Zipper Hood"
+                  ? `translate(0, ${ZIPPER_HOOD_SHIFT.middle})`
+                  : "translate(0, 0)"
             }
           >
             <rect
@@ -1248,7 +1255,14 @@ const JacketBack = ({
           </g>
 
           {globals.productId !== "5995" && (
-            <g id="back-bottom">
+            <g
+              id="back-bottom"
+              transform={
+                styles.collar === "Zipper Hood"
+                  ? `translate(0, ${ZIPPER_HOOD_SHIFT.bottom})`
+                  : "translate(0, 0)"
+              }
+            >
               <rect
                 className={`cjd-guides ${!globals.guides && "cjd-guides-hide"}`}
                 x="150"
