@@ -1,0 +1,16 @@
+/* testimonials (components/Testimonials.jsx), the same on every page: ONE horizontal scrolling row at every width
+   (native scroll, snap points, hidden scrollbar). Fixed-width cards: about three on a wide screen with the next one
+   peeking in, ~84% of the row on phones. The row bleeds into the section's side padding (the same clamp as the
+   section's), so cards scroll edge to edge. */
+.ez-quotes .ez-quote-row { --ez-gutter: clamp(16px, 4vw, 48px); display: flex; gap: 20px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: var(--ez-gutter); margin: 0 calc(-1 * var(--ez-gutter)); padding: 0 var(--ez-gutter) 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.ez-quotes .ez-quote-row::-webkit-scrollbar { display: none; }
+.ez-quotes .ez-quote-row > * { flex: 0 0 min(400px, 84%); box-sizing: border-box; scroll-snap-align: start; }
+@media (max-width: 640px) { .ez-quotes .ez-quote-row { gap: 12px; } }
+/* heading with previous / next buttons on its right */
+.ez-quotes .ez-quote-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin: 0 0 36px; }
+.ez-quotes .ez-quote-nav { display: flex; gap: 10px; }
+.ez-quotes .ez-quote-btn { width: 50px; height: 50px; display: grid; place-items: center; padding: 0; border: 2px solid var(--ink); border-radius: 2px; background: transparent; color: var(--ink); font-family: var(--display); font-weight: 900; font-size: 22px; line-height: 1; cursor: pointer; transition: background .2s, color .2s, opacity .2s, transform .2s; }
+.ez-quotes .ez-quote-btn:hover:not(:disabled) { background: var(--ink); color: var(--cream); transform: translateY(-2px); }
+.ez-quotes .ez-quote-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.ez-quotes .ez-quote-btn:disabled { opacity: .3; cursor: default; }
+@media (max-width: 640px) { .ez-quotes .ez-quote-head { margin-bottom: 24px; } .ez-quotes .ez-quote-btn { width: 44px; height: 44px; font-size: 20px; } }

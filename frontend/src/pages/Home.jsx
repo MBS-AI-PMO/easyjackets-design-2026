@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 // The landing page: catalogue, categories, blog, FAQs, reviews and the top bar
 // come from the API; the photography is the client's own.
 import A from '../components/A';
@@ -7,9 +7,9 @@ import CountUp from '../components/CountUp';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import Faq from '../components/Faq';
+import Testimonials from '../components/Testimonials';
 import { fetchCategories, fetchCategoryCounts, fetchColors, fetchLanding } from '../lib/catalog';
 import { fetchFabricSections, fetchFeaturedReviews, fetchGallery, fetchPageFaqs, fetchPatchPhotos, fetchRecentBlogs, fetchTopBar, patchTags } from '../lib/content';
-import { fetchTestimonials } from '../lib/site';
 import { useAsync } from '../lib/useAsync';
 import { usePageProps } from '../lib/usePageProps';
 import { usePageTitle } from '../lib/usePageTitle';
@@ -139,31 +139,6 @@ export default function Home() {
   const { data: colors } = useAsync(fetchColors, []);
   const { data: reviewData } = useAsync((signal) => fetchFeaturedReviews(3, signal), []);
   const { data: posts } = useAsync((signal) => fetchRecentBlogs(3, signal), []);
-  // Testimonials the admin keeps with the site features; the section is dropped when there are none or the request fails.
-  const { data: testimonials, loading: testimonialsLoading } = useAsync((signal) => fetchTestimonials(signal), []);
-  // testimonials row: previous / next buttons move it one card at a time; each greys out at its end
-  const quoteRowRef = useRef(null);
-  const [quoteEnds, setQuoteEnds] = useState({ start: true, end: true });
-  const measureQuotes = useCallback(() => {
-    const el = quoteRowRef.current;
-    if (!el) return;
-    setQuoteEnds({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
-  }, []);
-  useEffect(() => {
-    const el = quoteRowRef.current;
-    if (!el) return undefined;
-    measureQuotes();
-    el.addEventListener('scroll', measureQuotes, { passive: true });
-    window.addEventListener('resize', measureQuotes);
-    return () => { el.removeEventListener('scroll', measureQuotes); window.removeEventListener('resize', measureQuotes); };
-  }, [testimonials, measureQuotes]);
-  const moveQuotes = (dir) => {
-    const el = quoteRowRef.current;
-    const card = el?.firstElementChild;
-    if (!el || !card) return;
-    const step = card.getBoundingClientRect().width + (parseFloat(getComputedStyle(el).columnGap) || 20);
-    el.scrollBy({ left: dir * step, behavior: 'smooth' });
-  };
   const { data: faqs } = useAsync((signal) => fetchPageFaqs('/', signal), []);
   // Gallery photos, drawn once per visit: the patches tiles and the mosaic order change on every refresh.
   const { data: galleryData } = useAsync((signal) => Promise.all([fetchGallery(signal), fetchPatchPhotos(signal).catch(() => [])])
@@ -544,49 +519,8 @@ export default function Home() {
           )) : Array.from({ length: 3 }, (_, i) => <Skeleton key={i} ratio="1" />)}
         </div>
       </section>
-      {/* Testimonials */}
-      {testimonialsLoading || testimonials?.length ? (
-        <section id="testimonials" aria-labelledby="testimonials-title" style={section}>
-          <div className="ez-quote-head">
-            <div>
-              <div style={eyebrow}>Testimonials</div>
-              <h2 id="testimonials-title" style={{ ...h2, margin: '10px 0 0' }}>What people are saying</h2>
-            </div>
-            {quoteEnds.start && quoteEnds.end ? null : (
-              <div className="ez-quote-nav">
-                <button type="button" className="ez-quote-btn" onClick={() => moveQuotes(-1)} disabled={quoteEnds.start} aria-label="Previous testimonials" aria-controls="testimonials-row">
-                  <span aria-hidden="true">←</span>
-                </button>
-                <button type="button" className="ez-quote-btn" onClick={() => moveQuotes(1)} disabled={quoteEnds.end} aria-label="Next testimonials" aria-controls="testimonials-row">
-                  <span aria-hidden="true">→</span>
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="ez-quote-row" id="testimonials-row" ref={quoteRowRef}>
-            {testimonials?.length ? testimonials.map((t) => (
-              <figure key={t.id} className="ez-reveal" style={{ margin: '0', padding: '28px', background: '#fbf8f2', border: '1px solid var(--cream-2)', borderTop: '3px solid var(--gold)', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div aria-hidden="true" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '64px', lineHeight: '1', height: '32px', color: 'var(--gold)' }}>“</div>
-                {t.rating ? <div role="img" aria-label={`Rated ${t.rating} out of 5`} style={{ color: 'var(--gold-2)', letterSpacing: '0.1em' }}>{stars(t.rating)}</div> : null}
-                <blockquote style={{ margin: '0', fontSize: '16px', lineHeight: '1.65', color: 'var(--ink-2)', flex: '1' }}>{t.quote}</blockquote>
-                <figcaption style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingTop: '16px', borderTop: '1px solid var(--cream-2)' }}>
-                  {t.photo ? (
-                    <span style={{ width: '44px', height: '44px', flex: 'none', borderRadius: '50%', overflow: 'hidden', background: 'var(--cream-2)' }}>
-                      <ImageSlot slot={`v2-q-${t.id}`} shape="circle" src={t.photo} width={96} placeholder={t.initial} aria-label={`Photo of ${t.name}`} />
-                    </span>
-                  ) : (
-                    <span aria-hidden="true" style={{ width: '44px', height: '44px', flex: 'none', borderRadius: '50%', background: 'var(--ink)', color: 'var(--gold)', display: 'grid', placeItems: 'center', fontFamily: 'var(--display)', fontWeight: '900', fontSize: '20px' }}>{t.initial}</span>
-                  )}
-                  <span style={{ minWidth: 0 }}>
-                    <strong style={{ display: 'block', fontFamily: 'var(--display)', fontWeight: '800', fontSize: '20px', lineHeight: '1', textTransform: 'uppercase' }}>{t.name}</strong>
-                    {t.role ? <span style={{ display: 'block', fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>{t.role}</span> : null}
-                  </span>
-                </figcaption>
-              </figure>
-            )) : Array.from({ length: 3 }, (_, i) => <Skeleton key={i} ratio="1" />)}
-          </div>
-        </section>
-      ) : null}
+      {/* Testimonials (the admin's, components/Testimonials.jsx: the same section on every page) */}
+      <Testimonials />
       {/* FAQ */}
       <section id="faq" style={{ ...section, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '32px clamp(24px,4vw,72px)' }}>
         <div>

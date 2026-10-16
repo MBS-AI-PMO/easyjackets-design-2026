@@ -1,0 +1,13 @@
+/* "Who makes your jacket": the five workshop stations. The last one carries the gold rule, as in the numbers row.
+   On hover a card lifts, lightens and takes the gold rule; its number slides in. */
+.pg-about .ab-station { display: grid; gap: 10px; align-content: start; padding: 22px 20px 26px; background: var(--cream-2); border-top: 3px solid var(--ink); border-radius: 4px; transition: transform .28s cubic-bezier(.2, .7, .2, 1), background-color .28s, border-color .28s, box-shadow .28s; }
+.pg-about .ab-station:last-child { border-top-color: var(--gold); }
+.pg-about .ab-station-num { color: var(--gold); transition: transform .28s cubic-bezier(.2, .7, .2, 1), color .28s; }
+@media (hover: hover) {
+  .pg-about .ab-station:hover { transform: translateY(-6px); background: #fbf8f2; border-top-color: var(--gold); box-shadow: 0 18px 36px -22px rgba(20, 17, 15, .45); }
+  .pg-about .ab-station:hover .ab-station-num { transform: translateX(6px); color: var(--gold-2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pg-about .ab-station, .pg-about .ab-station-num { transition: background-color .2s, border-color .2s, color .2s; }
+  .pg-about .ab-station:hover, .pg-about .ab-station:hover .ab-station-num { transform: none; }
+}

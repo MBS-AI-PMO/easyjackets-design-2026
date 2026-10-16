@@ -10,21 +10,7 @@
 .pg-home .ez-photo-grid .ez-gal { display:block; margin-bottom:0; text-decoration:none; color:var(--cream); }
 
 
-/* testimonials: ONE horizontal scrolling row at every width (native scroll, snap points, hidden scrollbar, no controls).
-   Fixed-width cards: about three on a wide screen with the next one peeking in, ~84% of the row on phones.
-   The row bleeds into the section's side padding (the same clamp as `section` in Home.jsx), so cards scroll edge to edge. */
-.pg-home .ez-quote-row { --ez-gutter: clamp(16px, 4vw, 48px); display: flex; gap: 20px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: var(--ez-gutter); margin: 0 calc(-1 * var(--ez-gutter)); padding: 0 var(--ez-gutter) 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.pg-home .ez-quote-row::-webkit-scrollbar { display: none; }
-.pg-home .ez-quote-row > * { flex: 0 0 min(400px, 84%); box-sizing: border-box; scroll-snap-align: start; }
-@media (max-width: 640px) { .pg-home .ez-quote-row { gap: 12px; } }
-/* testimonials: heading with previous / next buttons on its right */
-.pg-home .ez-quote-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin: 0 0 36px; }
-.pg-home .ez-quote-nav { display: flex; gap: 10px; }
-.pg-home .ez-quote-btn { width: 50px; height: 50px; display: grid; place-items: center; padding: 0; border: 2px solid var(--ink); border-radius: 2px; background: transparent; color: var(--ink); font-family: var(--display); font-weight: 900; font-size: 22px; line-height: 1; cursor: pointer; transition: background .2s, color .2s, opacity .2s, transform .2s; }
-.pg-home .ez-quote-btn:hover:not(:disabled) { background: var(--ink); color: var(--cream); transform: translateY(-2px); }
-.pg-home .ez-quote-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.pg-home .ez-quote-btn:disabled { opacity: .3; cursor: default; }
-@media (max-width: 640px) { .pg-home .ez-quote-head { margin-bottom: 24px; } .pg-home .ez-quote-btn { width: 44px; height: 44px; font-size: 20px; } }
+/* testimonials: components/Testimonials.css (the same section on every page) */
 
 /* jacket-type tiles: one horizontal scrolling row on phones (native scroll, snap points, no controls) */
 @media (max-width: 640px) {

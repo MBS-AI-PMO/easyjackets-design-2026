@@ -111,7 +111,7 @@ export default function BulkOrders() {
         { slot: 'seg-1', name: 'Schools', desc: 'Letterman jackets for athletics, band and class of ’27.', src: '/images/site/bulk-seg-schools.webp', alt: 'Students on a campus in navy varsity jackets' },
         { slot: 'seg-2', name: 'Teams', desc: 'Matching colors, individual names and numbers.', src: '/images/site/bulk-team-madden.webp', alt: 'A team in matching Team Madden 2024 jackets celebrating in the locker room' },
         { slot: 'seg-3', name: 'Businesses', desc: 'Branded jackets for staff, launches and gifting.', src: '/images/site/bulk-seg-businesses.webp', alt: 'An office team in matching branded white varsity jackets' },
-        { slot: 'seg-4', name: 'Clubs', desc: 'Car clubs, fraternities, esports and alumni groups.', src: '/images/site/bulk-seg-clubs.jpg', alt: 'Club members in maroon and gold letterman jackets' },
+        { slot: 'seg-4', name: 'Clubs', desc: 'Car clubs, fraternities, esports and alumni groups.', src: '/images/site/team-varsity-group.webp', alt: 'Five people in custom varsity jackets in different colors with chenille letters and numbers' },
       ],
       // what a team can customize: the Design Studio's own choices (pages/HowToDesign.jsx, pages/Fabrics.jsx)
       options: [

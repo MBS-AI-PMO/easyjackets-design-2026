@@ -1,0 +1,245 @@
+/* Admin sign-in (Pages/Auth.js): a dark, warm-black page in the storefront's colours (ink #14110f, gold #c9a227,
+   cream #f4efe6) with one glass card in the middle. Everything is scoped to .ej-auth. */
+/* headings: the storefront's display font, 'Big Shoulders Display' 700, declared and preloaded in public/index.html */
+
+.ej-auth {
+  --a-bg: #0c0a09;
+  --a-card: rgba(23, 20, 18, 0.78);
+  --a-line: rgba(244, 239, 230, 0.08);
+  --a-line-2: rgba(244, 239, 230, 0.14);
+  --a-field: #12100e;
+  --a-text: #f4efe6;
+  --a-muted: #a39a8f;
+  --a-faint: #6f675e;
+  --a-gold: #c9a227;
+  --a-gold-hi: #dcb53a;
+  --a-ease: cubic-bezier(.2, .7, .2, 1);
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 32px 16px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(201, 162, 39, 0.10), transparent 60%),
+    radial-gradient(800px 500px at 100% 110%, rgba(201, 162, 39, 0.05), transparent 60%),
+    var(--a-bg);
+  color: var(--a-text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.ej-auth *, .ej-auth *::before, .ej-auth *::after { box-sizing: border-box; }
+
+/* a fine grid that fades out towards the edges, and a slow gold glow behind the card */
+.ej-auth::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(244, 239, 230, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244, 239, 230, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 45%, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 45%, #000 20%, transparent 75%);
+  /* the grid pans slowly and endlessly (one cell per loop, so the loop has no jump) */
+  animation: ej-auth-grid 16s linear infinite;
+}
+@keyframes ej-auth-grid {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 44px 44px, 44px 44px; }
+}
+/* two soft glows that drift behind the card: a gold one above, a warmer, fainter one below */
+.ej-auth-glow {
+  position: fixed;
+  width: 560px;
+  height: 560px;
+  left: 50%;
+  top: 50%;
+  margin: -340px 0 0 -280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.18), transparent 65%);
+  filter: blur(30px);
+  pointer-events: none;
+  animation: ej-auth-drift 12s ease-in-out infinite alternate;
+}
+.ej-auth-glow--2 {
+  width: 440px;
+  height: 440px;
+  margin: -60px 0 0 -120px;
+  background: radial-gradient(circle, rgba(214, 120, 52, 0.10), transparent 65%);
+  animation: ej-auth-drift-2 17s ease-in-out infinite alternate;
+}
+@keyframes ej-auth-drift {
+  0% { transform: translate(-90px, -30px) scale(1); }
+  50% { transform: translate(30px, -60px) scale(1.1); }
+  100% { transform: translate(90px, 40px) scale(1.04); }
+}
+@keyframes ej-auth-drift-2 {
+  0% { transform: translate(120px, 60px) scale(1.05); }
+  50% { transform: translate(-40px, 90px) scale(.95); }
+  100% { transform: translate(-130px, 10px) scale(1.1); }
+}
+
+.ej-auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 36px 34px;
+  background: var(--a-card);
+  border: 1px solid var(--a-line);
+  border-radius: 18px;
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(244, 239, 230, 0.05);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  animation: ej-auth-in .6s var(--a-ease) both;
+}
+/* a gold light that runs round the card's whole edge, clockwise, one lap every 6 s: a bright head with a tail
+   that fades out behind it. It is a turning conic gradient (its angle animated through @property) shown only
+   on a 1px ring over the card's border by the mask (the content box is cut out of the border box). */
+@property --ej-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.ej-auth-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(from var(--ej-angle), transparent 0turn, transparent .7turn, rgba(201, 162, 39, 0.28) .85turn, rgba(236, 202, 104, 0.9) .97turn, transparent 1turn);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: ej-auth-orbit 6s linear infinite;
+}
+@keyframes ej-auth-orbit {
+  to { --ej-angle: 360deg; }
+}
+@keyframes ej-auth-in {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.ej-auth-brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 30px; }
+.ej-auth-logo { display: block; height: 42px; max-height: 52px; width: auto; max-width: 220px; object-fit: contain; }
+.ej-auth-wordmark { font-family: 'Big Shoulders Display', Impact, sans-serif; font-weight: 700; font-size: 28px; letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
+.ej-auth-badge {
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.08);
+  color: var(--a-gold);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.ej-auth-title { margin: 0; font-family: 'Big Shoulders Display', Impact, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: .01em; text-transform: uppercase; color: var(--a-text); }
+.ej-auth-sub { margin: 10px 0 0; color: var(--a-muted); font-size: 14.5px; line-height: 1.55; }
+
+.ej-auth-form { display: grid; margin-top: 28px; }
+.ej-auth-label { margin: 0 0 8px; color: var(--a-muted); font-size: 12.5px; font-weight: 600; letter-spacing: .04em; }
+.ej-auth-label:not(:first-child) { margin-top: 18px; }
+
+.ej-auth-field { position: relative; }
+.ej-auth-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: grid; color: var(--a-faint); pointer-events: none; transition: color .2s; }
+.ej-auth-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 14px 0 44px;
+  border: 1px solid var(--a-line-2);
+  border-radius: 11px;
+  background: var(--a-field);
+  color: var(--a-text);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background-color .2s;
+}
+.ej-auth-input--pw { padding-right: 48px; }
+.ej-auth-input::placeholder { color: #57504a; }
+.ej-auth-input:hover { border-color: rgba(244, 239, 230, 0.22); }
+.ej-auth-input:focus { border-color: var(--a-gold); background: #15120f; box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.14); }
+.ej-auth-field:focus-within .ej-auth-icon { color: var(--a-gold); }
+/* browser autofill keeps the dark field and light text */
+.ej-auth-input:-webkit-autofill,
+.ej-auth-input:-webkit-autofill:hover,
+.ej-auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--a-text);
+  caret-color: var(--a-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--a-field) inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.ej-auth-eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--a-faint);
+  cursor: pointer;
+  transition: color .2s, background-color .2s;
+}
+.ej-auth-eye:hover { color: var(--a-text); background: rgba(244, 239, 230, 0.06); }
+.ej-auth-eye:focus-visible { outline: 2px solid var(--a-gold); outline-offset: 1px; color: var(--a-text); }
+
+.ej-auth-caps { min-height: 18px; margin-top: 8px; color: var(--a-gold); font-size: 12.5px; opacity: 0; transform: translateY(-3px); transition: opacity .2s, transform .2s; }
+.ej-auth-caps.is-on { opacity: 1; transform: none; }
+
+.ej-auth-submit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 50px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--a-gold);
+  color: #14110f;
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(201, 162, 39, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: background-color .2s, transform .2s var(--a-ease), box-shadow .2s, opacity .2s;
+}
+.ej-auth-submit:hover:not(:disabled) { background: var(--a-gold-hi); transform: translateY(-1px); box-shadow: 0 14px 30px -12px rgba(201, 162, 39, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.ej-auth-submit:active:not(:disabled) { transform: translateY(0) scale(.99); }
+.ej-auth-submit:focus-visible { outline: 2px solid var(--a-text); outline-offset: 3px; }
+.ej-auth-submit:disabled { cursor: progress; opacity: .85; }
+.ej-auth-spinner { width: 16px; height: 16px; border: 2px solid rgba(20, 17, 15, 0.25); border-top-color: #14110f; border-radius: 50%; animation: ej-auth-spin .7s linear infinite; }
+@keyframes ej-auth-spin { to { transform: rotate(360deg); } }
+
+.ej-auth-foot { position: relative; margin: 0; color: var(--a-faint); font-size: 12.5px; letter-spacing: .04em; animation: ej-auth-in .6s .1s var(--a-ease) both; }
+
+@media (max-width: 480px) {
+  .ej-auth-card { padding: 32px 22px 26px; border-radius: 16px; }
+  .ej-auth-title { font-size: 34px; }
+  .ej-auth-brand { margin-bottom: 24px; }
+  .ej-auth-logo { max-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ej-auth::before, .ej-auth-glow, .ej-auth-card, .ej-auth-card::before, .ej-auth-foot { animation: none; }
+  .ej-auth-submit, .ej-auth-submit:hover:not(:disabled) { transform: none; }
+}

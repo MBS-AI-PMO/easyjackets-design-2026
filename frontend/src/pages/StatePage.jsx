@@ -4,9 +4,9 @@ import { Navigate, useLocation, useParams } from 'react-router-dom';
 import A from '../components/A';
 import ProductCard from '../components/ProductCard';
 import { fetchRandomJackets } from '../lib/catalog';
-import { fetchTestimonials } from '../lib/site';
 import { stateBySlug, statePath } from '../lib/states';
 import ImageSlot from '../components/ImageSlot';
+import Testimonials from '../components/Testimonials';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { fetchShippingRates, money } from '../lib/materials';
@@ -25,8 +25,6 @@ export default function StatePage() {
   // popular picks: real jackets from the catalogue (no hoodies), a fresh random set on every visit and state
   const { pathname } = useLocation();
   const { data: picks, error: picksError } = useAsync((signal) => fetchRandomJackets(4, signal), [pathname], { live: false }); // random per visit
-  // customer quotes: the admin's testimonials (Features screen), as on the landing page
-  const { data: testimonials } = useAsync((signal) => fetchTestimonials(signal), []);
 
   function renderVals() {
     return { footerNoop: e => e.preventDefault(),
@@ -180,22 +178,8 @@ export default function StatePage() {
           ))}
         </div>
       </section>
-      {/* Customer quotes (the admin's testimonials) */}
-      {testimonials && testimonials.length ? (
-        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,88px) clamp(16px,4vw,48px) 0' }}>
-          <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(40px,5vw,68px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '0 0 28px' }}>
-            From our customers
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '24px' }}>
-            {testimonials.slice(0, 3).map((r) => (
-              <figure key={r.id} style={{ margin: 0, background: '#fbf8f2', border: '1px solid var(--cream-2)', borderRadius: '4px', padding: '24px' }}>
-                <blockquote style={{ margin: 0, lineHeight: '1.65', fontSize: '15px' }}>{r.quote}</blockquote>
-                <figcaption style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '14px', fontWeight: '600' }}>{r.name}{r.role ? ` · ${r.role}` : ''}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      {/* Customer quotes (the admin's testimonials, components/Testimonials.jsx: the same section as on the home page) */}
+      <Testimonials />
       {/* Nearby states */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,88px) clamp(16px,4vw,48px) 0' }}>
         <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(34px,4vw,52px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '0 0 18px' }}>

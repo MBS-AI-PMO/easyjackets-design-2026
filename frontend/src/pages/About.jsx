@@ -5,6 +5,7 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import Testimonials from '../components/Testimonials';
 import { usePageTitle } from '../lib/usePageTitle';
+import './About.css';
 
 const IMG = '/images/site';
 
@@ -17,12 +18,19 @@ export default function About() {
            { slot: 'val-1', title: 'Made to order', desc: 'Nothing sits in a warehouse. Every jacket is cut after you approve the proof.', src: '/images/site/bulk-seg-schools.webp', alt: 'Students on a campus in navy varsity jackets' },
            { slot: 'val-2', title: 'Real materials', desc: '24 oz melton wool, full-grain cowhide, quilted satin lining. The same spec as jackets three times the price.', src: '/images/site/bulk-team-madden.webp', alt: 'A team in matching Team Madden 2024 jackets celebrating in the locker room' },
            { slot: 'val-3', title: 'No minimums', desc: 'One jacket gets the same attention as a hundred. Team pricing starts at ten.', src: '/images/site/bulk-seg-businesses.webp', alt: 'An office team in matching branded white varsity jackets' },
-           { slot: 'val-4', title: 'Fair to makers', desc: 'Above-market wages, a five-day week and a workshop we are proud to show on video calls.', src: '/images/site/bulk-seg-clubs.jpg', alt: 'Club members in maroon and gold letterman jackets' },
+           { slot: 'val-4', title: 'Fair to makers', desc: 'Above-market wages, a five-day week and a workshop we are proud to show on video calls.', src: '/images/site/team-varsity-group.webp', alt: 'Five people in custom varsity jackets in different colors with chenille letters and numbers' },
          ],
-         team: [{ slot: 'tm-1', name: 'Founder', role: 'Cutting & pattern' }, { slot: 'tm-2', name: 'Head of chenille', role: 'Letters & patches' }, { slot: 'tm-3', name: 'Embroidery lead', role: 'Names & logos' }, { slot: 'tm-4', name: 'Design artist', role: 'Digital proofs' }, { slot: 'tm-5', name: 'Customer care', role: 'Orders & sizing' }] };
+         // the workshop's stations, in the order an order passes through them (no portraits or names)
+         bench: [
+           { title: 'Customer care', tag: 'Orders & sizing', desc: 'Answers your questions and checks every size with you before the order moves on.' },
+           { title: 'Design artists', tag: 'Digital proofs', desc: 'Draw your jacket up as a digital proof. Nothing is cut until you approve it.' },
+           { title: 'Cutters', tag: 'Cutting & pattern', desc: 'Cut the wool, leather and lining panels to the pattern for your size.' },
+           { title: 'Chenille artists', tag: 'Letters & patches', desc: 'Make your chenille letters and patches in your colors.' },
+           { title: 'Embroiderers', tag: 'Names & logos', desc: 'Stitch on the names, numbers and logos before the final inspection.' },
+         ] };
   }
 
-  const { team, values } = renderVals();
+  const { bench, values } = renderVals();
 
   return (
     <div className="pg-about">
@@ -151,29 +159,32 @@ export default function About() {
           ))}
         </div>
       </section>
-      {/* Team */}
+      {/* Who makes your jacket: the workshop's stations, numbered in order */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end', justifyContent: 'space-between', gap: '16px 28px', marginBottom: '32px' }}>
           <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(40px,5vw,72px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '0' }}>
-            The people on the bench
+            Who makes your jacket
           </h2>
           <p style={{ margin: '0', color: 'var(--muted)', maxWidth: '40ch', fontSize: '15px', lineHeight: '1.55' }}>
-            Cutters, chenille artists and embroiderers — most have been with us since the first year.
+            Every order passes through the same five stations, from your first message to the final stitch.
           </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '20px' }}>
-          {team.map((p, pIdx) => (
-            <div key={pIdx}>
-              <div style={{ aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: 'var(--cream-2)' }}>
-                <ImageSlot slot={p.slot} shape="rect" placeholder={`${p.name} portrait`} />
+        <ol style={{ listStyle: 'none', margin: '0', padding: '0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '20px' }}>
+          {bench.map((s, sIdx) => (
+            <li key={sIdx} className="ab-station">
+              <div className="ab-station-num" aria-hidden="true" style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(44px,4vw,60px)', lineHeight: '1' }}>
+                {String(sIdx + 1).padStart(2, '0')}
               </div>
-              <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '22px', textTransform: 'uppercase', marginTop: '12px' }}>
-                {p.name}
+              <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase', lineHeight: '0.95' }}>
+                {s.title}
               </div>
-              <div style={{ fontSize: '13px', color: 'var(--muted)' }}>{p.role}</div>
-            </div>
+              <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--gold-2)' }}>
+                {s.tag}
+              </div>
+              <p style={{ margin: '0', color: 'var(--muted)', lineHeight: '1.55', fontSize: '14px' }}>{s.desc}</p>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
       {/* what customers say (the admin's testimonials) */}
       <Testimonials />
