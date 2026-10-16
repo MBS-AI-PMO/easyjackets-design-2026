@@ -41,6 +41,8 @@ import ProductReviews from './Components/ProductReviews';
 import FabricColors from './Components/FabricColors';
 import StorefrontFaqs from './Components/StorefrontFaqs';
 import TopBar from './Components/TopBar';
+import SiteImages from './Components/SiteImages';
+import HowToDesignEditor from './Components/HowToDesignEditor';
 import SeoHealth from './Components/SeoHealth';
 import IndexControl from './Components/IndexControl';
 import VisitorAnalytics from './Components/VisitorAnalytics';
@@ -91,6 +93,8 @@ export default function App() {
                   <Route index element={<Navigate to="/products" replace />} />
                   <Route path="/features" element={<FeatureForm />} />
                   <Route path="/top-bar" element={<TopBar />} />
+                  <Route path="/site-images" element={<SiteImages />} />
+                  <Route path="/how-to-design-page" element={<HowToDesignEditor />} />
                   <Route path="/blogs" element={<BlogManager />} />
                   <Route path="/storefront-faqs" element={<StorefrontFaqs />} />
                   {/* The old single-page FAQ screen was replaced by Storefront FAQs,

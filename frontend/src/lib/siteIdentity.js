@@ -7,15 +7,20 @@
 // so no request is needed. A first-ever visit shows the bundled copy (/logo-navbar.webp,
 // preloaded in index.html) until the admin's logo has downloaded. Settings refresh with
 // the site's live data (tab focus, every minute).
+//
+// Also the admin's Site Images (components/SiteImage.jsx): kept here with the logos, so a returning visitor
+// sees the admin's photos at once. `siteImagesKnown` is false only until the settings have been read once
+// (or could not be): until then those photo boxes stay empty instead of flashing the bundled photo.
 import { useEffect, useState } from 'react';
 import { api, imageUrl, uploadUrl } from './api';
 import { onRevalidate } from './useAsync';
+import { cleanSiteImages } from './siteImages';
 
 const KEY = 'ej-identity';
 export const FALLBACK_NAV_LOGO = '/logo-navbar.webp';
 export const FALLBACK_FOOTER_LOGO = '/logo-navbar.webp';
 const NAV_LOGO_WIDTH = 320; // the resizer's smallest size: 2x+ the navbar's display width
-const DEFAULTS = { favicon: '', faviconDark: '', navbarLogo: '', navbarLogoHeight: 72, footerLogo: '', footerLogoHeight: 64, navSrc: '', navFor: '' };
+const DEFAULTS = { favicon: '', faviconDark: '', navbarLogo: '', navbarLogoHeight: 72, footerLogo: '', footerLogoHeight: 64, navSrc: '', navFor: '', siteImages: {}, siteImagesKnown: false };
 
 const read = () => {
   try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return { ...DEFAULTS }; }
@@ -75,6 +80,8 @@ export function loadIdentity() {
         footerLogoHeight: Number(m.footerLogoHeight) || DEFAULTS.footerLogoHeight,
         navSrc: current.navSrc,
         navFor: current.navFor,
+        siteImages: cleanSiteImages(m.siteImages),
+        siteImagesKnown: true,
       };
       if (!next.navbarLogo) {
         next.navSrc = ''; next.navFor = '';
@@ -85,7 +92,11 @@ export function loadIdentity() {
       applyFavicons(next);
       return next;
     })
-    .catch(() => current)
+    .catch(() => {
+      // the API did not answer: the photo boxes show the bundled photos rather than staying empty
+      if (!current.siteImagesKnown) publish({ ...current, siteImagesKnown: true });
+      return current;
+    })
     .finally(() => { inflight = null; });
   return inflight;
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 // come from the API; the photography is the client's own.
 import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import CountUp from '../components/CountUp';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -32,10 +33,6 @@ const PAGE_PROPS = {
   showPromo: { type: 'boolean', default: true },
   primaryCta: { type: 'enum', options: ['shop', 'builder'], default: 'shop' },
 };
-
-const IMG = '/images/site';
-// The client's campaign photo (two coach jackets) for the builder section, cropped 4:3.
-const BUILDER_PHOTO = `${IMG}/campaign-coach-duo.webp`;
 
 const PICKS = [
   // each pick tries its queries in order and takes a random product that matches (and is not already used),
@@ -214,7 +211,7 @@ export default function Home() {
               Free design proof
             </div>
             <div style={{ position: 'relative', aspectRatio: '4/5', maxHeight: 'calc(100vh - 230px)', width: '100%', borderRadius: '4px', overflow: 'hidden', background: 'var(--cream-2)' }}>
-              <ImageSlot slot="v2-hero" shape="rect" src={`${IMG}/hero-red-navy-varsity.webp`} placeholder="Custom varsity jacket" aria-label="Customer wearing a custom red and navy varsity jacket" eager />
+              <SiteImage which="home-hero" slot="v2-hero" shape="rect" width={768} sizes="(max-width: 720px) 100vw, 600px" placeholder="Custom varsity jacket" aria-label="Customer wearing a custom red and navy varsity jacket" eager />
             </div>
           </div>
         </div>
@@ -258,7 +255,7 @@ export default function Home() {
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '40px clamp(24px,4vw,72px)', alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             <div style={{ aspectRatio: '4/3', overflow: 'hidden', borderRadius: '4px', border: '1px solid rgba(244,239,230,0.15)', background: '#E8DFCB' }}>
-              <ImageSlot slot="v2-builder" shape="rect" src={BUILDER_PHOTO} fit="cover" placeholder="Campaign photo" aria-label="Two Easy Jacket coach jackets from the campaign shoot" />
+              <SiteImage which="home-builder" slot="v2-builder" shape="rect" fit="cover" width={768} sizes="(max-width: 720px) 100vw, 640px" placeholder="Campaign photo" aria-label="Two Easy Jacket coach jackets from the campaign shoot" />
             </div>
             <div style={{ position: 'absolute', left: '-10px', bottom: '-16px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'var(--display)', fontWeight: '900', fontSize: '18px', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 14px' }}>
               Live preview

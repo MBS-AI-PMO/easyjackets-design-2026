@@ -28,7 +28,11 @@ ENV U2NET_HOME=/opt/bg-remover/models
 COPY bg-remover/requirements.txt /tmp/bg-remover-requirements.txt
 RUN python3 -m venv /opt/bg-remover \
   && /opt/bg-remover/bin/pip install --no-cache-dir -r /tmp/bg-remover-requirements.txt \
-  && /opt/bg-remover/bin/python -c "from rembg import new_session; new_session('birefnet-general'); new_session('isnet-general-use')"
+  && /opt/bg-remover/bin/python -c "from rembg import new_session; new_session('birefnet-general'); new_session('isnet-general-use')" \
+  && chmod -R a+rX /opt/bg-remover
+# ^ the models are downloaded as root and saved readable by root only; the API (and with it the remover)
+#   runs as "node" (docker-entrypoint.sh), which then could not open them ("system error number 13").
+#   Read access for everyone, no write access.
 
 # exactly the versions in the lockfile (a lockfile out of step with package.json stops the build instead of
 # quietly installing other versions)

@@ -1,13 +1,11 @@
 // Converted from design/Easy Jackets About.dc.html
 import A from '../components/A';
-import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import Testimonials from '../components/Testimonials';
 import { usePageTitle } from '../lib/usePageTitle';
 import './About.css';
-
-const IMG = '/images/site';
 
 export default function About() {
   usePageTitle('About Us', 'Easy Jackets is a small workshop making custom varsity and letterman jackets to order — one at a time or a hundred for a team — and shipping them worldwide.');
@@ -15,10 +13,10 @@ export default function About() {
   function renderVals() {
     return { footerNoop: e => e.preventDefault(),
          values: [
-           { slot: 'val-1', title: 'Made to order', desc: 'Nothing sits in a warehouse. Every jacket is cut after you approve the proof.', src: '/images/site/bulk-seg-schools.webp', alt: 'Students on a campus in navy varsity jackets' },
-           { slot: 'val-2', title: 'Real materials', desc: '24 oz melton wool, full-grain cowhide, quilted satin lining. The same spec as jackets three times the price.', src: '/images/site/bulk-team-madden.webp', alt: 'A team in matching Team Madden 2024 jackets celebrating in the locker room' },
-           { slot: 'val-3', title: 'No minimums', desc: 'One jacket gets the same attention as a hundred. Team pricing starts at ten.', src: '/images/site/bulk-seg-businesses.webp', alt: 'An office team in matching branded white varsity jackets' },
-           { slot: 'val-4', title: 'Fair to makers', desc: 'Above-market wages, a five-day week and a workshop we are proud to show on video calls.', src: '/images/site/team-varsity-group.webp', alt: 'Five people in custom varsity jackets in different colors with chenille letters and numbers' },
+           { slot: 'val-1', which: 'about-value1', title: 'Made to order', desc: 'Nothing sits in a warehouse. Every jacket is cut after you approve the proof.' },
+           { slot: 'val-2', which: 'about-value2', title: 'Real materials', desc: '24 oz melton wool, full-grain cowhide, quilted satin lining. The same spec as jackets three times the price.' },
+           { slot: 'val-3', which: 'about-value3', title: 'No minimums', desc: 'One jacket gets the same attention as a hundred. Team pricing starts at ten.' },
+           { slot: 'val-4', which: 'about-value4', title: 'Fair to makers', desc: 'Above-market wages, a five-day week and a workshop we are proud to show on video calls.' },
          ],
          // the workshop's stations, in the order an order passes through them (no portraits or names)
          bench: [
@@ -58,7 +56,7 @@ export default function About() {
           {/* the shop page's campaign card */}
           <A href="/design-custom-jacket" className="ez-card" style={{ position: 'relative', display: 'block', aspectRatio: '1', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', textDecoration: 'none', color: 'var(--cream)' }}>
             <div style={{ position: 'absolute', inset: '0', opacity: '0.92' }}>
-              <ImageSlot slot="about-hero" shape="rect" src="/images/site/campaign-varsity-back.webp" fit="cover" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
+              <SiteImage which="campaign" slot="about-hero" shape="rect" fit="cover" width={640} sizes="(max-width: 720px) 100vw, 420px" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
             </div>
             <div style={{ position: 'absolute', inset: '0', background: 'linear-gradient(to top,rgba(20,17,15,0.85) 18%,rgba(20,17,15,0.35) 42%,rgba(20,17,15,0) 65%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', inset: 'auto 0 0 0', padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', pointerEvents: 'none' }}>
@@ -80,7 +78,7 @@ export default function About() {
       {/* About hero image */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ aspectRatio: '16/9', borderRadius: '4px', overflow: 'hidden', background: 'var(--cream-2)' }}>
-          <ImageSlot slot="about-wide" shape="rect" src={`${IMG}/bulk-team-madden.webp`} fit="cover" style={{ objectPosition: 'center 62%' }} placeholder="Team in custom varsity jackets" aria-label="A team celebrating in the locker room in matching black Team Madden 2024 varsity jackets" eager />
+          <SiteImage which="about-wide" slot="about-wide" shape="rect" fit="cover" width={1280} sizes="(max-width: 1280px) 100vw, 1184px" style={{ objectPosition: 'center 62%' }} placeholder="Team in custom varsity jackets" aria-label="A team celebrating in the locker room in matching black Team Madden 2024 varsity jackets" eager />
         </div>
       </section>
       {/* Story */}
@@ -149,7 +147,7 @@ export default function About() {
           {values.map((v, vIdx) => (
             <div key={vIdx} style={{ display: 'grid', gap: '14px', alignContent: 'start' }}>
               <div style={{ aspectRatio: '4/3', borderRadius: '4px', overflow: 'hidden', background: 'var(--cream-2)' }}>
-                <ImageSlot slot={v.slot} shape="rect" src={v.src} placeholder={v.title} aria-label={v.alt} />
+                <SiteImage which={v.which} slot={v.slot} shape="rect" width={640} sizes="(max-width: 720px) 100vw, 300px" placeholder={v.title} />
               </div>
               <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '26px', textTransform: 'uppercase', lineHeight: '0.95' }}>
                 {v.title}

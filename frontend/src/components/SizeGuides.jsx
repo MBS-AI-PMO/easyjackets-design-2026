@@ -2,7 +2,7 @@
 // fit) and coach jackets. Wording and figures are the live site's
 // (easyjackets/src/Pages/SizeChart.jsx); the layout is this site's own.
 // `unit` is the page's 'in' / 'cm' switch, shared by every table on the page.
-import ImageSlot from './ImageSlot';
+import SiteImage from './SiteImage';
 import ProductCard from './ProductCard';
 
 const YOUTH = [ // stored in centimetres, as on the live site
@@ -129,7 +129,7 @@ export default function SizeGuides({ unit, setUnit, croppedProduct }) {
             </div>
           </div>
           <Frame ratio="5/4">
-            <ImageSlot slot="size-youth" shape="rect" src="/images/size-chart/youth-varsity-measure.webp" fit="contain" placeholder="Youth varsity jacket measurement guide" aria-label="Youth varsity jacket measurement guide showing chest, body length, across shoulder, and sleeve length" />
+            <SiteImage which="size-youth" slot="size-youth" shape="rect" fit="contain" width={768} sizes="(max-width: 720px) 100vw, 520px" placeholder="Youth varsity jacket measurement guide" aria-label="Youth varsity jacket measurement guide showing chest, body length, across shoulder, and sleeve length" />
           </Frame>
         </div>
       </section>
@@ -177,7 +177,7 @@ export default function SizeGuides({ unit, setUnit, croppedProduct }) {
             </ol>
           </div>
           <Frame ratio="16/10">
-            <ImageSlot slot="size-coach" shape="rect" src="/images/size-chart/coach-jacket-measure.webp" fit="contain" placeholder="Coach jacket measurement guide" aria-label="Coach jacket measurement guide showing sleeve length, body width, and body length" />
+            <SiteImage which="size-coach" slot="size-coach" shape="rect" fit="contain" width={768} sizes="(max-width: 720px) 100vw, 520px" placeholder="Coach jacket measurement guide" aria-label="Coach jacket measurement guide showing sleeve length, body width, and body length" />
           </Frame>
         </div>
         <div className="sc-wide">

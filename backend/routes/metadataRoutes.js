@@ -9,7 +9,8 @@ import {
   seedRequiredMetadata,
   updateMetadata,
   deleteMetadata,
-  uploadMetadataImage
+  uploadMetadataImage,
+  getSiteImageDefaults
 } from '../controllers/metaDataController.js';
 import { requireSignin, isAdmin } from "../middlewares/authMiddleware.js";
 import formidable from "express-formidable";
@@ -18,6 +19,9 @@ const router = express.Router();
 
 // Upload Metadata Image
 router.post('/upload', requireSignin, isAdmin, uploadMetadataImage);
+
+// The storefront's shipped photos per Site Images slot (before '/:route', which would take this path)
+router.get('/site-image-defaults', requireSignin, isAdmin, getSiteImageDefaults);
 
 // Sync required public SEO routes into metadata
 router.post('/seed-required', requireSignin, isAdmin, seedRequiredMetadata);

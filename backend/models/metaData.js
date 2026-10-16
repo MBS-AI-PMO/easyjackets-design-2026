@@ -18,6 +18,10 @@ const metadataSchema = new mongoose.Schema({
   footerLogo: { type: String },
   navbarLogoHeight: { type: Number, default: 75 },
   footerLogoHeight: { type: Number, default: 66 },
+  // The storefront's replaceable photos (admin: Content -> Site Images), by slot key, e.g.
+  // { 'home-hero': { src: 'https://…/uploads/x.webp', alt: '…' } }. A slot left out, or with no src, shows the
+  // storefront's bundled photo. Cleaned on save (controllers/metaDataController.js cleanSiteImages).
+  siteImages: { type: mongoose.Schema.Types.Mixed, default: {} },
   // When true the storefront emits <meta name="robots" content="noindex, nofollow">
   // for this route AND the route is dropped from every sitemap. Both halves matter:
   // a URL that is noindexed but still listed in a sitemap is reported by Search

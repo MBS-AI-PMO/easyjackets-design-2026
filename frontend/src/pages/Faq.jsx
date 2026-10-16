@@ -5,7 +5,7 @@
 // admin; until one is set, it is grouped by what it asks about.
 import { useState } from 'react';
 import A from '../components/A';
-import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { faqSchema } from '../components/Faq';
@@ -66,7 +66,7 @@ export default function FaqPage() {
           {/* the shop page's campaign card */}
           <A href="/design-custom-jacket" className="ez-card" style={{ position: 'relative', display: 'block', aspectRatio: '1', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', textDecoration: 'none', color: 'var(--cream)' }}>
             <div style={{ position: 'absolute', inset: '0', opacity: '0.92' }}>
-              <ImageSlot slot="faq-hero" shape="rect" src="/images/site/campaign-varsity-back.webp" fit="cover" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
+              <SiteImage which="campaign" slot="faq-hero" shape="rect" fit="cover" width={640} sizes="(max-width: 720px) 100vw, 420px" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
             </div>
             <div style={{ position: 'absolute', inset: '0', background: 'linear-gradient(to top,rgba(20,17,15,0.85) 18%,rgba(20,17,15,0.35) 42%,rgba(20,17,15,0) 65%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', inset: 'auto 0 0 0', padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', pointerEvents: 'none' }}>

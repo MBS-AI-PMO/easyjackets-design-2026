@@ -2,7 +2,7 @@
 // message form, which emails the workshop through POST /features/contact.
 import { useState } from 'react';
 import A from '../components/A';
-import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { fetchWebsiteDetails, isEmail, submitContact, telHref } from '../lib/site';
@@ -89,7 +89,7 @@ export default function Contact() {
           {/* the shop page's campaign card */}
           <A href="/design-custom-jacket" className="ez-card" style={{ position: 'relative', display: 'block', aspectRatio: '1', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', textDecoration: 'none', color: 'var(--cream)' }}>
             <div style={{ position: 'absolute', inset: '0', opacity: '0.92' }}>
-              <ImageSlot slot="contact-hero" shape="rect" src="/images/site/campaign-varsity-back.webp" fit="cover" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
+              <SiteImage which="campaign" slot="contact-hero" shape="rect" fit="cover" width={640} sizes="(max-width: 720px) 100vw, 420px" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
             </div>
             <div style={{ position: 'absolute', inset: '0', background: 'linear-gradient(to top,rgba(20,17,15,0.85) 18%,rgba(20,17,15,0.35) 42%,rgba(20,17,15,0) 65%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', inset: 'auto 0 0 0', padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', pointerEvents: 'none' }}>
@@ -160,7 +160,7 @@ export default function Contact() {
           <div className="ez-offset-frame" style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', inset: '14px -14px -14px 14px', background: 'var(--ink)', borderRadius: '4px' }} />
             <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: '4px', overflow: 'hidden', background: '#E8DFCB' }}>
-              <ImageSlot slot="contact-photo" shape="rect" src="/images/site/campaign-coach-duo.webp" fit="cover" placeholder="Campaign photo" aria-label="Two Easy Jacket coach jackets from the campaign shoot" />
+              <SiteImage which="contact-photo" slot="contact-photo" shape="rect" fit="cover" width={768} sizes="(max-width: 720px) 100vw, 600px" placeholder="Campaign photo" aria-label="Two Easy Jacket coach jackets from the campaign shoot" />
             </div>
           </div>
         </div>

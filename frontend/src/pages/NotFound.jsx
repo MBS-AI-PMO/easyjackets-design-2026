@@ -1,6 +1,6 @@
 // Converted from design/Easy Jackets 404.dc.html
 import A from '../components/A';
-import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { useNoIndex, usePageTitle } from '../lib/usePageTitle';
@@ -36,7 +36,7 @@ export default function NotFound() {
         <div className="ez-offset-frame" style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', inset: '14px -14px -14px 14px', background: 'var(--ink)', borderRadius: '4px' }} />
           <div style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: 'var(--cream-2)' }}>
-            <ImageSlot slot="nf-photo" shape="rect" src="/images/site/woman-red-white-detail.webp" placeholder="Jacket photo" aria-label="Red and white cropped varsity jacket" eager />
+            <SiteImage which="notfound-photo" slot="nf-photo" shape="rect" width={768} sizes="(max-width: 720px) 100vw, 480px" placeholder="Jacket photo" aria-label="Red and white cropped varsity jacket" eager />
           </div>
         </div>
       </section>

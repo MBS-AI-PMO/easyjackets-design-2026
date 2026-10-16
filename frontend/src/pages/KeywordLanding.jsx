@@ -4,7 +4,7 @@
 import { useLocation } from 'react-router-dom';
 import A from '../components/A';
 import Footer from '../components/Footer';
-import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import Nav from '../components/Nav';
 import ProductCard from '../components/ProductCard';
 import { LANDING_CUSTOMIZE, LANDING_STEPS, landingPage } from '../data/landingPages';
@@ -54,7 +54,7 @@ export default function KeywordLanding() {
           {/* the quick answer, on the shop page's campaign photo */}
           <div style={{ position: 'relative', aspectRatio: '1', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', color: 'var(--cream)' }}>
             <div style={{ position: 'absolute', inset: '0', opacity: '0.9' }}>
-              <ImageSlot slot="kl-hero" shape="rect" src="/images/site/campaign-varsity-back.webp" fit="cover" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
+              <SiteImage which="campaign" slot="kl-hero" shape="rect" fit="cover" width={640} sizes="(max-width: 720px) 100vw, 420px" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
             </div>
             <div style={{ position: 'absolute', inset: '0', background: 'linear-gradient(to top,rgba(20,17,15,0.92) 30%,rgba(20,17,15,0.45) 60%,rgba(20,17,15,0.1) 85%)' }} />
             <div style={{ position: 'absolute', inset: 'auto 0 0 0', padding: '22px' }}>

@@ -4,7 +4,7 @@
 // youth, cropped and coach guides (components/SizeGuides.jsx).
 import { useState } from 'react';
 import A from '../components/A';
-import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { fetchSizes, inchRange, toCm } from '../lib/materials';
@@ -13,8 +13,6 @@ import { fetchProducts } from '../lib/catalog';
 import SizeGuides from '../components/SizeGuides';
 import './SizeChart.css';
 import { usePageTitle } from '../lib/usePageTitle';
-
-const IMG = '/images/site';
 
 // The cropped guide shows a real catalog jacket (the live site's search order): its front photo links to its page.
 const CROPPED_TERMS = ['Baby Pink Cropped Varsity Jacket', 'Red And White Cropped Varsity Jacket', 'Cropped Varsity Jacket', 'New Cropped Varsity Jacket For Women'];
@@ -87,7 +85,7 @@ export default function SizeChart() {
           {/* the shop page's campaign card */}
           <A href="/design-custom-jacket" className="ez-card" style={{ position: 'relative', display: 'block', aspectRatio: '1', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', textDecoration: 'none', color: 'var(--cream)' }}>
             <div style={{ position: 'absolute', inset: '0', opacity: '0.92' }}>
-              <ImageSlot slot="size-chart-hero" shape="rect" src="/images/site/campaign-varsity-back.webp" fit="cover" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
+              <SiteImage which="campaign" slot="size-chart-hero" shape="rect" fit="cover" width={640} sizes="(max-width: 720px) 100vw, 420px" placeholder="Jacket photo" aria-label="Navy and red varsity jacket with Senior Class 26 Brooklyn lettering on the back" eager />
             </div>
             <div style={{ position: 'absolute', inset: '0', background: 'linear-gradient(to top,rgba(20,17,15,0.85) 18%,rgba(20,17,15,0.35) 42%,rgba(20,17,15,0) 65%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', inset: 'auto 0 0 0', padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', pointerEvents: 'none' }}>
@@ -170,7 +168,7 @@ export default function SizeChart() {
         <div className="sc-frame" style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', inset: '14px -14px -14px 14px', background: 'var(--ink)', borderRadius: '4px' }} />
           <div style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: '#fbf8f2', display: 'grid', placeItems: 'center', padding: '8%', boxSizing: 'border-box' }}>
-            <ImageSlot slot="size-diagram" shape="rect" src={`${IMG}/jacket-measurement.webp`} fit="contain" placeholder="Jacket measurement diagram (chest, length, across shoulder, shoulder, back length)" aria-label="Diagram of a varsity jacket front and back with the five measurements numbered" style={{ aspectRatio: 'auto', height: 'auto' }} />
+            <SiteImage which="size-measure" slot="size-diagram" shape="rect" fit="contain" width={768} sizes="(max-width: 720px) 100vw, 600px" placeholder="Jacket measurement diagram (chest, length, across shoulder, shoulder, back length)" aria-label="Diagram of a varsity jacket front and back with the five measurements numbered" style={{ aspectRatio: 'auto', height: 'auto' }} />
           </div>
         </div>
         <div>

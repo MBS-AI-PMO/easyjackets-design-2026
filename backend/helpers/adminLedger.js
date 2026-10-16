@@ -329,6 +329,8 @@ const ROUTES = [
   ["PUT", "/api/v1/features/page-faqs/:id", "FAQs", "Updated FAQ", "PageFaq"],
   ["DELETE", "/api/v1/features/page-faqs/:id", "FAQs", "Deleted FAQ", "PageFaq"],
   ["PUT", "/api/v1/features/top-bar", "Website", "Updated top bar"],
+  // routes/pageContentRoutes.js
+  ["PUT", "/api/v1/page-content/:key", "Website", "Updated page content"],
   ["POST", "/api/v1/features", "Website", "Updated features"],
   ["PUT", "/api/v1/features/subscribers/:id", "Subscribers", "Updated subscriber", "NewsletterSubscriber"],
   ["DELETE", "/api/v1/features/subscribers/:id", "Subscribers", "Removed subscriber", "NewsletterSubscriber"],

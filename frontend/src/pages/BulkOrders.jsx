@@ -1,7 +1,7 @@
 // Converted from design/Easy Jackets Bulk.dc.html
 import { useDcState } from '../lib/useDcState';
 import A from '../components/A';
-import ImageSlot from '../components/ImageSlot';
+import SiteImage from '../components/SiteImage';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { faqSchema } from '../components/Faq';
@@ -108,10 +108,10 @@ export default function BulkOrders() {
       },
       reset: () => setState({ sent: false }),
       segments: [
-        { slot: 'seg-1', name: 'Schools', desc: 'Letterman jackets for athletics, band and class of ’27.', src: '/images/site/bulk-seg-schools.webp', alt: 'Students on a campus in navy varsity jackets' },
-        { slot: 'seg-2', name: 'Teams', desc: 'Matching colors, individual names and numbers.', src: '/images/site/bulk-team-madden.webp', alt: 'A team in matching Team Madden 2024 jackets celebrating in the locker room' },
-        { slot: 'seg-3', name: 'Businesses', desc: 'Branded jackets for staff, launches and gifting.', src: '/images/site/bulk-seg-businesses.webp', alt: 'An office team in matching branded white varsity jackets' },
-        { slot: 'seg-4', name: 'Clubs', desc: 'Car clubs, fraternities, esports and alumni groups.', src: '/images/site/team-varsity-group.webp', alt: 'Five people in custom varsity jackets in different colors with chenille letters and numbers' },
+        { slot: 'seg-1', which: 'bulk-schools', name: 'Schools', desc: 'Letterman jackets for athletics, band and class of ’27.' },
+        { slot: 'seg-2', which: 'bulk-teams', name: 'Teams', desc: 'Matching colors, individual names and numbers.' },
+        { slot: 'seg-3', which: 'bulk-businesses', name: 'Businesses', desc: 'Branded jackets for staff, launches and gifting.' },
+        { slot: 'seg-4', which: 'bulk-clubs', name: 'Clubs', desc: 'Car clubs, fraternities, esports and alumni groups.' },
       ],
       // what a team can customize: the Design Studio's own choices (pages/HowToDesign.jsx, pages/Fabrics.jsx)
       options: [
@@ -208,7 +208,7 @@ export default function BulkOrders() {
           <div className="bo-hero-frame" style={{ position: 'relative', marginTop: '44px' }}>
             <div style={{ position: 'absolute', inset: '14px -14px -14px 14px', background: 'var(--ink)', borderRadius: '4px' }} />
             <div style={{ position: 'relative', aspectRatio: '16/10', borderRadius: '4px', overflow: 'hidden', background: 'var(--cream-2)' }}>
-              <ImageSlot slot="bulk-hero" shape="rect" src="/images/site/bulk-team-madden.webp" placeholder="Team in matching jackets" aria-label="A team celebrating in the locker room in matching black Team Madden 2024 varsity jackets" eager />
+              <SiteImage which="bulk-hero" slot="bulk-hero" shape="rect" width={768} sizes="(max-width: 720px) 100vw, 660px" placeholder="Team in matching jackets" aria-label="A team celebrating in the locker room in matching black Team Madden 2024 varsity jackets" eager />
             </div>
           </div>
           {/* quote brief (the live page's copy) */}
@@ -352,7 +352,7 @@ export default function BulkOrders() {
           {segments.map((s, sIdx) => (
             <div key={sIdx} className="bo-seg" style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: 'var(--ink)', color: 'var(--cream)' }}>
               <div className="bo-seg-img" style={{ position: 'absolute', inset: '0', opacity: '0.8' }}>
-                <ImageSlot slot={s.slot} shape="rect" src={s.src} placeholder={s.name} aria-label={s.alt} />
+                <SiteImage which={s.which} slot={s.slot} shape="rect" width={480} sizes="(max-width: 720px) 100vw, 320px" placeholder={s.name} />
               </div>
               <div style={{ position: 'absolute', inset: 'auto 0 0 0', padding: '20px', background: 'linear-gradient(to top,rgba(20,17,15,0.92),transparent)' }}>
                 <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '30px', lineHeight: '0.95', textTransform: 'uppercase' }}>

@@ -35,6 +35,7 @@ import seoHealthRoutes from './routes/seoHealthRoutes.js'
 import seoRenderRoutes from './routes/seoRenderRoutes.js'
 import visitorAnalyticsRoutes from './routes/visitorAnalyticsRoutes.js'
 import siteStatusRoutes from './routes/siteStatusRoutes.js'
+import pageContentRoutes from './routes/pageContentRoutes.js'
 import adminLogRoutes from './routes/adminLogRoutes.js'
 import { renderHoldingPage, siteUnderConstruction } from './helpers/holdingPage.js'
 import { sanitizeInput } from './middlewares/sanitizeInput.js'
@@ -48,6 +49,8 @@ import { indexNowWatcher } from './helpers/indexNow.js'
 import { rateLimit } from './middlewares/rateLimit.js'
 import { answerAsyncErrors } from './helpers/asyncErrors.js'
 import { startSecurityDigest } from './helpers/securityDigest.js'
+import { ensureSiteImageDefaults } from './helpers/siteImageDefaults.js'
+import { ensurePageContentDefaults } from './helpers/pageContent.js'
 import fs from 'fs/promises'
 import { constants as fsConstants } from 'fs'
 
@@ -223,6 +226,7 @@ app.use('/api/v1/shipping-rates', shippingRateRoutes)
 app.use('/api/v1/seo-health', seoHealthRoutes)
 app.use('/api/v1/visitor-analytics', visitorAnalyticsRoutes)
 app.use('/api/v1/site-status', siteStatusRoutes)
+app.use('/api/v1/page-content', pageContentRoutes)
 // the admin activity ledger, read only (Admin → Activity Log; written by helpers/adminLedger.js)
 app.use('/api/v1/admin-logs', adminLogRoutes)
 
@@ -276,6 +280,14 @@ app.listen(PORT, '0.0.0.0', () => {
   }
   // the admin's daily security summary email, and the activity log's integrity check (helpers/securityDigest.js)
   startSecurityDigest();
+  // every replaceable storefront photo has its entry in the site settings (helpers/siteImageDefaults.js)
+  ensureSiteImageDefaults()
+    .then((added) => { if (added.length) console.log(`Site Images: ${added.length} photo entries stored in the database`); })
+    .catch((error) => console.error(`Site Images: defaults not stored (${error.message})`));
+  // the editable pages' shipped content (helpers/pageContent.js)
+  ensurePageContentDefaults()
+    .then((added) => { if (added.length) console.log(`Page content stored in the database: ${added.join(', ')}`); })
+    .catch((error) => console.error(`Page content: defaults not stored (${error.message})`));
 });
 
 // Global Error Handler
