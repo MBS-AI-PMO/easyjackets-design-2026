@@ -83,7 +83,7 @@ const CustomJacketFaqs = () => {
           </p>
         </div>
         <div className="ez-faq-list">
-          {schema ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} /> : null}
+          {schema ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} /> : null}
           {faqs.map((f) => <FaqItem key={f.id || f.q} q={f.q} a={f.a} points={f.points} />)}
           <div className="ez-faq-end" />
         </div>

@@ -144,6 +144,7 @@ const navGroups = [
       { name: 'Customer', link: '/users' },
       { name: 'Admin', link: '/admin' },
       { name: 'Activity Log', link: '/activity-log' },
+      { name: 'Security Events', link: '/security-events' },
       { name: 'Subscribers', link: '/subscribers' },
     ],
   },
@@ -200,6 +201,29 @@ const DashboardAdmin = () => {
   useEffect(() => {
     if (activeGroupId) setOpenGroup(activeGroupId);
   }, [activeGroupId]);
+
+  // An admin session left alone ends by itself: after IDLE_MINUTES without a click, key press, scroll or touch
+  // the admin signs out (the API ends that session too), so an unattended screen does not stay signed in.
+  useEffect(() => {
+    const IDLE_MINUTES = 60;
+    let last = Date.now();
+    const seen = () => { last = Date.now(); };
+    const events = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'];
+    events.forEach((name) => window.addEventListener(name, seen, { passive: true }));
+    const timer = window.setInterval(() => {
+      if (Date.now() - last < IDLE_MINUTES * 60 * 1000) return;
+      let token = '';
+      try { token = JSON.parse(sessionStorage.getItem('auth'))?.token || ''; } catch { token = ''; }
+      if (token) instance.post('/auth/logout', null, { headers: { Authorization: token } }).catch(() => {});
+      sessionStorage.clear();
+      logout();
+      navigate('/');
+    }, 30 * 1000);
+    return () => {
+      window.clearInterval(timer);
+      events.forEach((name) => window.removeEventListener(name, seen));
+    };
+  }, [logout, navigate]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);

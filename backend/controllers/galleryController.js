@@ -1,10 +1,11 @@
 import galleryModel from "../models/galleryModel.js";
 import formidable from "formidable";
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 import uploadToS3 from "../helpers/fileUpload.js";
 
 // Create/Upload new gallery image
 export const uploadGalleryImage = async (req, res) => {
-    const form = formidable({ multiples: true });
+    const form = adminForm({ multiples: true });
 
     form.parse(req, async (err, fields, files) => {
         if (err) {
@@ -245,7 +246,7 @@ export const updateGalleryImage = async (req, res) => {
         const contentType = req.headers['content-type'] || '';
 
         if (contentType.includes('multipart/form-data')) {
-            const form = formidable({ multiples: true });
+            const form = adminForm({ multiples: true });
             return form.parse(req, async (err, fields, files) => {
                 if (err) {
                     return res.status(500).send({

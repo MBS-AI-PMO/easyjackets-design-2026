@@ -1,4 +1,5 @@
 import SiteTag from '../models/SiteTag.js';
+import { checkSiteTag } from '../helpers/siteTagRules.js';
 
 // Create a new tag
 export const createTag = async (req, res) => {
@@ -15,11 +16,15 @@ export const createTag = async (req, res) => {
       }
     }
 
+    // what a site tag may be (helpers/siteTagRules.js): no event attributes, scripts only from known services
+    const checked = checkSiteTag({ tagType, attributes: parsedAttributes, content });
+    if (checked.error) return res.status(400).json({ success: false, message: checked.error });
+
     const newTag = new SiteTag({
       name,
       tagType,
-      attributes: parsedAttributes,
-      content,
+      attributes: checked.attributes,
+      content: checked.content,
       isActive
     });
 
@@ -68,9 +73,12 @@ export const updateTag = async (req, res) => {
       }
     }
 
+    const checked = checkSiteTag({ tagType, attributes: parsedAttributes, content });
+    if (checked.error) return res.status(400).json({ success: false, message: checked.error });
+
     const updatedTag = await SiteTag.findByIdAndUpdate(
       id,
-      { name, tagType, attributes: parsedAttributes, content, isActive },
+      { name, tagType, attributes: checked.attributes, content: checked.content, isActive },
       { new: true, runValidators: true }
     );
 

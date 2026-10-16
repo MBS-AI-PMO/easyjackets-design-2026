@@ -45,7 +45,15 @@ import { getStorageDriver } from './helpers/fileUpload.js'
 import { backgroundRemovalEnabled } from './helpers/backgroundRemoval.js'
 import { embeddedAllowed, startBgRemover } from './helpers/bgRemoverProcess.js'
 import { indexNowWatcher } from './helpers/indexNow.js'
+import { rateLimit } from './middlewares/rateLimit.js'
+import { answerAsyncErrors } from './helpers/asyncErrors.js'
+import { startSecurityDigest } from './helpers/securityDigest.js'
 import fs from 'fs/promises'
+import { constants as fsConstants } from 'fs'
+
+// every route's async errors reach the error handler below (and are answered) instead of leaving the request
+// hanging: Express 4 does not catch a rejected promise from a handler by itself (helpers/asyncErrors.js)
+answerAsyncErrors();
 // const path = require("path");
 
 // module.exports = {
@@ -82,18 +90,20 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
-  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=15552000');
+  // this API's own subdomains are HTTPS too
+  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
   next();
 });
 
-// An error answer to a visitor who is not signed in carries no internal details: error objects (database
-// and library errors, with their fields) are left out, and a server error's text becomes a plain message.
-// Signed-in customers and admins get the full answer, as before.
+// An error answer carries no internal details: error objects (database and library errors, with their
+// fields) are left out, and a server error's text becomes a plain message. Only a signed-in admin (checked by
+// isAdmin, which sets req.adminUser) still gets the full answer, for the admin screens' error messages. (Any
+// "Authorization" header used to be enough, even a made-up one, so anyone could read the raw errors.)
 const SERVER_ERROR_TEXT = 'Something went wrong on our side. Please try again.';
 app.use((req, res, next) => {
-  if (req.headers.authorization) return next();
   const json = res.json.bind(res);
   res.json = (body) => {
+    if (req.adminUser) return json(body);
     if (res.statusCode >= 400 && body && typeof body === 'object' && !Array.isArray(body)) {
       const clean = { ...body };
       for (const key of ['err', 'error', 'stack']) {
@@ -107,7 +117,20 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors())
+// Which sites' pages may call this API from a browser: the shop's own (easyjackets.com and its subdomains,
+// the Coolify test addresses of this server, any listed in CORS_ORIGINS) and a developer's localhost. It used
+// to be every site, so any page could have its visitors' browsers post to the forms here. Calls without an
+// Origin (the storefront's server, Stripe, scripts) are not affected.
+const OWN_ORIGINS = [
+  /^https:\/\/([a-z0-9-]+\.)*easyjackets\.com$/i,
+  /^https:\/\/([a-z0-9-]+\.)*145\.223\.75\.247\.sslip\.io$/i,
+  /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i,
+];
+const extraOrigins = new Set(String(process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean));
+app.use(cors({
+  origin: (origin, done) => done(null, !origin || extraOrigins.has(origin) || OWN_ORIGINS.some((pattern) => pattern.test(origin))),
+  maxAge: 600,
+}));
 
 const immutableStaticCache = {
   maxAge: '1y',
@@ -145,12 +168,27 @@ app.use('/uploads', express.static(UPLOADS_ROOT, uploadsStatic));
 app.post('/stripe/webhook', express.raw({ type: 'application/json' }), triggerWebhook)
 
 // Saved designs (all their views as images) and blog posts are large; everything else is small. Bigger
-// requests are refused before they are read into memory.
-app.use(['/api/v1/custom', '/api/v1/features'], express.json({ limit: "50mb" }));
+// requests are refused before they are read into memory. The large limit is only for the routes that save a
+// design or a post (it used to cover every builder and "features" route, the contact form included), and the
+// public design routes are rate-limited before anything is read.
+// exact routes (app.post / app.put match the whole address; app.use would also match everything below it)
+const bigJson = express.json({ limit: "50mb" });
+const BIG_POSTS = ['/api/v1/custom/addToCart', '/api/v1/custom/product-design', '/api/v1/custom/share', '/api/v1/features/blogs', '/api/v1/features'];
+const BIG_PUTS = ['/api/v1/custom/updateDesign/:designId', '/api/v1/features/blogs/:id', '/api/v1/features/website/details'];
+const TEN_MINUTES = 10 * 60 * 1000;
+app.use('/api/v1/custom/addToCart', rateLimit({ name: 'design-save', max: 30, windowMs: TEN_MINUTES }));
+app.use('/api/v1/custom/updateDesign', rateLimit({ name: 'design-update', max: 60, windowMs: TEN_MINUTES }));
+app.use('/api/v1/custom/save-images', rateLimit({ name: 'design-picture', max: 30, windowMs: TEN_MINUTES }));
+app.post(BIG_POSTS, bigJson);
+app.put(BIG_PUTS, bigJson);
+app.use(['/api/v1/custom', '/api/v1/features'], express.json({ limit: "100kb" }));
 app.use(express.json({ limit: "10mb" }));
 // no "$" keys from clients: they would be database operators (middlewares/sanitizeInput.js)
 app.use(sanitizeInput);
-app.use(morgan("dev"));
+// one line per request: time, address, method, path without its query (emails and ids in query strings stay
+// out of the logs), status and time taken
+morgan.token('path-only', (req) => String(req.originalUrl || req.url || '').split('?')[0].slice(0, 300));
+app.use(morgan(':date[iso] :remote-addr :method :path-only :status :response-time ms'));
 app.set('view engine', 'ejs');
 
 // app.set('views', __dirname);
@@ -205,26 +243,21 @@ app.get("/", async (req, res) => {
   });
 });
 
+// Whether uploads can be written: only "ok" or not (it used to show the folder, the driver and raw file
+// errors to anyone, and write a file on every visit). Checked without writing.
 app.get("/health/storage", async (req, res) => {
   try {
-    const probeFile = `${UPLOADS_ROOT}/.storage-health`;
-    await fs.writeFile(probeFile, 'ok');
-    await fs.unlink(probeFile);
-
-    res.json({
-      ok: true,
-      driver: getStorageDriver(),
-      uploadsRoot: UPLOADS_ROOT,
-      publicBase: process.env.UPLOADS_PUBLIC_BASE_URL || process.env.AWS_FILE_PATH || null,
-    });
+    await fs.access(UPLOADS_ROOT, fsConstants.W_OK);
+    res.json({ ok: true });
   } catch (error) {
-    res.status(503).json({
-      ok: false,
-      driver: getStorageDriver(),
-      uploadsRoot: UPLOADS_ROOT,
-      error: error.message,
-    });
+    console.error('Storage health:', error.message);
+    res.status(503).json({ ok: false });
   }
+});
+
+// an unknown address: a short JSON answer, not Express's own HTML page
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Not found' });
 });
 
 const PORT = process.env.PORT || 8080;
@@ -241,6 +274,8 @@ app.listen(PORT, '0.0.0.0', () => {
       .then(() => console.log('🪄 Background remover running'.cyan))
       .catch((error) => console.error(`bg-remover: not running (${error.message}); product photos keep their backgrounds`));
   }
+  // the admin's daily security summary email, and the activity log's integrity check (helpers/securityDigest.js)
+  startSecurityDigest();
 });
 
 // Global Error Handler
@@ -248,6 +283,9 @@ app.listen(PORT, '0.0.0.0', () => {
 // JSON); anything else is a 500 that says no more than that (the details are in the log).
 app.use((err, req, res, next) => {
   console.error('💥 Unhandled Error:', err);
+  if (res.headersSent) return next(err);
+  // a malformed id in the address (CastError): nothing by that id
+  if (err?.name === 'CastError') return res.status(404).json({ success: false, message: 'Not found' });
   const status = Number(err.status || err.statusCode);
   const clientError = status >= 400 && status < 500;
   res.status(clientError ? status : 500).json({

@@ -8,6 +8,11 @@ import JWT from "jsonwebtoken";
 import RevokedToken from "../models/revokedToken.js";
 // the admin activity ledger: sign-ins, sign-outs and password changes of admin accounts (does nothing for others)
 import { recordAdminEvent } from "../helpers/adminLedger.js";
+// every account's security events (failed sign-ins, resets, email changes …), and the admin alerts they raise
+import { recordSecurityEvent } from "../helpers/securityEvents.js";
+import { passwordProblem } from "../helpers/passwordPolicy.js";
+import { loginKey } from "../helpers/tokenKeys.js";
+import { LOCKED_MESSAGE, clearAccountLock, clearFailedLogins, isLockedOut, noteFailedLogin } from "../helpers/loginGuard.js";
 // import { compare } from "bcrypt";
 const serializeUser = (user) => ({
   _id: user._id,
@@ -29,6 +34,11 @@ export const registerController = async (req, res) => {
     }
     if (!password) {
       return res.send({ message: "Password is Required" });
+    }
+    // one rule for every new password (helpers/passwordPolicy.js); it used to accept any, even one character
+    const weak = passwordProblem(password, { email });
+    if (weak) {
+      return res.status(200).send({ success: false, message: weak });
     }
     if (!phone) {
       return res.send({ message: "Phone is Required" });
@@ -81,6 +91,11 @@ export const registerAdminController = async (req, res) => {
     if (!password) {
       return res.status(400).send({ success: false, message: "Password is Required" });
     }
+    // admins: the longer admin rule (helpers/passwordPolicy.js)
+    const weak = passwordProblem(password, { email, admin: true });
+    if (weak) {
+      return res.status(400).send({ success: false, message: weak });
+    }
     if (!phone) {
       return res.status(400).send({ success: false, message: "Phone is Required" });
     }
@@ -129,33 +144,28 @@ export const registerAdminController = async (req, res) => {
 
 
 // A sign-in token: the user, their tokenVersion (raised by a password change or reset, which ends older
-// sessions) and its own id (jti, so logging out can end this one session). 7 days, as before.
-const signLoginToken = (user) => JWT.sign(
+// sessions) and its own id (jti, so logging out can end this one session). Signed with this site's own
+// sign-in key (helpers/tokenKeys.js), so it means nothing to any other backend holding the same JWT_SECRET.
+//   - customers: 7 days, as before
+//   - admins: ADMIN_SESSION (an admin session controls payments, emails and every order)
+const ADMIN_SESSION = "12h";
+export const signLoginToken = (user) => JWT.sign(
   { _id: String(user._id), v: user.tokenVersion || 0, jti: crypto.randomBytes(12).toString("hex") },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" }
+  loginKey(),
+  { expiresIn: user.role === 1 ? ADMIN_SESSION : "7d", algorithm: "HS256" }
 );
 
-// After LOCK_AFTER wrong passwords for one account within LOCK_MINUTES, that account's sign-in waits
-// LOCK_MINUTES (guessing passwords one after another stops working). Kept in memory.
-const LOCK_AFTER = 10;
-const LOCK_MINUTES = 15;
-const LOCKED_MESSAGE = `Too many wrong passwords. Please wait ${LOCK_MINUTES} minutes, or reset your password.`;
-const failedLogins = new Map(); // email -> { count, firstAt, lockedUntil }
-const isLockedOut = (key) => (failedLogins.get(key)?.lockedUntil || 0) > Date.now();
-const noteFailedLogin = (key) => {
-  const now = Date.now();
-  const entry = failedLogins.get(key);
-  const fresh = !entry || now - entry.firstAt > LOCK_MINUTES * 60 * 1000;
-  const next = fresh ? { count: 1, firstAt: now, lockedUntil: 0 } : { ...entry, count: entry.count + 1 };
-  if (next.count >= LOCK_AFTER) next.lockedUntil = now + LOCK_MINUTES * 60 * 1000;
-  failedLogins.set(key, next);
+// For a sign-in with an unknown email: a password check against this hash takes as long as a real one, so the
+// time of the answer does not tell which emails have accounts.
+let dummyHash = null;
+const timeLikeARealCheck = async (password) => {
+  if (!dummyHash) dummyHash = hashPassword(crypto.randomBytes(18).toString("hex"));
+  await comparePassword(password, await dummyHash).catch(() => false);
+  return false;
 };
-const clearFailedLogins = (key) => failedLogins.delete(key);
-setInterval(() => {
-  const cutoff = Date.now() - LOCK_MINUTES * 60 * 1000;
-  for (const [key, entry] of failedLogins) if (entry.firstAt < cutoff && (entry.lockedUntil || 0) < Date.now()) failedLogins.delete(key);
-}, 10 * 60 * 1000).unref();
+
+// Wrong passwords lock that account from that address for a while (helpers/loginGuard.js: by account and
+// address, in the database; the same counts cover the "current password" checks below).
 
 // Logging out ends this session on the server too (the token stops working at once, not after 7 days).
 export const logoutController = async (req, res) => {
@@ -185,27 +195,30 @@ export const loginController = async (req, res) => {
         message: "Invalid email or Password",
       });
     }
-    const lockKey = email.trim().toLowerCase();
-    if (isLockedOut(lockKey)) {
+    if (await isLockedOut(email, req)) {
       recordAdminEvent({ email, area: "Sign-in", action: "Failed sign-in", req, status: 429, details: { reason: "Locked out after too many wrong passwords" } });
+      const known = await userModel.findOne({ email }).select("email role").lean();
+      recordSecurityEvent({ type: "login-locked", req, user: known, email, details: { reason: "Still locked" } });
       return res.status(429).send({ success: false, message: LOCKED_MESSAGE });
     }
 
     const user = await userModel.findOne({
       email,
-    });
+    }).select("+password");
 
-    // one answer for a wrong email and a wrong password, so the form does not tell which emails have accounts
-    const match = user ? await comparePassword(password, user.password) : false;
+    // one answer (and the same time) for a wrong email and a wrong password, so the form does not tell which
+    // emails have accounts
+    const match = user ? await comparePassword(password, user.password) : await timeLikeARealCheck(password);
     if (!user || !match) {
-      noteFailedLogin(lockKey);
+      const locked = await noteFailedLogin(email, req);
       recordAdminEvent({ user, area: "Sign-in", action: "Failed sign-in", req, status: 200, ok: false, details: { reason: "Wrong password" } });
+      recordSecurityEvent({ type: locked ? "login-locked" : "login-failed", req, user, email, details: { reason: user ? "Wrong password" : "No account with this email" } });
       return res.status(200).send({
         success: false,
         message: "Invalid email or password",
       });
     }
-    clearFailedLogins(lockKey);
+    await clearFailedLogins(email, req);
 
     const token = signLoginToken(user);
     recordAdminEvent({ user, area: "Sign-in", action: "Signed in", req, status: 200 });
@@ -251,6 +264,7 @@ export const forgotPasswordController = async (req, res) => {
       const link = `${storefrontUrl()}/account?reset=${token}`;
       sendEmailInBackground("Reset your Easy Jackets password", user.email, { name: user.name, link, minutes: RESET_MINUTES }, "/views/passwordReset.ejs");
     }
+    recordSecurityEvent({ type: "password-reset-requested", req, user, email, details: { account: user ? "exists" : "none" } });
     return res.status(200).send({ success: true, message: RESET_SENT });
   } catch (err) {
     console.log(err);
@@ -265,20 +279,25 @@ export const resetPasswordController = async (req, res) => {
     if (!/^[a-f0-9]{64}$/.test(token)) {
       return res.status(400).send({ success: false, message: "This reset link is not valid. Ask for a new one." });
     }
-    if (newPassword.length < 6) {
-      return res.status(400).send({ success: false, message: "Use a new password of at least 6 characters." });
+    if (!newPassword) {
+      return res.status(400).send({ success: false, message: "Please enter a new password." });
     }
     const user = await userModel.findOne({ resetPasswordHash: sha256(token), resetPasswordExpires: { $gt: new Date() } });
     if (!user) {
       return res.status(400).send({ success: false, message: "This reset link has expired or was already used. Ask for a new one." });
+    }
+    const weak = passwordProblem(newPassword, { email: user.email, admin: user.role === 1 });
+    if (weak) {
+      return res.status(400).send({ success: false, message: weak });
     }
     // the new password ends every session signed in with the old one
     await userModel.updateOne(
       { _id: user._id },
       { password: await hashPassword(newPassword), resetPasswordHash: null, resetPasswordExpires: null, $inc: { tokenVersion: 1 } }
     );
-    clearFailedLogins(String(user.email || "").trim().toLowerCase());
+    await clearAccountLock(user.email, req);
     recordAdminEvent({ user, area: "Account", action: "Reset password", req, status: 200, details: { via: "Emailed reset link" } });
+    recordSecurityEvent({ type: "password-reset", req, user });
     return res.status(200).send({ success: true, message: "Password changed. Sign in with your new password." });
   } catch (err) {
     console.log(err);
@@ -286,43 +305,8 @@ export const resetPasswordController = async (req, res) => {
   }
 };
 
-export const encryptUser = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    // const { userId } = req.body;
-
-    const token = JWT.sign({ userId }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-      notBefore: "0", // Cannot use before now, can be configured to be deferred.
-      algorithm: "HS256",
-      expiresIn: "24h",
-    });
-
-    return res.status(200).send({
-      success: true,
-      message: "user encrypted",
-      token,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send({
-      success: false,
-      message: "Something went wrong",
-      error,
-    });
-  }
-};
-
-export const testController = (req, res) => {
-  try {
-    res.send("protected route");
-  } catch (err) {
-    console.log(err);
-    res.send({
-      err,
-    });
-  }
-};
+// (/auth/encrypt, which signed 24-hour { userId } tokens with the sign-in secret, and /auth/test were removed:
+// nothing used them)
 
 export const getAuthenticatedUserController = async (req, res) => {
   try {
@@ -352,7 +336,7 @@ export const getAuthenticatedUserController = async (req, res) => {
 export const updateProfileController = async (req, res) => {
   try {
     const { name, email, password, address, phone } = req.body;
-    const user = await userModel.findById(req.user._id);
+    const user = await userModel.findById(req.user._id).select("+password");
     if (!user) {
       return res.status(404).send({
         success: false,
@@ -367,7 +351,13 @@ export const updateProfileController = async (req, res) => {
     const emailChanges = Boolean(normalizedEmail) && normalizedEmail !== String(user.email || '').trim().toLowerCase();
     if (emailChanges || password) {
       const current = typeof req.body.currentPassword === "string" ? req.body.currentPassword : "";
+      // wrong current passwords count like wrong sign-ins (and lock the same way: helpers/loginGuard.js)
+      if (await isLockedOut(user.email, req)) {
+        return res.status(429).send({ success: false, message: LOCKED_MESSAGE });
+      }
       if (!current || !(await comparePassword(current, user.password))) {
+        const locked = await noteFailedLogin(user.email, req);
+        recordSecurityEvent({ type: locked ? "login-locked" : "login-failed", req, user, details: { reason: "Wrong current password (profile)" } });
         return res.status(401).send({
           success: false,
           message: emailChanges ? "Enter your current password to change your email." : "Enter your current password to change your password.",
@@ -390,8 +380,11 @@ export const updateProfileController = async (req, res) => {
     }
 
     //password
-    if (password && password.length < 6) {
-      return res.json({ error: "Passsword is required and 6 character long" });
+    if (password) {
+      const weak = passwordProblem(password, { email: normalizedEmail || user.email, admin: user.role === 1 });
+      if (weak) {
+        return res.status(400).send({ success: false, message: weak, error: weak });
+      }
     }
     const hashedPassword = password ? await hashPassword(password) : undefined;
     const updatedUser = await userModel.findByIdAndUpdate(
@@ -408,6 +401,8 @@ export const updateProfileController = async (req, res) => {
       { new: true }
     );
     recordAdminEvent({ user: updatedUser, area: "Account", action: hashedPassword ? "Changed password" : "Updated profile", req, status: 200, details: req.body });
+    if (emailChanges) recordSecurityEvent({ type: "email-changed", req, user, details: { newEmail: updatedUser.email } });
+    if (hashedPassword) recordSecurityEvent({ type: "password-changed", req, user: updatedUser });
     res.status(200).send({
       success: true,
       message: "Profile Updated SUccessfully",
@@ -430,7 +425,7 @@ export const getOrdersController = async (req, res) => {
     const orders = await orderModel
       .find({ buyer: req.user._id, hiddenByUser: { $ne: true } })
       .populate("products")
-      .populate("buyer")
+      .populate("buyer", "name email")
       .populate({
         path: 'cartData.id',
         model: 'Products',
@@ -647,15 +642,8 @@ export const changePasswordController = async (req, res) => {
         message: "New password and confirmation do not match",
       });
     }
-    if (newPassword.length < 6) {
-      return res.status(400).send({
-        success: false,
-        message: "New password must be at least 6 characters",
-      });
-    }
-
     // Get current user from req.user (set by requireSignin middleware)
-    const user = await userModel.findById(req.user._id);
+    const user = await userModel.findById(req.user._id).select("+password");
     if (!user) {
       return res.status(404).send({
         success: false,
@@ -663,9 +651,19 @@ export const changePasswordController = async (req, res) => {
       });
     }
 
-    // Verify current password
+    const weak = passwordProblem(newPassword, { email: user.email, admin: user.role === 1 });
+    if (weak) {
+      return res.status(400).send({ success: false, message: weak });
+    }
+
+    // Verify current password (wrong ones count like wrong sign-ins: helpers/loginGuard.js)
+    if (await isLockedOut(user.email, req)) {
+      return res.status(429).send({ success: false, message: LOCKED_MESSAGE });
+    }
     const isMatch = await comparePassword(currentPassword, user.password);
     if (!isMatch) {
+      const locked = await noteFailedLogin(user.email, req);
+      recordSecurityEvent({ type: locked ? "login-locked" : "login-failed", req, user, details: { reason: "Wrong current password (change password)" } });
       return res.status(401).send({
         success: false,
         message: "Current password is incorrect",
@@ -681,6 +679,7 @@ export const changePasswordController = async (req, res) => {
     );
 
     recordAdminEvent({ user: updated, area: "Account", action: "Changed password", req, status: 200 });
+    recordSecurityEvent({ type: "password-changed", req, user: updated });
     res.status(200).send({
       success: true,
       token: signLoginToken(updated),

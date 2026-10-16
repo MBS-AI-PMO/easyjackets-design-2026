@@ -1,3 +1,4 @@
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 import Feature from '../models/features.js';
 import NewsletterSubscriber from '../models/newsletterSubscriberModel.js';
 import formidable from 'formidable'; // For file uploads
@@ -13,7 +14,7 @@ import { BLOG_IMAGE_FOLDER, blogImageUrl, moveInlineImagesToStorage } from '../h
 
 // Create or Update Feature
 export const createOrUpdateFeatureController = async (req, res) => {
-    const form = formidable({ multiples: true });
+    const form = adminForm({ multiples: true });
 
     form.parse(req, async (err, fields, files) => {
         if (err) {
@@ -150,7 +151,7 @@ export const updateWebsiteDetails = async (req, res) => {
 
 
 export const createBlogController = async (req, res) => {
-    const form = formidable({ multiples: false }); // Single file
+    const form = adminForm({ multiples: false }); // Single file
     form.parse(req, async (err, fields, files) => {
         if (err) {
 
@@ -251,7 +252,7 @@ export const getBlogByIdController = async (req, res) => {
 
 // Update blog by ID
 export const updateBlogController = async (req, res) => {
-    const form = formidable({ multiples: false });
+    const form = adminForm({ multiples: false });
     form.parse(req, async (err, fields, files) => {
         if (err) {
             return res.status(500).send('Error parsing the files.');
@@ -312,7 +313,7 @@ export const updateBlogController = async (req, res) => {
  * uploads/blog/ folder.
  */
 export const uploadBlogImageController = async (req, res) => {
-    const form = formidable({ multiples: false, maxFileSize: 25 * 1024 * 1024 });
+    const form = adminForm({ multiples: false, maxFileSize: 25 * 1024 * 1024 });
     form.parse(req, async (err, fields, files) => {
         if (err) {
             return res.status(400).json({ success: false, message: 'Could not read the image.' });
@@ -538,8 +539,16 @@ export const SubmitContact = async (req, res) => {
         if (!isOneEmail(req.body?.email)) {
             return res.status(400).json({ success: false, message: 'Please enter one valid email address.' });
         }
+        // only the form's own fields, as text: the request used to be copied whole into the email's data, and a
+        // made-up "cartData" list there had the server download any address it named (helpers/invoiceImages.js)
+        const field = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
         const contactData = {
-            ...req.body,
+            firstName: field(req.body.firstName, 80),
+            lastName: field(req.body.lastName, 80),
+            email: field(req.body.email, 200),
+            phone: field(req.body.phone, 40),
+            subject: field(req.body.subject, 200),
+            message: field(req.body.message, 5000),
             date: new Date().toLocaleString('en-US', {
                 dateStyle: 'full',
                 timeStyle: 'short'
@@ -548,7 +557,7 @@ export const SubmitContact = async (req, res) => {
 
         // Send email to admin (non-blocking)
         sendEmail(
-            `New Contact Form Submission - ${req.body.firstName} ${req.body.lastName}`,
+            `New Contact Form Submission - ${contactData.firstName} ${contactData.lastName}`,
             await getAdminEmail(),
             contactData,
             '/views/contact.ejs'
@@ -557,7 +566,7 @@ export const SubmitContact = async (req, res) => {
         // Send confirmation email to customer (non-blocking)
         sendEmail(
             'Thank You for Contacting Easy Jackets',
-            req.body.email,
+            contactData.email,
             contactData,
             '/views/contactCustomer.ejs'
         ).catch(err => console.error('Customer contact email failure:', err));

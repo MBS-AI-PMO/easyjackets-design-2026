@@ -50,8 +50,9 @@ function ChangePassword() {
             toast.error("Please enter a new password");
             return;
         }
-        if (formData.newPassword.length < 6) {
-            toast.error("New password must be at least 6 characters");
+        // admin passwords: at least 12 characters (the server checks the full rule)
+        if (formData.newPassword.length < 12) {
+            toast.error("New password must be at least 12 characters");
             return;
         }
         if (formData.newPassword !== formData.confirmPassword) {
@@ -191,7 +192,7 @@ function ChangePassword() {
                             value={formData.newPassword}
                             onChange={handleChange}
                             sx={{ ...textFieldStyle, mb: 3 }}
-                            helperText="Must be at least 6 characters"
+                            helperText="At least 12 characters"
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">

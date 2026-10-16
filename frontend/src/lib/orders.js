@@ -95,9 +95,10 @@ export const checkoutProducts = (lines, shippingCost) => {
   return products;
 };
 
-/** Cash on delivery: the order is created at once. */
+/** Cash on delivery: the order is created at once. A signed-in customer sends their sign-in, which is how the
+ * order joins their account (the account is never taken from the request body). */
 export const createCodOrder = async ({ products, user, formDetails, country }) => {
-  const r = await api.post('/payment/cod-order', { products, user: user || null, formDetails, country }, { auth: false });
+  const r = await api.post('/payment/cod-order', { products, formDetails, country }, { auth: !!user });
   return r.orderId;
 };
 

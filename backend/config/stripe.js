@@ -62,7 +62,7 @@ export const invalidateStripeSettings = () => { loadedAt = 0; return getStripeSe
 const clients = new Map(); // secret key -> Stripe client
 export const stripeFor = (secretKey) => {
     if (!secretKey) throw new Error('A Stripe secret key is required');
-    if (!clients.has(secretKey)) clients.set(secretKey, new Stripe(secretKey, { apiVersion: API_VERSION }));
+    if (!clients.has(secretKey)) clients.set(secretKey, new Stripe(secretKey, { apiVersion: API_VERSION, timeout: 15000, maxNetworkRetries: 2 }));
     return clients.get(secretKey);
 };
 // Webhook signature checks are local HMAC work with the webhook secret; no API key is involved.

@@ -12,9 +12,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    // the bcrypt hash: never read unless asked for (.select("+password")), so no answer that includes a user
+    // record (an order's buyer, a list) can carry it
     password: {
       type: String,
       required: true,
+      select: false,
     },
     phone: {
       type: String,

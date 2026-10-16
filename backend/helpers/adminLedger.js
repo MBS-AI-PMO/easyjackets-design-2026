@@ -1,6 +1,9 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
 import AdminLog from "../models/adminLog.js";
+import LedgerAnchor from "../models/ledgerAnchor.js";
+import { countHit } from "./counters.js";
+import { recordSecurityEvent } from "./securityEvents.js";
 
 // The admin activity ledger (models/adminLog.js): writes one entry for everything an admin changes, and for
 // their sign-ins, sign-outs and password changes. Read by routes/adminLogRoutes.js (admin → Activity Log).
@@ -20,8 +23,27 @@ import AdminLog from "../models/adminLog.js";
 /** prevHash of the very first entry. */
 export const GENESIS_HASH = "0".repeat(64);
 
-// The fields an entry's hash covers: all of them except its own hash (and MongoDB's _id).
+// The fields an entry's hash covers: all of them except its own hash (and MongoDB's _id); a signed entry's
+// signature also covers its hash version.
 const HASHED_FIELDS = ["seq", "at", "admin", "area", "action", "method", "path", "target", "details", "status", "ok", "ip", "userAgent", "prevHash"];
+const SIGNED_FIELDS = [...HASHED_FIELDS, "hv"];
+
+// The ledger key: entries are signed (HMAC-SHA256) with a key derived from LEDGER_HMAC_KEY, else from
+// SECRETS_ENCRYPTION_KEY, both server settings that are not in the database. A plain sha256 chain could be
+// rewritten from start to end, every hash recomputed, by anyone with write access to the database; signed
+// entries cannot be forged without the key. Without either setting, entries are chained as before (unsigned).
+export const SIGNED = 2;
+let keyCache = null;
+const ledgerKey = () => {
+  const source = process.env.LEDGER_HMAC_KEY || process.env.SECRETS_ENCRYPTION_KEY || "";
+  if (!source) return null;
+  if (!keyCache || keyCache.source !== source) {
+    keyCache = { source, key: Buffer.from(crypto.hkdfSync("sha256", source, "easyjackets-2026", "admin-ledger", 32)) };
+  }
+  return keyCache.key;
+};
+export const ledgerSigning = () => Boolean(ledgerKey());
+const anchorMac = (key, seq) => crypto.createHmac("sha256", key).update(`anchor:adminlog:${seq}`).digest("hex");
 
 const isObjectId = (value) => value instanceof mongoose.Types.ObjectId || value?._bsontype === "ObjectId";
 
@@ -40,11 +62,38 @@ const canonicalJson = (value) => {
   return JSON.stringify(value);
 };
 
-/** sha256(prevHash + canonical JSON of the entry's fields except hash). */
+/**
+ * An unsigned entry: sha256(prevHash + canonical JSON of its fields except hash). A signed one (hv 2):
+ * HMAC-SHA256 with the ledger key over the same, its hv included. null when a signed entry cannot be checked
+ * here (no key).
+ */
 export const hashEntry = (entry) => {
+  if (entry.hv === SIGNED) {
+    const key = ledgerKey();
+    if (!key) return null;
+    const fields = {};
+    for (const name of SIGNED_FIELDS) fields[name] = entry[name];
+    return crypto.createHmac("sha256", key).update(String(entry.prevHash || "") + canonicalJson(fields)).digest("hex");
+  }
   const fields = {};
   for (const key of HASHED_FIELDS) fields[key] = entry[key];
   return crypto.createHash("sha256").update(String(entry.prevHash || "") + canonicalJson(fields)).digest("hex");
+};
+
+// The record of where signing started, written once with the first signed entry.
+let anchorWritten = false;
+const ensureAnchor = async (seq) => {
+  if (anchorWritten) return;
+  const key = ledgerKey();
+  if (!key) return;
+  try {
+    const existing = await LedgerAnchor.findById("adminlog").lean();
+    if (!existing) await LedgerAnchor.create({ _id: "adminlog", firstSignedSeq: seq, mac: anchorMac(key, seq) });
+    anchorWritten = true;
+  } catch (err) {
+    if (err?.code === 11000) anchorWritten = true; // another container wrote it first
+    else console.error("Admin log: could not record where signing started:", err?.message || err);
+  }
 };
 
 /* ------------------------------------------------------------------------------------------------ */
@@ -69,12 +118,14 @@ const MAX_ATTEMPTS = 5;
 const appendNow = async (fields) => {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     if (!head) head = await readHead();
-    const entry = new AdminLog({ ...fields, seq: head.seq + 1, prevHash: head.hash, hash: "-" });
+    const signed = ledgerSigning();
+    const entry = new AdminLog({ ...fields, seq: head.seq + 1, prevHash: head.hash, hash: "-", ...(signed ? { hv: SIGNED } : {}) });
     // hashed as mongoose will store it (ids cast, defaults filled in)
     entry.hash = hashEntry(entry.toObject());
     try {
       await entry.save();
       head = { seq: entry.seq, hash: entry.hash };
+      if (signed) await ensureAnchor(entry.seq);
       return entry;
     } catch (err) {
       // another writer (a second backend instance) took this seq first: read the newest entry again and retry
@@ -492,6 +543,36 @@ const lookupLabel = async (modelName, id) => {
 
 const READ_ONLY = new Set(["GET", "HEAD", "OPTIONS"]);
 
+// Reading customers' personal data is recorded too (it used to be only changes), so a bulk copy of customer data
+// through an admin login leaves a trace. A list is recorded at most once per admin and screen every
+// READ_EVERY (the order list is polled by the admin app); exports every time.
+const READ_EVERY = 30 * 60 * 1000;
+const SENSITIVE_READS = new Map([
+  ["/api/v1/order", "Viewed order list"],
+  ["/api/v1/order/:id", "Viewed order"],
+  ["/api/v1/order/deleted", "Viewed deleted orders"],
+  ["/api/v1/order/bulk", "Viewed bulk order list"],
+  ["/api/v1/order/bulk/:id", "Viewed bulk order"],
+  ["/api/v1/order/bulk/deleted", "Viewed deleted bulk orders"],
+  ["/api/v1/auth/allusers", "Viewed customer list"],
+  ["/api/v1/auth/alladmins", "Viewed admin list"],
+  ["/api/v1/auth/all-orders", "Viewed all orders"],
+  ["/api/v1/features/subscribers", "Viewed subscribers"],
+  ["/api/v1/visitor-analytics/sessions", "Viewed visitor sessions"],
+  ["/api/v1/visitor-analytics/sessions/:sessionId", "Viewed visitor session"],
+  ["/api/v1/admin-logs/export.csv", "Exported activity log"],
+]);
+const ALWAYS_RECORDED_READS = new Set(["/api/v1/admin-logs/export.csv"]);
+
+// Changes that also email the admin address (helpers/securityEvents.js "admin-change"): who can sign in as an
+// admin, where payments go, the mail account, and scripts on every page.
+const ALERT_AREAS = new Map([
+  ["Admins", /^(Created|Deleted) admin$/],
+  ["Payments", /^Saved payment settings$/],
+  ["Email", /^Saved email settings$/],
+  ["Site tags", /./],
+]);
+
 const adminSnapshot = (user) => ({
   _id: user?._id && mongoose.isValidObjectId(user._id) ? user._id : null,
   name: text(user?.name, 120),
@@ -511,7 +592,11 @@ const requestInfo = (req) => ({
  */
 export const watchAdminRequest = (req, res) => {
   try {
-    if (READ_ONLY.has(req.method) || req.adminLedgerWatched) return;
+    if (req.adminLedgerWatched) return;
+    if (READ_ONLY.has(req.method)) {
+      watchSensitiveRead(req, res);
+      return;
+    }
     req.adminLedgerWatched = true;
 
     const info = requestInfo(req);
@@ -553,6 +638,40 @@ export const watchAdminRequest = (req, res) => {
   } catch (err) {
     console.error("Admin log: could not watch a request:", err?.message || err);
   }
+};
+
+// A GET of personal data: one entry once answered (lists at most once per READ_EVERY per admin and screen).
+const watchSensitiveRead = (req, res) => {
+  if (req.method !== "GET") return;
+  req.adminLedgerWatched = true;
+  res.once("finish", () => {
+    setImmediate(async () => {
+      try {
+        const info = requestInfo(req);
+        const action = SENSITIVE_READS.get(info.path);
+        if (!action || res.statusCode >= 400) return;
+        const target = Object.values(req.params || {}).filter(Boolean).join(" / ");
+        if (!ALWAYS_RECORDED_READS.has(info.path)) {
+          const { count } = await countHit(`ledger-read:${req.adminUser?._id}:${info.path}:${target}`, READ_EVERY);
+          if (count > 1) return;
+        }
+        const query = Object.keys(req.query || {}).length ? cleanDetails(req.query) : {};
+        await append({
+          at: new Date(),
+          admin: adminSnapshot(req.adminUser),
+          area: "Viewed data",
+          action,
+          ...info,
+          target: { id: text(target, 200), label: "" },
+          details: query,
+          status: res.statusCode,
+          ok: true,
+        });
+      } catch (err) {
+        console.error("Admin log: could not record a read:", err?.message || err);
+      }
+    });
+  });
 };
 
 const recordRequest = async ({ req, info, params, rule, answer, status, nameBeforeDelete }) => {
@@ -605,6 +724,80 @@ const recordRequest = async ({ req, info, params, rule, answer, status, nameBefo
     status,
     ok,
   });
+
+  // a sensitive change: the admin address is emailed (helpers/securityEvents.js)
+  const alertOn = ALERT_AREAS.get(rule.area);
+  if (ok && alertOn && alertOn.test(String(action))) {
+    recordSecurityEvent({
+      type: "admin-change",
+      req,
+      user: req.adminUser,
+      details: { action: String(action), target: label || targetId || "" },
+    });
+  }
+};
+
+/* ------------------------------------------------------------------------------------------------ */
+/* Checking the chain                                                                                */
+/* ------------------------------------------------------------------------------------------------ */
+
+/**
+ * Walks the whole chain in order (a batch at a time) and says whether every entry is there, links to the one
+ * before, still has the contents it was written with, and, from where signing started, carries a valid
+ * signature. { intact, count, head: { seq, hash }, signedFrom, brokenAt?, reason?, unchecked? }
+ */
+export const verifyLedger = async () => {
+  // entries this process wrote before the walk began must all be found, the last one unchanged
+  const known = ledgerHead();
+  const key = ledgerKey();
+  const anchor = await LedgerAnchor.findById("adminlog").lean();
+  let anchorProblem = null;
+  if (anchor && key && anchor.mac !== anchorMac(key, anchor.firstSignedSeq)) {
+    anchorProblem = "The record of where signing started was changed";
+  }
+  const signedFrom = anchor && !anchorProblem ? anchor.firstSignedSeq : null;
+  let expected = 1;
+  let prevHash = GENESIS_HASH;
+  let lastHash = GENESIS_HASH;
+  let problem = anchorProblem ? { brokenAt: anchor.firstSignedSeq, reason: anchorProblem } : null;
+  let sawSigned = false;
+  let unchecked = false;
+  if (!problem) {
+    for await (const entry of AdminLog.find({}).sort({ seq: 1 }).lean().cursor({ batchSize: 500 })) {
+      if (entry.hv === SIGNED) sawSigned = true;
+      if (entry.seq !== expected) {
+        problem = entry.seq > expected
+          ? { brokenAt: expected, reason: `Entry #${expected} is missing` }
+          : { brokenAt: entry.seq, reason: `Entry #${entry.seq} is out of order` };
+      } else if (entry.prevHash !== prevHash) {
+        problem = { brokenAt: entry.seq, reason: `Entry #${entry.seq} does not link to the entry before it (prevHash mismatch)` };
+      } else if (signedFrom && entry.seq >= signedFrom && entry.hv !== SIGNED) {
+        problem = { brokenAt: entry.seq, reason: `Entry #${entry.seq} should be signed but is not (it was rewritten)` };
+      } else {
+        const hash = hashEntry(entry);
+        if (hash === null) unchecked = true; // a signed entry, and no key here to check it
+        else if (hash !== entry.hash) {
+          problem = { brokenAt: entry.seq, reason: entry.hv === SIGNED ? `Entry #${entry.seq} has a wrong signature (changed after it was written)` : `Entry #${entry.seq} was changed after it was written (hash mismatch)` };
+        }
+      }
+      if (!problem && known && entry.seq === known.seq && entry.hash !== known.hash) {
+        problem = { brokenAt: entry.seq, reason: `Entry #${entry.seq} is not the entry that was written (the chain was rewritten)` };
+      }
+      if (problem) break;
+      prevHash = entry.hash;
+      lastHash = entry.hash;
+      expected += 1;
+    }
+  }
+  const count = expected - 1;
+  if (!problem && sawSigned && !anchor) {
+    problem = { brokenAt: null, reason: "Signed entries exist but the record of where signing started is missing" };
+  }
+  if (!problem && known && known.seq > count) {
+    problem = { brokenAt: count + 1, reason: `Entries after #${count} are missing (the newest written was #${known.seq})` };
+  }
+  const result = { intact: !problem, count, head: { seq: count, hash: lastHash }, signedFrom, signing: Boolean(key), ...(unchecked ? { unchecked: true } : {}) };
+  return problem ? { ...result, ...problem } : result;
 };
 
 /* ------------------------------------------------------------------------------------------------ */

@@ -1,4 +1,5 @@
-FROM node:20-bookworm-slim
+# Node.js 22 LTS (20 reached its end of life on 2026-04-30 and gets no more security fixes)
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
@@ -29,8 +30,10 @@ RUN python3 -m venv /opt/bg-remover \
   && /opt/bg-remover/bin/pip install --no-cache-dir -r /tmp/bg-remover-requirements.txt \
   && /opt/bg-remover/bin/python -c "from rembg import new_session; new_session('birefnet-general'); new_session('isnet-general-use')"
 
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev || npm install --omit=dev
+# exactly the versions in the lockfile (a lockfile out of step with package.json stops the build instead of
+# quietly installing other versions)
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY . .
 

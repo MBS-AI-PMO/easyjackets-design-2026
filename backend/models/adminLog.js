@@ -36,6 +36,9 @@ const adminLogSchema = new mongoose.Schema(
     userAgent: { type: String, default: "" },
     prevHash: { type: String, required: true },
     hash: { type: String, required: true },
+    // how `hash` was made: missing = sha256 (entries before signing), 2 = HMAC-SHA256 with the ledger key,
+    // which lives in the server's environment, not the database (helpers/adminLedger.js)
+    hv: { type: Number },
   },
   {
     collection: "adminlogs",

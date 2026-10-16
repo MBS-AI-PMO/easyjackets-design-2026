@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import AdminLog from "../models/adminLog.js";
 import userModel from "../models/userModel.js";
-import { GENESIS_HASH, hashEntry, ledgerHead } from "../helpers/adminLedger.js";
+import { verifyLedger } from "../helpers/adminLedger.js";
+import SecurityEvent from "../models/securityEvent.js";
+import { recordSecurityEvent } from "../helpers/securityEvents.js";
 
 // Admin → Activity Log: reading the admin activity ledger (models/adminLog.js, written by helpers/adminLedger.js).
 // Read only: there is deliberately no route that changes or removes an entry.
@@ -138,34 +140,9 @@ export const adminLogAreas = async (req, res) => {
 // says whether every entry is there, links to the one before and still has the contents it was written with.
 export const verifyAdminLogs = async (req, res) => {
   try {
-    // entries this process wrote before the walk began must all be found, the last one unchanged
-    const known = ledgerHead();
-    let expected = 1;
-    let prevHash = GENESIS_HASH;
-    let problem = null; // { brokenAt, reason }
-    // leaving the loop early closes the cursor
-    for await (const entry of AdminLog.find({}).sort({ seq: 1 }).lean().cursor({ batchSize: 500 })) {
-      if (entry.seq !== expected) {
-        problem = entry.seq > expected
-          ? { brokenAt: expected, reason: `Entry #${expected} is missing` }
-          : { brokenAt: entry.seq, reason: `Entry #${entry.seq} is out of order` };
-      } else if (entry.prevHash !== prevHash) {
-        problem = { brokenAt: entry.seq, reason: `Entry #${entry.seq} does not link to the entry before it (prevHash mismatch)` };
-      } else if (hashEntry(entry) !== entry.hash) {
-        problem = { brokenAt: entry.seq, reason: `Entry #${entry.seq} was changed after it was written (hash mismatch)` };
-      } else if (known && entry.seq === known.seq && entry.hash !== known.hash) {
-        problem = { brokenAt: entry.seq, reason: `Entry #${entry.seq} is not the entry that was written (the chain was rewritten)` };
-      }
-      if (problem) break;
-      prevHash = entry.hash;
-      expected += 1;
-    }
-    const count = expected - 1;
-    if (!problem && known && known.seq > count) {
-      problem = { brokenAt: count + 1, reason: `Entries after #${count} are missing (the newest written was #${known.seq})` };
-    }
-    if (problem) return res.status(200).json({ success: true, intact: false, ...problem, count });
-    res.status(200).json({ success: true, intact: true, count });
+    const result = await verifyLedger();
+    if (!result.intact) recordSecurityEvent({ type: "ledger-broken", req, user: req.adminUser, details: { reason: result.reason } });
+    res.status(200).json({ success: true, ...result });
   } catch (error) {
     console.error("Admin log verify:", error);
     res.status(500).json({ success: false, message: "Could not check the activity log" });
@@ -227,5 +204,40 @@ export const exportAdminLogs = async (req, res) => {
     console.error("Admin log export:", error);
     if (!res.headersSent) res.status(500).json({ success: false, message: "Could not export the activity log" });
     else res.end();
+  }
+};
+
+// GET /api/v1/admin-logs/security-events — every account's security events (models/securityEvent.js), newest
+// first: failed and locked sign-ins, resets, email changes, refused admin access, rate limits.
+// ?type=&q=&page=&limit=
+export const listSecurityEvents = async (req, res) => {
+  try {
+    const filter = {};
+    const type = oneText(req.query.type, 40);
+    if (type) filter.type = type;
+    const search = oneText(req.query.q, MAX_SEARCH);
+    if (search) {
+      const pattern = new RegExp(escapeRegex(search), "i");
+      filter.$or = [{ email: pattern }, { ip: pattern }];
+    }
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || DEFAULT_LIMIT, 1), MAX_LIMIT);
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [events, total, lastDay] = await Promise.all([
+      SecurityEvent.find(filter).sort({ at: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      SecurityEvent.countDocuments(filter),
+      SecurityEvent.aggregate([{ $match: { at: { $gte: since } } }, { $group: { _id: "$type", count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+    ]);
+    res.status(200).json({
+      success: true,
+      events,
+      total,
+      page,
+      pages: Math.max(Math.ceil(total / limit), 1),
+      lastDay: lastDay.map((row) => ({ type: row._id, count: row.count })),
+    });
+  } catch (error) {
+    console.error("Security events list:", error);
+    res.status(500).json({ success: false, message: "Could not load the security events" });
   }
 };

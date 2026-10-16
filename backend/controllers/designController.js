@@ -25,6 +25,8 @@ import formidable from "formidable";
 import crypto from "crypto";
 import Order from "../models/orderModel.js";
 import { isOneEmail } from "../helpers/emailAddress.js";
+import { designTicketKey } from "../helpers/tokenKeys.js";
+import { loadDesignPrices, priceDesign } from "../helpers/cartPricing.js";
 
 // Who may change a saved design (they used to be open to anyone, even after the jacket was ordered):
 //   - a cart design: the browser that added it to the cart, which got its private editKey (sent back as
@@ -40,7 +42,8 @@ const sameSecret = (a, b) => {
 };
 const readDesignTicket = (req) => {
   try {
-    const ticket = JWT.verify(String(req.get('x-design-ticket') || ''), process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    // signed with the design-ticket key (helpers/tokenKeys.js): a sign-in token is never a ticket
+    const ticket = JWT.verify(String(req.get('x-design-ticket') || ''), designTicketKey(), { algorithms: ['HS256'] });
     return ticket?.purpose === 'design-ticket' ? ticket : null;
   } catch {
     return null;
@@ -58,8 +61,8 @@ export const createDesignTicket = async (req, res) => {
     if (!product) return res.status(404).json({ success: false, message: 'Product not found.' });
     const ticket = JWT.sign(
       { purpose: 'design-ticket', productId, designId: product.designId ? String(product.designId) : null },
-      process.env.JWT_SECRET,
-      { expiresIn: DESIGN_TICKET_LIFETIME }
+      designTicketKey(),
+      { expiresIn: DESIGN_TICKET_LIFETIME, algorithm: 'HS256' }
     );
     return res.status(200).json({ success: true, ticket });
   } catch (error) {
@@ -67,6 +70,28 @@ export const createDesignTicket = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Could not prepare the builder.' });
   }
 };
+
+// What a saved design is made of: only these fields are taken from a request (it used to store whatever was
+// sent, e.g. a userId, or a made-up custom_price the cart and the share email then showed). The price shown
+// with a design is worked out here, as checkout does (helpers/cartPricing.js priceDesign).
+const DESIGN_FIELDS = ['title', 'styles', 'advance', 'colors', 'materials', 'sizes', 'designs', 'globals', 'jackets'];
+const designFields = (source = {}) => {
+  const out = {};
+  for (const key of DESIGN_FIELDS) if (source[key] !== undefined) out[key] = source[key];
+  return out;
+};
+const displayPrice = async (design, sentPrice) => {
+  try {
+    const price = priceDesign(design, await loadDesignPrices());
+    if (Number.isFinite(price) && price > 0) return price;
+  } catch (error) {
+    console.error('Design price:', error.message);
+  }
+  // the price list could not be read: the builder's own figure, as before (checkout prices again anyway)
+  const sent = Number(sentPrice);
+  return Number.isFinite(sent) && sent > 0 ? sent : undefined;
+};
+const isDesignId = (value) => mongoose.Types.ObjectId.isValid(String(value || '')) && /^[0-9a-f]{24}$/i.test(String(value));
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -207,12 +232,13 @@ export const save_design_to_cart = async (req, res) => {
 
     // the cart design's private key, given to this browser only (it is needed to change the design)
     const editKey = newEditKey()
-    delete rest.editKey
+    const fields = designFields(rest)
 
     const save_design = await Design.create({
       categoryCode,
       ...designImageUrls(req, { custom_image, custom_image_back, custom_image_left, custom_image_right }),
-      ...rest,
+      ...fields,
+      custom_price: await displayPrice(fields, rest.custom_price),
       editKey
     })
 
@@ -254,8 +280,12 @@ export const save_images = async (req, res) => {
     }
     try {
       const file = files.file?.[0];
-      if (!file || !String(file.mimetype || '').startsWith('image/')) {
-        return res.status(400).send({ success: false, message: 'Please upload a picture (JPG, PNG, WebP, GIF or SVG).' });
+      // photos only: an SVG is a document the image library would have to run through its own parser, for
+      // anyone, so it is refused here (logos as SVG: save them as PNG first)
+      const type = String(file?.mimetype || '').toLowerCase();
+      const name = String(file?.originalFilename || '').toLowerCase();
+      if (!file || !type.startsWith('image/') || type.includes('svg') || name.endsWith('.svg') || name.endsWith('.svgz')) {
+        return res.status(400).send({ success: false, message: 'Please upload a picture (JPG, PNG, WebP or GIF).' });
       }
       const url = await uploadToS3(file)
       return res.status(200).json({
@@ -306,7 +336,7 @@ export const save_design_to_product = async (req, res) => {
         message: 'Open the builder from the admin Products screen to design this product.'
       });
     }
-    delete rest.editKey;
+    const fields = designFields(rest);
 
     const product = await productModel.findById(productId).select('_id');
     if (!product) {
@@ -324,7 +354,8 @@ export const save_design_to_product = async (req, res) => {
     const save_design = await Design.create({
       categoryCode,
       ...designImageUrls(req, { custom_image, custom_image_back, custom_image_left, custom_image_right }),
-      ...rest
+      ...fields,
+      custom_price: await displayPrice(fields, rest.custom_price),
     })
 
     await productModel.findByIdAndUpdate(
@@ -354,6 +385,9 @@ export const save_design_to_product = async (req, res) => {
 export const getCartById = async (req, res) => {
   try {
     const { cartId } = req.params
+    if (!isDesignId(cartId)) {
+      return res.status(404).json({ success: false, message: 'Cart not found.' })
+    }
 
     const getCart = await CustomCart.findOne({ _id: cartId }).populate('designId')
 
@@ -388,21 +422,30 @@ const DESIGN_SNAPSHOT_FIELDS = {
 };
 
 export const getDesignById = async (req, res) => {
-  const { designId } = req.params
-  const getDesign = await Design.findOne({ _id: designId }, DESIGN_SNAPSHOT_FIELDS)
+  try {
+    const { designId } = req.params
+    // a malformed id used to throw outside any handler, and the request was never answered
+    if (!isDesignId(designId)) {
+      return res.status(404).json({ success: false, message: 'Design not found.', data: null })
+    }
+    const getDesign = await Design.findOne({ _id: designId }, DESIGN_SNAPSHOT_FIELDS)
 
-  return res.status(200).json({
-    success: 'true',
-    message: 'getDesign',
-    data: getDesign
-  })
+    return res.status(200).json({
+      success: 'true',
+      message: 'getDesign',
+      data: getDesign
+    })
+  } catch (error) {
+    console.error('getDesign:', error.message)
+    return res.status(500).json({ success: false, message: 'Could not load the design.' })
+  }
 }
 
 export const updateDesign = async (req, res) => {
   try {
     const { designId } = req.params
     let { custom_image, custom_image_back, custom_image_left, custom_image_right, ...rest } = req.body
-    delete rest.editKey
+    const fields = designFields(rest)
 
     if (!mongoose.Types.ObjectId.isValid(String(designId))) {
       return res.status(404).json({ success: false, message: 'Design not found.' })
@@ -423,8 +466,10 @@ export const updateDesign = async (req, res) => {
       if (ordered) {
         return res.status(409).json({ success: false, message: 'This jacket has been ordered, so its design can no longer be changed. Contact us for any change.' })
       }
-      // a cart design saved before keys existed has none: still the customer's to change
-      allowed = !catalogue && (findDesign.editKey ? sameSecret(req.get('x-design-key'), findDesign.editKey) : true)
+      // only with the design's own key. A design without one (saved before keys existed, or a shared copy:
+      // snapshotSharedDesign) can no longer be changed by anyone who merely has its id; it can still be
+      // opened in the builder and added to the cart as a new design.
+      allowed = !catalogue && Boolean(findDesign.editKey) && sameSecret(req.get('x-design-key'), findDesign.editKey)
     }
     if (!allowed) {
       return res.status(403).json({ success: false, message: 'This design can only be changed from the cart it was added to.' })
@@ -436,7 +481,8 @@ export const updateDesign = async (req, res) => {
 
     const updateDesign = await Design.findOneAndUpdate({ _id: designId }, {
       ...designImageUrls(req, { custom_image, custom_image_back, custom_image_left, custom_image_right }),
-      ...rest
+      ...fields,
+      custom_price: await displayPrice({ ...findDesign.toObject(), ...fields }, rest.custom_price),
     }, { runValidators: true })
 
     return res.status(200).json({
@@ -458,7 +504,8 @@ export const updateDesign = async (req, res) => {
 // update cart and adds userId
 export const getAllCustomCart = async (req, res) => {
   try {
-    const { carts } = req.body
+    // cart ids only (a list of up to 50): anything else is ignored
+    const carts = Array.isArray(req.body?.carts) ? req.body.carts.filter(isDesignId).slice(0, 50) : []
     // if(carts) {
     //     for(let cart in carts){
     //         await CustomCart.findOneAndUpdate({_id : cart}, {userId : req.user._id} , { runValidators : true})
@@ -518,11 +565,16 @@ const snapshotSharedDesign = async (req, design = {}) => {
     upload(design.custom_image_right),
   ]);
 
-  // Unknown keys (product_id, product_qty) are dropped by the schema.
+  // Only the design's own fields, its price worked out here, and a key nobody is given: a shared copy is a
+  // bookmark that can be opened and copied, never changed (it used to be stored as sent, price included, and
+  // stay open to changes by anyone with its id).
+  const fields = designFields(design);
   const saved = await Design.create({
-    ...design,
+    ...fields,
     categoryCode: String(categoryCode),
     ...designImageUrls(req, { custom_image, custom_image_back, custom_image_left, custom_image_right }),
+    custom_price: await displayPrice(fields, design.custom_price),
+    editKey: newEditKey(),
   });
 
   return { designId: saved._id, categoryCode: String(categoryCode) };
@@ -546,10 +598,12 @@ export const shareDesign = async (req, res) => {
     }
 
     const jacket = String(design?.globals?.catName || 'Jacket').trim().replace(/s$/i, '')
+    // the price shown in the email and its PDF: worked out here (the one sent by the browser is not used)
+    const price = await displayPrice(designFields(design || {}), design?.custom_price)
     const result = await sendFileEmail(
       `Your custom ${jacket.toLowerCase()} design · Easy Jackets`,
       email,
-      { ...design, shareName: name },
+      { ...design, custom_price: price, shareName: name },
       '/views/design.ejs',
       {
         resumeUrl: resumeDesignUrl(snapshot?.designId, snapshot?.categoryCode),

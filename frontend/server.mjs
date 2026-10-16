@@ -11,6 +11,7 @@
 //   - writes the admin's site tags (Search Console verification and the like) into the head;
 //   - caches and compresses files: hashed build files for a year, fonts and site images for 30 days.
 // Run: `npm run build && node server.mjs` (PORT, default 80; API from the build's VITE_API_URL or SEO_API_URL).
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -86,6 +87,36 @@ const SECURITY_HEADERS = {
   'Content-Security-Policy': "base-uri 'self'; object-src 'none'; frame-ancestors 'self'",
   'Strict-Transport-Security': 'max-age=15552000',
 };
+
+// A page's Content-Security-Policy: which scripts may run. The site's own files, the scripts this server
+// writes into the page (each carries this response's one-time nonce, including the admin's inline site tags),
+// and the analytics and marketing services site tags may load (SCRIPT_HOST_ROOTS, the same list the API keeps
+// for site tags). Anything else, e.g. a script slipped into a page by an attacker, does not run. (The policy
+// used to cover framing only.) Styles, images, fonts and API calls stay open to HTTPS, as the shop needs.
+const scriptHosts = () => SCRIPT_HOST_ROOTS.flatMap((root) => [`https://${root}`, `https://*.${root}`]).join(' ');
+// the API this storefront talks to, by name (on a developer's machine it is plain http on another port)
+const apiSource = () => { try { return new URL(API_ORIGIN).origin; } catch { return ''; } };
+const pagePolicy = (nonce) => [
+  "default-src 'self'",
+  `script-src 'self' 'nonce-${nonce}' ${scriptHosts()}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  `img-src 'self' data: blob: https: ${apiSource()}`.trim(),
+  "font-src 'self' data: https://fonts.gstatic.com",
+  `connect-src 'self' https: ${apiSource()}`.trim(),
+  "media-src 'self' blob: https:",
+  "frame-src 'self' https:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  ...(apiSource().startsWith('https:') ? ['upgrade-insecure-requests'] : []),
+].join('; ');
+// every script element this server sends (and script preloads) gets the nonce
+const withNonce = (html, nonce) => html
+  .replace(/<script\b(?![^>]*\snonce=)/gi, `<script nonce="${nonce}"`)
+  .replace(/<link\b(?=[^>]*\brel="(?:modulepreload|preload)")(?![^>]*\snonce=)/gi, `<link nonce="${nonce}"`);
 
 // ── routes: pages, redirects, 404 ────────────────────────────────────────────
 
@@ -207,7 +238,29 @@ const isDeferredAnalyticsTag = (tag) => {
   const content = String(tag?.content || '').toLowerCase();
   return tag?.tagType === 'script' && (src.includes('googletagmanager.com') || src.includes('google-analytics.com') || content.includes('gtag(') || content.includes('datalayer'));
 };
+// The same rules the API applies when a tag is saved (backend/helpers/siteTagRules.js), so a tag saved before
+// them is not written either: no event attributes (onload …), no javascript:/data: addresses, and scripts from
+// an outside address only from the known analytics and marketing services.
+const SCRIPT_HOST_ROOTS = [
+  'googletagmanager.com', 'google-analytics.com', 'googleadservices.com', 'google.com', 'gstatic.com', 'doubleclick.net',
+  'facebook.net', 'hotjar.com', 'clarity.ms', 'ahrefs.com', 'bing.com', 'licdn.com', 'tiktok.com', 'pinimg.com',
+  'sc-static.net', 'klaviyo.com', 'hs-scripts.com', 'hs-analytics.net', 'trustpilot.com', 'tawk.to',
+  ...String(process.env.SITE_TAG_SCRIPT_HOSTS || '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean),
+];
+const scriptSourceAllowed = (src) => {
+  try {
+    const url = new URL(String(src));
+    const host = url.hostname.toLowerCase();
+    return url.protocol === 'https:' && SCRIPT_HOST_ROOTS.some((root) => host === root || host.endsWith(`.${root}`));
+  } catch {
+    return false;
+  }
+};
+const safeAttribute = ([key, value]) => /^[A-Za-z_:][-A-Za-z0-9_:.]*$/.test(key) && !/^on/i.test(key)
+  && !(/^(src|href|action|formaction|xlink:href|poster|data)$/i.test(key) && /^\s*(javascript|data|vbscript):/i.test(String(value)));
+const siteTagAllowed = (tag) => !(tag?.tagType === 'script' && tag?.attributes?.src && !scriptSourceAllowed(tag.attributes.src));
 const renderTagAttributes = (attributes = {}) => Object.entries(attributes || {})
+  .filter(safeAttribute)
   .filter(([key, value]) => /^[A-Za-z_:][-A-Za-z0-9_:.]*$/.test(key) && value !== undefined && value !== null && value !== false)
   .map(([key, value]) => (value === true ? ` ${key}` : ` ${key}="${escapeHtml(String(value))}"`))
   .join('');
@@ -228,7 +281,7 @@ const isExcludedSiteTag = (tag) => {
     || name === 'theme-color' || name === 'viewport';
 };
 const renderSiteTags = (tags = []) => tags
-  .filter((tag) => tag && SITE_TAG_TYPES.has(tag.tagType) && !isExcludedSiteTag(tag) && !isDeferredAnalyticsTag(tag) && !isSeoManagedTag(tag))
+  .filter((tag) => tag && SITE_TAG_TYPES.has(tag.tagType) && siteTagAllowed(tag) && !isExcludedSiteTag(tag) && !isDeferredAnalyticsTag(tag) && !isSeoManagedTag(tag))
   // the same tag saved twice (two identical verification metas) is written once
   .filter((tag, index, all) => all.findIndex((t) => t.tagType === tag.tagType && JSON.stringify(t.attributes || {}) === JSON.stringify(tag.attributes || {}) && (t.content || '') === (tag.content || '')) === index)
   .map((tag) => {
@@ -385,7 +438,7 @@ const pageContent = async ({ route, seo, match, page }) => {
       `<nav aria-label="Related pages"><h2>Related pages</h2><ul>${landing.links.map((l) => `<li><a href="${escapeHtml(l.to)}">${escapeHtml(l.label)}</a></li>`).join('')}</ul></nav>`,
     ].join('');
     // seo-render's text has the breadcrumb, H1, description and the page's questions: the copy goes after the H1
-    html = html.replace(/(<h1>[\s\S]*?<\/h1>)\s*(<p>[\s\S]*?<\/p>)?/, `$1${body}`)
+    html = html.replace(/(<h1>[\s\S]*?<\/h1>)\s*(<p>[\s\S]*?<\/p>)?/, (match, heading) => `${heading}${body}`) // the H1 kept, the paragraph after it replaced by the copy; a function, as '$1' in the text would be a pattern
       .replace(/<nav aria-label="More from Easy Jackets">[\s\S]*?<\/nav>/, '');
   }
   return html ? `<div class="ez-ssr">${html}</div>` : '';
@@ -604,7 +657,8 @@ const serveApp = async (req, res, route, searchParams) => {
   // the quick answer goes straight under the page's H1, with its FAQPage schema (G-3)
   let content = pageText;
   if (answer) {
-    content = content.replace(/(<\/h1>(?:\s*<p>By [\s\S]*?<\/p>)?)/, `$1${answer.html}`);
+    // a function, not a replacement string: in a string "$1…" is a pattern, so "$150" in an answer became "</h1>50"
+    content = content.replace(/(<\/h1>(?:\s*<p>By [\s\S]*?<\/p>)?)/, (heading) => `${heading}${answer.html}`);
     seo = { ...seo, jsonLd: [...(seo.jsonLd || []), answer.schema] };
   }
 
@@ -616,9 +670,12 @@ const serveApp = async (req, res, route, searchParams) => {
     content ? SSR_STYLE : '',
   ].filter(Boolean).join('\n');
   let html = (seo ? stripStaticSeo(readIndex()) : readIndex()).replace('</head>', `${head}\n</head>`);
-  if (content) html = html.replace('<div id="root"></div>', `<div id="root">${content}</div>`);
+  if (content) html = html.replace('<div id="root"></div>', () => `<div id="root">${content}</div>`);
+  const nonce = crypto.randomBytes(16).toString('base64');
+  html = withNonce(html, nonce);
 
   res.statusCode = status;
+  res.setHeader('Content-Security-Policy', pagePolicy(nonce));
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   res.setHeader('Vary', 'Accept-Encoding');

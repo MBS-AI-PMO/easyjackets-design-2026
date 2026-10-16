@@ -24,12 +24,8 @@ const safeHref = (raw = '') => {
   return '';
 };
 
-/** Article HTML from the admin editor → the safe subset. An H1 inside a post becomes an H2: the title is the page's one H1. */
-export const sanitizeArticleHtml = (html = '') =>
-  String(html || '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(DROPPED_WITH_CONTENT, '')
-    .replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>/g, (tag, rawName, attrs) => {
+// One pass over the tags: kept ones are rewritten in their exact form, everything else goes.
+const passTags = (html) => html.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>/g, (tag, rawName, attrs) => {
       let name = rawName.toLowerCase();
       if (name === 'h1') name = 'h2';
       if (name === 'h5' || name === 'h6') name = 'h4';
@@ -42,7 +38,23 @@ export const sanitizeArticleHtml = (html = '') =>
         return href ? `<a href="${escapeHtml(href)}">` : '<a>';
       }
       return `<${name}>`;
-    })
+    });
+
+// Repeated until nothing changes: removing one tag can join the text around it into a new one
+// ("<<x>a href=\"javascript:…\">" became a live link after a single pass).
+const allTags = (html) => {
+  let current = html;
+  for (let i = 0; i < 10; i += 1) {
+    const next = passTags(current.replace(/<!--[\s\S]*?-->/g, '').replace(DROPPED_WITH_CONTENT, ''));
+    if (next === current) return next;
+    current = next;
+  }
+  return current.replace(/</g, '&lt;'); // still changing after 10 passes: nothing is trusted
+};
+
+/** Article HTML from the admin editor → the safe subset. An H1 inside a post becomes an H2: the title is the page's one H1. */
+export const sanitizeArticleHtml = (html = '') =>
+  allTags(String(html || ''))
     .replace(LEFTOVER_LT, '&lt;')
     .replace(/(\s*<p>\s*(?:&nbsp;|\s)*<\/p>)+/gi, '')
     .replace(/<(\/?)h([2-4])>/g, stepHeadings())

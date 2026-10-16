@@ -48,15 +48,36 @@ export const readOwnUpload = async (url) => {
   }
 };
 
+// Pictures are only ever fetched from the shop's own image hosts, over HTTPS (an order's pictures are its
+// products' and designs' own uploads). Any other address is left as it is: the server used to download whatever
+// address it was given, internal ones included, which anyone could trigger through a form.
+const hostOf = (value) => {
+  try { return value ? new URL(value).hostname.toLowerCase() : ''; } catch { return ''; }
+};
+const imageHosts = () => new Set([
+  'easyjackets.com', 'www.easyjackets.com', 'api.easyjackets.com', 'api2.easyjackets.com',
+  'res.cloudinary.com', 'easyjacket.s3.amazonaws.com',
+  hostOf(process.env.UPLOADS_PUBLIC_BASE_URL), hostOf(process.env.AWS_FILE_PATH), hostOf(process.env.LEGACY_UPLOADS_URL),
+].filter(Boolean));
+const mayFetch = (url) => {
+  try {
+    const target = new URL(url);
+    return target.protocol === 'https:' && !target.username && !target.password && !target.port
+      && imageHosts().has(target.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+};
+
 const fetchImage = async (url) => {
   const local = await readOwnUpload(url);
   if (local) return local;
-  if (!/^https?:\/\//i.test(url)) return null;
+  if (!mayFetch(url)) return null;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    const response = await fetch(url, { signal: controller.signal, redirect: 'error' });
     if (!response.ok) return null;
     if (!(response.headers.get('content-type') || '').startsWith('image/')) return null;
     const buffer = Buffer.from(await response.arrayBuffer());
@@ -96,7 +117,7 @@ export const inlineCartImages = async (data) => {
       attachments.push({ filename, content: await toPng(raw), cid });
       return `cid:${cid}`;
     } catch (error) {
-      console.warn(`Invoice image could not be inlined (${source}):`, error.message);
+      console.warn(`Invoice image could not be inlined (${JSON.stringify(source.slice(0, 200))}):`, error.message);
       return source;
     }
   };

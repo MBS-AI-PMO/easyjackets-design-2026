@@ -136,7 +136,9 @@ export const builderUrl = ({ code, design, designedit, key } = {}) => {
   if (code) url.searchParams.set('id', code);
   if (design) url.searchParams.set('design', design);
   if (designedit) url.searchParams.set('designedit', designedit);
-  if (designedit && key) url.searchParams.set('key', key); // the cart design's private key (lib/designs.js)
+  // the cart design's private key (lib/designs.js), after "#": never sent to a server or in a Referer, and the
+  // builder takes it out of the address bar as soon as it has read it (custom-jacket/src/utils/axiosConfig.js)
+  if (designedit && key) url.hash = new URLSearchParams({ key }).toString();
   return url.toString();
 };
 /** The builder opened on this product's own design. */

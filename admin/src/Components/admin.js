@@ -123,8 +123,9 @@ const AdminTable = () => {
             return;
         }
 
-        if (newUser.password.length < 6) {
-            setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+        // admin passwords: at least 12 characters (the server checks the full rule)
+        if (newUser.password.length < 12) {
+            setMessage({ type: 'error', text: 'Password must be at least 12 characters' });
             return;
         }
 
@@ -531,7 +532,7 @@ const AdminTable = () => {
                                     required
                                     margin="normal"
                                     disabled={submitting}
-                                    helperText="Minimum 6 characters required"
+                                    helperText="At least 12 characters"
                                     sx={textFieldStyle}
                                     InputProps={{
                                         startAdornment: (

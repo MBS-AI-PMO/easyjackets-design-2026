@@ -1,4 +1,5 @@
 import formidable from "formidable";
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 import slugify from "slugify";
 import FabricColor from "../models/fabricColor.js";
 import FabricSection from "../models/fabricSection.js";
@@ -149,7 +150,7 @@ const parseRequest = (req) =>
       return;
     }
 
-    const form = formidable({ multiples: false });
+    const form = adminForm({ multiples: false });
     form.parse(req, (error, fields, files) => {
       if (error) reject(error);
       else resolve({ fields, files });

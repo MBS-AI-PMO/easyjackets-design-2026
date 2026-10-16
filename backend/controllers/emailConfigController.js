@@ -102,13 +102,26 @@ export const testEmailConfig = async (req, res) => {
             smtpPort: Number(body.smtpPort) || stored.smtpPort,
             smtpSecure: body.smtpSecure === undefined ? stored.smtpSecure : (body.smtpSecure === true || body.smtpSecure === 'true'),
             smtpUser: body.smtpUser?.trim() || stored.smtpUser,
-            smtpPass: (typeof body.smtpPass === 'string' && body.smtpPass !== '') ? body.smtpPass : stored.smtpPass,
+            smtpPass: (typeof body.smtpPass === 'string' && body.smtpPass !== '') ? body.smtpPass : '',
             fromName: body.fromName?.trim() ?? stored.fromName,
             fromEmail: body.fromEmail?.trim() || stored.fromEmail,
             replyToEmail: body.replyToEmail?.trim() ?? stored.replyToEmail,
             adminEmail: body.adminEmail?.trim() || stored.adminEmail,
         };
         candidate.fromEmail = candidate.fromEmail || candidate.smtpUser;
+
+        // The saved password is only sent to the saved mail server, for the saved login. Testing another
+        // server or login needs its password typed in (it used to send the saved one to any server named in
+        // the request, so a stolen admin session could collect the mailbox password).
+        if (!candidate.smtpPass) {
+            const sameServer = String(candidate.smtpHost || '').toLowerCase() === String(stored.smtpHost || '').toLowerCase()
+                && Number(candidate.smtpPort) === Number(stored.smtpPort)
+                && String(candidate.smtpUser || '').toLowerCase() === String(stored.smtpUser || '').toLowerCase();
+            if (!sameServer) {
+                return res.status(400).send({ success: false, stage: 'authentication', message: 'Enter the password for this mail server and login to test them (the saved password is only used with the saved server and login).' });
+            }
+            candidate.smtpPass = stored.smtpPass;
+        }
 
         const recipient = (body.testRecipient || '').trim() || candidate.adminEmail || candidate.smtpUser;
         if (!recipient) {

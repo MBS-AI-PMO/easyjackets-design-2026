@@ -858,9 +858,11 @@ function Products({ section = "jackets" }) {
                             toast.error(error?.response?.data?.message || 'Could not open the builder for this product.');
                             return;
                           }
+                          // the ticket after "#": never sent to a server or in a Referer; the builder takes it out
+                          // of the address bar once read (custom-jacket/src/utils/axiosConfig.js)
                           const url = product.designId
-                            ? `${baseUrl}/?id=${product.category?.code}&designedit=${product.designId}&ticket=${encodeURIComponent(ticket)}`
-                            : `${baseUrl}/?id=${product.category?.code}&product=${product._id}&ticket=${encodeURIComponent(ticket)}`;
+                            ? `${baseUrl}/?id=${product.category?.code}&designedit=${product.designId}#ticket=${encodeURIComponent(ticket)}`
+                            : `${baseUrl}/?id=${product.category?.code}&product=${product._id}#ticket=${encodeURIComponent(ticket)}`;
                           window.location.href = url;
                         }}
                         sx={{

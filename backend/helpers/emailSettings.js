@@ -120,6 +120,10 @@ export const buildTransporter = (settings) => nodemailer.createTransport({
     host: settings.smtpHost,
     port: settings.smtpPort,
     secure: settings.smtpSecure,
+    // without implicit TLS (port 587), the connection must still be upgraded to TLS before the login is
+    // sent: a server or network that skips the upgrade is refused instead of getting the password in clear
+    // (a mail server on this machine, for development, is exempt)
+    requireTLS: !settings.smtpSecure && !/^(localhost|127\.0\.0\.1|::1)$/i.test(String(settings.smtpHost || '')),
     auth: { user: settings.smtpUser, pass: settings.smtpPass },
     connectionTimeout: 20000,
     greetingTimeout: 20000,

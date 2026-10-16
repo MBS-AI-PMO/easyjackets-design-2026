@@ -5,6 +5,10 @@ import { getTransporter, getEmailSettings, formatFrom } from './emailSettings.js
 import { inlineCartImages } from './invoiceImages.js';
 import { prepareOrderEmail } from './orderEmailData.js';
 
+// an address as it is written to the server log: the first letter and the domain (customers' addresses do not
+// pile up in container logs)
+const masked = (address) => String(address || '').replace(/^([^@\s]?)[^@\s]*@/, '$1***@');
+
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
@@ -23,7 +27,7 @@ export const sendEmail = async (subject, email, data, location, options = {}) =>
     const settings = await getEmailSettings();
 
     if (!settings.enabled) {
-        console.log(`✉️  Email sending is disabled in admin settings - skipped "${subject}" to ${email}`);
+        console.log(`✉️  Email sending is disabled in admin settings - skipped "${subject}" to ${masked(email)}`);
         return { skipped: true };
     }
 
@@ -61,15 +65,15 @@ export const sendEmail = async (subject, email, data, location, options = {}) =>
             info = await transporter.sendMail(mailOptions);
         } catch (first) {
             // one retry: a busy mail server or a dropped connection usually lets the second attempt through
-            console.warn(`✉️  "${subject}" to ${email} failed (${first.code || first.message}), retrying once...`.yellow);
+            console.warn(`✉️  "${subject}" to ${masked(email)} failed (${first.code || first.message}), retrying once...`.yellow);
             await new Promise((r) => setTimeout(r, 2500));
             info = await (await getTransporter()).sendMail(mailOptions);
         }
-        console.log(`✅ Email sent to ${email}:`.green, info.response);
+        console.log(`✅ Email sent to ${masked(email)}:`.green, info.response);
         return info;
     } catch (error) {
         console.error("❌ CRITICAL EMAIL ERROR:".red);
-        console.error("- To:".yellow, email, "| Subject:".yellow, subject);
+        console.error("- To:".yellow, masked(email), "| Subject:".yellow, subject);
         console.error("- Host:".yellow, `${settings.smtpHost}:${settings.smtpPort}`, "| User:".yellow, settings.smtpUser, "| From:".yellow, settings.fromEmail);
         console.error("- Message:".yellow, error.message);
         console.error("- Code:".yellow, error.code, "| Response:".yellow, error.response);

@@ -454,7 +454,7 @@ export default function BulkOrders() {
       </section>
       {/* faq */}
       {/* FAQ */}
-      {faqJsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} /> : null}
+      {faqJsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, '\\u003c') }} /> : null}
       <FaqGroups
         id="faq"
         className="ez-faq-layout-bulk"

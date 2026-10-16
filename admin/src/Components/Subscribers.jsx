@@ -65,7 +65,12 @@ const Subscribers = () => {
     };
 
     const exportCsv = () => {
-        const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+        // a value a spreadsheet would run as a formula (=, +, -, @ …) starts with ' (anyone can subscribe any text)
+        const esc = (v) => {
+            let cell = String(v ?? '');
+            if (/^[=+\-@\t\r]/.test(cell)) cell = `'${cell}`;
+            return `"${cell.replace(/"/g, '""')}"`;
+        };
         const lines = [['Email', 'Status', 'Subscribed', 'Unsubscribed', 'Source'].join(',')]
             .concat(visible.map((r) => [r.email, r.status, r.subscribedAt ? moment(r.subscribedAt).format('YYYY-MM-DD HH:mm') : '', r.unsubscribedAt ? moment(r.unsubscribedAt).format('YYYY-MM-DD HH:mm') : '', r.source].map(esc).join(',')));
         const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' }));

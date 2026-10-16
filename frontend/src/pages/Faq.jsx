@@ -34,7 +34,7 @@ export default function FaqPage() {
     <div className="pg-faq">
       <Nav active="/faq" cta="shop" />
       <main id="main">
-      {schema ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} /> : null}
+      {schema ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} /> : null}
       {/* FAQ header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>

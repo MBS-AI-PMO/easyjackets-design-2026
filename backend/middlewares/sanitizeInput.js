@@ -4,8 +4,12 @@
 // like that, so nothing legitimate is lost. (server.mjs, before the routes.)
 const MAX_DEPTH = 32;
 
+class TooDeep extends Error {}
+
 const strip = (value, depth = 0) => {
-  if (!value || typeof value !== 'object' || depth > MAX_DEPTH || Buffer.isBuffer(value)) return;
+  if (!value || typeof value !== 'object' || Buffer.isBuffer(value)) return;
+  // deeper than any form or design of this site: refused rather than passed on unchecked
+  if (depth > MAX_DEPTH) throw new TooDeep();
   if (Array.isArray(value)) {
     value.forEach((item) => strip(item, depth + 1));
     return;
@@ -17,7 +21,12 @@ const strip = (value, depth = 0) => {
 };
 
 export const sanitizeInput = (req, res, next) => {
-  strip(req.body);
-  strip(req.query);
+  try {
+    strip(req.body);
+    strip(req.query);
+  } catch (error) {
+    if (error instanceof TooDeep) return res.status(400).json({ success: false, message: 'The request is nested too deeply.' });
+    throw error;
+  }
   next();
 };

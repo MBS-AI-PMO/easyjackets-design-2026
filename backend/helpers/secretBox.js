@@ -82,6 +82,13 @@ export const encryptSecret = (plain, field) => {
 export const decryptSecret = (stored, field) => {
   if (!stored) return '';
   if (!isEncrypted(stored)) {
+    // Every secret this site saves is encrypted (and the stored ones were migrated). A plain one can only
+    // have been written into the database directly: in production it is not used. (On a developer's
+    // machine it still works, with this warning.)
+    if (process.env.NODE_ENV === 'production') {
+      console.error(`A secret is stored in plain text${field ? ` (${field})` : ''} and was not used: save it again in the admin, or run scripts/encryptStoredSecrets.mjs --apply.`);
+      return '';
+    }
     console.warn(`A secret is stored in plain text${field ? ` (${field})` : ''}: run scripts/encryptStoredSecrets.mjs --apply.`);
     return stored;
   }

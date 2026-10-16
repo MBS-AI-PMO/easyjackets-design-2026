@@ -2,6 +2,7 @@
 // field (see models/patchPhotoModel.js). Files are stored under uploads/patches.
 import patchPhotoModel, { PATCH_TAGS } from "../models/patchPhotoModel.js";
 import formidable from "formidable";
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 import uploadToS3 from "../helpers/fileUpload.js";
 
 const FOLDER = 'patches';
@@ -73,7 +74,7 @@ const uploadPatchFiles = async (files) => {
 
 // Create: multipart with `image` file(s), `description`, optional `tags`.
 export const uploadPatchPhoto = async (req, res) => {
-    const form = formidable({ multiples: true });
+    const form = adminForm({ multiples: true });
     form.parse(req, async (err, fields, files) => {
         if (err) {
             return res.status(500).send({ success: false, message: 'Error parsing the files.' });
@@ -190,7 +191,7 @@ export const updatePatchPhoto = async (req, res) => {
         const { id } = req.params;
         const contentType = req.headers['content-type'] || '';
         if (contentType.includes('multipart/form-data')) {
-            const form = formidable({ multiples: true });
+            const form = adminForm({ multiples: true });
             return form.parse(req, async (err, fields, files) => {
                 if (err) return res.status(500).send({ success: false, message: 'Error parsing the files.' });
                 try {

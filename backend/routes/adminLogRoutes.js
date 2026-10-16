@@ -5,6 +5,7 @@ import {
   adminLogSummary,
   exportAdminLogs,
   listAdminLogs,
+  listSecurityEvents,
   verifyAdminLogs,
 } from "../controllers/adminLogController.js";
 
@@ -17,5 +18,7 @@ router.get("/admins", requireSignin, isAdmin, adminLogSummary);
 router.get("/areas", requireSignin, isAdmin, adminLogAreas);
 router.get("/verify", requireSignin, isAdmin, verifyAdminLogs);
 router.get("/export.csv", requireSignin, isAdmin, exportAdminLogs);
+// every account's security events (failed sign-ins, resets, refused access …)
+router.get("/security-events", requireSignin, isAdmin, listSecurityEvents);
 
 export default router;

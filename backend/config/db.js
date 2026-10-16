@@ -14,6 +14,12 @@ const connectDB = async () => {
     );
   } catch (err) {
     console.log(`Error in Mongodb ${err}`.bgRed.white);
+    // In production an API without its database only answers errors after long waits, while looking healthy:
+    // it stops instead, and Coolify starts it again (a developer's API keeps running, as before).
+    if (process.env.NODE_ENV === 'production') {
+      console.error('No database: stopping, so the container is restarted.');
+      process.exit(1);
+    }
   }
 };
 

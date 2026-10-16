@@ -31,7 +31,7 @@ export const proxyImage = async (req, res) => {
 
     if (target.protocol !== 'https:' || target.username || target.password || target.port
       || !proxyHosts().has(target.hostname.toLowerCase())) {
-      console.warn(`🛑 Blocked proxy request for: ${raw.slice(0, 200)}`);
+      console.warn(`🛑 Blocked proxy request for: ${JSON.stringify(raw.slice(0, 200))}`);
       return res.status(403).send("Forbidden: Domain not allowed");
     }
 
@@ -44,14 +44,17 @@ export const proxyImage = async (req, res) => {
       maxContentLength: PROXY_MAX_BYTES,
     });
 
-    const type = String(response.headers['content-type'] || '');
-    if (!type.startsWith('image/')) {
+    // photos only: an SVG is a document that can run script, and a shared host (res.cloudinary.com serves every
+    // Cloudinary customer) could hand one over as if it were ours
+    const type = String(response.headers['content-type'] || '').toLowerCase();
+    if (!type.startsWith('image/') || type.includes('svg')) {
       response.data.destroy();
       return res.status(415).send("Not an image");
     }
 
     res.set('Content-Type', type);
     res.set('X-Content-Type-Options', 'nosniff');
+    res.set('Content-Security-Policy', "default-src 'none'; sandbox");
     res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24h
 
     let sent = 0;

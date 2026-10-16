@@ -25,10 +25,11 @@ export const getPublicFileUrl = (key, req) => {
       return `${configuredBase.replace(/\/+$/, '')}/${normalizedKey}`;
     }
 
-    const forwardedProto = req?.headers?.['x-forwarded-proto']?.split(',')[0]?.trim();
-    const forwardedHost = req?.headers?.['x-forwarded-host']?.split(',')[0]?.trim();
-    const protocol = forwardedProto || req?.protocol;
-    const host = forwardedHost || req?.get?.('host') || req?.headers?.host;
+    // no address configured (a developer's machine): this request's own host. Never X-Forwarded-Host, which
+    // a visitor can set, so a stored link could have pointed at another site. (req.protocol already follows
+    // the proxy's X-Forwarded-Proto: server.mjs trusts one proxy.)
+    const protocol = req?.protocol;
+    const host = req?.get?.('host') || req?.headers?.host;
 
     if (protocol && host) {
       return `${protocol}://${host}/uploads/${normalizedKey}`;

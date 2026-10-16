@@ -1,64 +1,14 @@
-import pdf from 'html-pdf';
-import fs from 'fs';
-import { createRequire } from 'module';
 import { getTransporter, getEmailSettings, formatFrom } from './emailSettings.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import ejs from 'ejs'
 import { prepareDesignImages } from './designImages.js';
 import { designStudioUrl, storefrontUrl } from './customJacketUrl.js';
 import { designSummary } from './designSummary.js';
+import { designPdf } from './designPdf.js';
 
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
-
-// Shared designs embed four full jacket renders as base64 data URIs, so the
-// document PhantomJS has to rasterise is megabytes rather than kilobytes.
-// html-pdf's own default is 30s, which those designs can outrun on a small
-// container; PDF_TIMEOUT_MS makes it tunable without a code change.
-const PDF_TIMEOUT_MS = Number(process.env.PDF_TIMEOUT_MS) || 45000;
-
-// html-pdf shells out to PhantomJS, which it declares as an OPTIONAL dependency
-// with a download-on-install step. npm treats a failed optional install as a
-// success, so a container can build green with no renderer in it at all and only
-// find out at the first share. Say which of those happened, in the log, rather
-// than leaving "PDF generation failed" to be guessed at.
-const describeRenderer = () => {
-    try {
-        const binary = createRequire(import.meta.url)('phantomjs-prebuilt').path;
-        return fs.existsSync(binary)
-            ? `phantomjs binary present at ${binary}`
-            : `phantomjs binary MISSING - phantomjs-prebuilt installed but its download step never ran (expected at ${binary})`;
-    } catch (error) {
-        return 'phantomjs-prebuilt is not installed at all - npm skipped the optional dependency';
-    }
-};
-
-async function generatePDF(htmlContent) {
-    return new Promise((resolve, reject) => {
-        // pdf.create throws synchronously when the phantomjs binary is missing —
-        // it is an optionalDependency of html-pdf, so an image can build fine
-        // without it. Inside the executor that surfaces as a rejection.
-        pdf.create(htmlContent, {
-            childProcessOptions: {
-                env: {
-                    OPENSSL_CONF: '/dev/null',
-                },
-            },
-            format: 'A4',
-            // Page padding has to come from the paper, not the markup. A cell's
-            // padding is laid down once at the start and once at the end of that
-            // cell, so every continuation page began hard against the sheet edge.
-            // paperSize.border is applied to every page, first and last included.
-            border: { top: '13mm', right: '11mm', bottom: '13mm', left: '11mm' },
-            timeout: PDF_TIMEOUT_MS
-        }).toBuffer(function (err, buffer) {
-            if (err) return reject(err)
-            return resolve(buffer)
-        })
-    });
-}
 
 // Transport and addressing come from the admin-managed email configuration.
 
@@ -217,23 +167,19 @@ export const sendFileEmail = async (subject, email, data, location, options = {}
     // can use what the customiser sends.
     const previewImages = await prepareDesignImages(data);
 
-    const html = await ejs.renderFile(__dirname + location, {
-        data,
-        previews: previewImages.map(({ label, dataUri }) => ({ label, src: dataUri })),
-    });
-
-    // The PDF is an attachment, not the payload — the email body already carries
-    // the previews, price, materials and fit. PhantomJS is abandonware that is
-    // slow on image-heavy designs and can be absent from the image entirely, so
-    // losing it must not cost the customer their email.
+    // The PDF is an attachment, not the payload: the email body already carries the previews, price,
+    // materials and fit, so a PDF that fails must not cost the customer their email (helpers/designPdf.js).
     let pdfBuffer = null;
     let pdfError = null;
     try {
-        pdfBuffer = await generatePDF(html);
+        pdfBuffer = await designPdf(data, previewImages, {
+            resumeUrl: options.resumeUrl || designStudioUrl(),
+            reviewUrl: options.reviewUrl || '',
+            siteUrl: storefrontUrl(),
+        });
     } catch (error) {
         pdfError = error.message;
         console.error("PDF generation failed - sending without the attachment:".yellow, error.message);
-        console.error("- Renderer:".yellow, describeRenderer());
     }
 
     const emailHtml = buildDesignEmailHtml(

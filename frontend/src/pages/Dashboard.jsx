@@ -393,8 +393,8 @@ export default function Dashboard() {
                 <form onSubmit={savePassword} className="ez-panel" style={{ display: 'grid', gap: '18px', maxWidth: '640px' }}>
                   <label className="ez-label">Current password<input className="ez-input" type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} required autoComplete="current-password" /></label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '14px' }}>
-                    <label className="ez-label">New password<input className="ez-input" type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} required minLength={6} autoComplete="new-password" /></label>
-                    <label className="ez-label">Confirm<input className="ez-input" type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} required minLength={6} autoComplete="new-password" /></label>
+                    <label className="ez-label">New password<input className="ez-input" type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} required minLength={8} autoComplete="new-password" /></label>
+                    <label className="ez-label">Confirm<input className="ez-input" type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} required minLength={8} autoComplete="new-password" /></label>
                   </div>
                   {pwState.error ? <p role="alert" style={{ margin: '0', fontSize: '14px', color: '#b3261e' }}>{pwState.error}</p> : null}
                   {pwState.msg ? <p role="status" style={{ margin: '0', fontSize: '14px', color: 'var(--gold-2)', fontWeight: '600' }}>{pwState.msg}</p> : null}

@@ -1,6 +1,7 @@
 import CategoryModel from "../models/CategoryModel.js";
 import slugify from "slugify";
 import formidable from "formidable";
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 import uploadToS3 from "../helpers/fileUpload.js";
 
 export const createCategoryController = async (req, res) => {
@@ -58,7 +59,7 @@ export const createCategoryController = async (req, res) => {
   };
 
   if (isMultipart) {
-    const form = formidable({});
+    const form = adminForm({});
     form.parse(req, (err, fields, files) => {
       if (err) return res.status(500).send('Error parsing the files.');
       const flat = Object.fromEntries(
@@ -76,7 +77,7 @@ export const createCategoryController = async (req, res) => {
 
 //update category
 export const updateCategoryController = async (req, res) => {
-  const form = formidable({});
+  const form = adminForm({});
   form.parse(req, async (err, fields, files) => {
     if (err) {
       return res.status(500).send('Error parsing the files.');

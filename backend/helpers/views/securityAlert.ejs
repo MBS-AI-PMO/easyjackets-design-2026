@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; background: #ffffff; color: #211d18; font-family: Arial, Helvetica, sans-serif; }
+        table { border-collapse: collapse; }
+        .wrapper { width: 100%; background: #ffffff; padding: 28px 12px; }
+        .card { width: 100%; max-width: 600px; margin: 0 auto; background: #fffaf2; border: 1px solid #e4d6c3; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 50px rgba(33,29,24,.10); }
+        .hero { background: #11100e; padding: 30px 34px; color: #f5eee3; }
+        .eyebrow { margin: 0 0 12px; color: #c4703a; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+        h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; line-height: 1.15; font-weight: 400; letter-spacing: -.02em; }
+        .content { padding: 28px 32px; }
+        p { margin: 0 0 16px; color: #5f574c; font-size: 15px; line-height: 1.7; }
+        h2 { margin: 22px 0 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #8a7f71; }
+        .rows { width: 100%; margin: 6px 0 18px; }
+        .rows td { padding: 8px 0; border-bottom: 1px solid #ecdfcd; font-size: 14px; vertical-align: top; }
+        .rows td.label { color: #8a7f71; width: 38%; padding-right: 12px; }
+        .rows td.value { color: #211d18; word-break: break-word; }
+        .note { background: #f6ead8; border-radius: 10px; padding: 14px 16px; color: #4e483d; font-size: 14px; line-height: 1.6; }
+        .footer { background: #11100e; color: rgba(245,238,227,.56); padding: 20px 32px; font-size: 12px; line-height: 1.7; }
+        .footer strong { color: #f5eee3; }
+        @media only screen and (max-width: 520px) { .wrapper { padding: 18px 10px !important; } .hero, .content, .footer { padding-left: 22px !important; padding-right: 22px !important; } h1 { font-size: 24px !important; } }
+    </style>
+</head>
+
+<body>
+    <table class="wrapper" role="presentation" width="100%">
+        <tr>
+            <td>
+                <table class="card" role="presentation" width="100%">
+                    <tr>
+                        <td class="hero">
+                            <p class="eyebrow"><%= data.eyebrow || 'Security alert' %></p>
+                            <h1><%= data.title %></h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+                            <% if (data.intro) { %><p><%= data.intro %></p><% } %>
+                            <% if (data.rows && data.rows.length) { %>
+                            <table class="rows" role="presentation" width="100%">
+                                <% data.rows.forEach(function (row) { %>
+                                <tr><td class="label"><%= row[0] %></td><td class="value"><%= row[1] %></td></tr>
+                                <% }) %>
+                            </table>
+                            <% } %>
+                            <% (data.sections || []).forEach(function (section) { %>
+                            <h2><%= section.title %></h2>
+                            <% if (section.rows && section.rows.length) { %>
+                            <table class="rows" role="presentation" width="100%">
+                                <% section.rows.forEach(function (row) { %>
+                                <tr><td class="label"><%= row[0] %></td><td class="value"><%= row[1] %></td></tr>
+                                <% }) %>
+                            </table>
+                            <% } else { %><p><%= section.empty || 'Nothing.' %></p><% } %>
+                            <% }) %>
+                            <% if (data.note) { %><p class="note"><%= data.note %></p><% } %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer">
+                            <strong>Easy Jackets</strong><br>
+                            Sent by your website's security checks. The full history is in Admin → Activity Log.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

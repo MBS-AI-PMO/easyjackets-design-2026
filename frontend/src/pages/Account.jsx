@@ -19,7 +19,15 @@ export default function Account() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const next = params.get('next') && params.get('next').startsWith('/') ? params.get('next') : '/dashboard';
-  const resetToken = params.get('reset') || '';
+  // the reset link's token is read once and taken out of the address bar at once, so it does not stay in the
+  // browser's history or reach an analytics tag
+  const [resetToken] = useState(() => params.get('reset') || '');
+  useEffect(() => {
+    if (!params.get('reset')) return;
+    const rest = new URLSearchParams(params);
+    rest.delete('reset');
+    setParams(rest, { replace: true });
+  }, [params, setParams]);
   const [mode, setMode] = useState(resetToken ? 'reset' : params.get('mode') === 'signup' ? 'signup' : 'login');
   const [form, setForm] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
@@ -42,7 +50,8 @@ export default function Account() {
         await login(form.email.trim(), form.password);
         navigate(next, { replace: true });
       } else if (mode === 'signup') {
-        if (form.password.length < 6) throw new Error('Use a password of at least 6 characters.');
+        // the server's rule (backend/helpers/passwordPolicy.js): at least 8 characters, not a common password
+        if (form.password.length < 8) throw new Error('Use a password of at least 8 characters.');
         await register({ name: form.name.trim(), email: form.email.trim(), password: form.password, phone: form.phone.trim(), address: form.address.trim() });
         navigate(next, { replace: true });
       } else if (mode === 'forgot') {
@@ -50,7 +59,7 @@ export default function Account() {
         const res = await api.post('/auth/forgot-password', { email: form.email.trim() }, { auth: false });
         setNotice(res?.message || 'If an account exists for that email, we have sent a link to reset its password.');
       } else {
-        if (form.newPassword.length < 6) throw new Error('Use a new password of at least 6 characters.');
+        if (form.newPassword.length < 8) throw new Error('Use a new password of at least 8 characters.');
         if (form.newPassword !== form.confirmPassword) throw new Error('The two passwords are not the same.');
         const res = await api.post('/auth/reset-password', { token: resetToken, newPassword: form.newPassword }, { auth: false });
         setParams({}, { replace: true }); // the link is used up
@@ -127,7 +136,7 @@ export default function Account() {
             {tabs ? (
               <label className="ez-label">
                 Password
-                <input className="ez-input" type="password" required placeholder="••••••••" value={form.password} onChange={set('password')} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={6} />
+                <input className="ez-input" type="password" required placeholder="••••••••" value={form.password} onChange={set('password')} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={mode === 'login' ? undefined : 8} />
               </label>
             ) : null}
             {mode === 'forgot' ? (
@@ -151,11 +160,11 @@ export default function Account() {
               <>
                 <label className="ez-label">
                   New password
-                  <input className="ez-input" type="password" required placeholder="••••••••" value={form.newPassword} onChange={set('newPassword')} autoComplete="new-password" minLength={6} />
+                  <input className="ez-input" type="password" required placeholder="••••••••" value={form.newPassword} onChange={set('newPassword')} autoComplete="new-password" minLength={8} />
                 </label>
                 <label className="ez-label">
                   New password again
-                  <input className="ez-input" type="password" required placeholder="••••••••" value={form.confirmPassword} onChange={set('confirmPassword')} autoComplete="new-password" minLength={6} />
+                  <input className="ez-input" type="password" required placeholder="••••••••" value={form.confirmPassword} onChange={set('confirmPassword')} autoComplete="new-password" minLength={8} />
                 </label>
               </>
             ) : null}

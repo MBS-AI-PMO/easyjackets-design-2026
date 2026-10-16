@@ -1,4 +1,5 @@
 import formidable from 'formidable';
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 import Font from '../models/font.js';
 import uploadToS3 from '../helpers/fileUpload.js';
 
@@ -53,9 +54,17 @@ const parseGoogleFamily = (googleUrl, family) => {
   }
 };
 
+// A font's stylesheet address: only https://fonts.googleapis.com/… (the builder loads it as a stylesheet on
+// every visit, so any other address would let a page outside the shop style, and track, the builder).
 const sanitizeGoogleUrl = (value, fallback = '') => {
-  const raw = firstField(value, fallback);
-  return `${raw ?? ''}`.trim().replace(/^['"]+|['"]+$/g, '');
+  const raw = `${firstField(value, fallback) ?? ''}`.trim().replace(/^['"]+|['"]+$/g, '');
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'https:' && url.hostname === 'fonts.googleapis.com' && !url.username && !url.password && !url.port ? url.toString() : '';
+  } catch {
+    return '';
+  }
 };
 
 const getUploadedFontFile = (files) => {
@@ -84,7 +93,7 @@ const ensureDefaultFonts = async () => {
 
 const parseForm = (req) =>
   new Promise((resolve, reject) => {
-    const form = formidable({ multiples: false });
+    const form = adminForm({ multiples: false });
     form.parse(req, (error, fields, files) => {
       if (error) reject(error);
       else resolve({ fields, files });

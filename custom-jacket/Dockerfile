@@ -1,6 +1,7 @@
 # The jacket builder (CRA) served as a static bundle by nginx.
 # Coolify: Base Directory /custom-jacket, port 80 (Coolify's proxy terminates TLS).
-FROM node:20-alpine AS build
+# Node.js 22 LTS for the build (20 reached its end of life on 2026-04-30)
+FROM node:22-alpine AS build
 WORKDIR /app
 
 # Where the builder talks to. Left empty, src/config/url.js uses the new 2026 deployment
@@ -12,14 +13,18 @@ ENV REACT_APP_API_URL=$REACT_APP_API_URL
 ENV REACT_APP_FRONTEND_URL=$REACT_APP_FRONTEND_URL
 ENV CI=true
 ENV GENERATE_SOURCEMAP=false
+# no inline <script> in index.html: the Content-Security-Policy allows this site's own script files only
+ENV INLINE_RUNTIME_CHUNK=false
 
-COPY package.json package-lock.json* ./
-RUN npm ci || npm install
+# exactly the versions in the lockfile (out of step with package.json: the build stops)
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY . .
 RUN npm run build
 
-FROM nginx:1.27-alpine
+# nginx 1.28 (stable; the 1.27 line gets no more fixes)
+FROM nginx:1.28-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/build /usr/share/nginx/html

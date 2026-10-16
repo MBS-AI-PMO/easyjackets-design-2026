@@ -10,6 +10,7 @@ import { fetchProductSeoPages, resolveSaveTarget, isProductRoute } from '../help
 
 import uploadToS3 from '../helpers/fileUpload.js';
 import formidable from 'formidable';
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 
 export const SYSTEM_ROUTES = new Set(['/global-settings']);
 
@@ -944,7 +945,7 @@ export const deleteMetadata = async (req, res) => {
 
 // Upload Image to S3
 export const uploadMetadataImage = async (req, res) => {
-  const form = formidable({});
+  const form = adminForm({});
 
   form.parse(req, async (err, fields, files) => {
     if (err) {

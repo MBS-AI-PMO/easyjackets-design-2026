@@ -20,10 +20,33 @@ const isAnalyticsScript = (tag) => {
 let gaReady;
 const gaLoaded = new Promise((resolve) => { gaReady = resolve; });
 
+// Only scripts from Google's analytics hosts are loaded here (the API refuses other outside addresses when a
+// tag is saved: backend/helpers/siteTagRules.js), and no event attributes are copied.
+const GOOGLE_HOSTS = ['googletagmanager.com', 'google-analytics.com'];
+const allowedSource = (src) => {
+  if (!src) return true; // an inline snippet
+  try {
+    const url = new URL(String(src));
+    const host = url.hostname.toLowerCase();
+    return url.protocol === 'https:' && GOOGLE_HOSTS.some((root) => host === root || host.endsWith(`.${root}`));
+  } catch {
+    return false;
+  }
+};
+
+// the page's nonce (frontend/server.mjs gives each page one): the analytics snippet added here is allowed to
+// run by the page's Content-Security-Policy only with it
+const pageNonce = () => document.querySelector('script[nonce]')?.nonce || '';
+
 function injectAnalytics(tags) {
-  tags.forEach((tag) => {
+  const nonce = pageNonce();
+  tags.filter((tag) => allowedSource(tag?.attributes?.src)).forEach((tag) => {
     const script = document.createElement('script');
-    Object.entries(tag.attributes || {}).forEach(([key, value]) => { if (value !== false && value != null) script.setAttribute(key, value === true ? '' : value); });
+    if (nonce) script.nonce = nonce;
+    Object.entries(tag.attributes || {}).forEach(([key, value]) => {
+      if (/^on/i.test(key) || !/^[A-Za-z_:][-A-Za-z0-9_:.]*$/.test(key)) return;
+      if (value !== false && value != null) script.setAttribute(key, value === true ? '' : value);
+    });
     script.async = true;
     if (tag.content) script.text = tag.content;
     document.head.appendChild(script);

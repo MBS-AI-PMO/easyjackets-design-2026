@@ -9,6 +9,7 @@ import slugify from "slugify";
 import Design from "../models/design.js";
 import randomString from 'randomstring'
 import formidable from "formidable";
+import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
 import uploadToS3 from "../helpers/fileUpload.js";
 import addWatermark from "../helpers/watermark.js";
 import { backgroundRemovalStatus, queueProductCutout } from "../helpers/backgroundRemoval.js";
@@ -203,7 +204,7 @@ export const createDraftProduct = async (req, res) => {
 }
 
 export const createProductController = async (req, res) => {
-  const form = formidable({});
+  const form = adminForm({});
   form.parse(req, async (err, fields, files) => {
     if (err) {
       return res.status(500).send('Error parsing the files.');
@@ -559,7 +560,7 @@ export const deleteProductController = async (req, res) => {
 
 //upate products
 export const updateProductController = async (req, res) => {
-  const form = formidable({});
+  const form = adminForm({});
   form.parse(req, async (err, fields, files) => {
     if (err) {
       return res.status(500).send('Error parsing the files.');

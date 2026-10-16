@@ -1,0 +1,31 @@
+# Dependabot: GitHub opens a pull request when a package or base image this repo uses gets a fix.
+#   - npm and pip: security fixes only (open-pull-requests-limit 0 turns off routine version bumps; security
+#     updates still come when "Dependabot security updates" is on in the repo's Settings → Code security)
+#   - Docker base images (node, nginx): a weekly check, so an image that stops getting fixes is noticed
+# Nothing is merged automatically: each pull request is reviewed, built and tested first.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 0
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 0
+  - package-ecosystem: npm
+    directory: /admin
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 0
+  - package-ecosystem: npm
+    directory: /custom-jacket
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 0
+  - package-ecosystem: pip
+    directory: /backend/bg-remover
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 0
+  - package-ecosystem: docker
+    directories: [/backend, /frontend, /admin, /custom-jacket]
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 4

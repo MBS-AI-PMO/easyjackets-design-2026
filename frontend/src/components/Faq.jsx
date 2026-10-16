@@ -46,7 +46,7 @@ export default function Faq({ items, size, schema = false }) {
   const data = schema ? faqSchema(items) : null;
   return (
     <div className="ez-faq-list">
-      {data ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} /> : null}
+      {data ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }} /> : null}
       {items.map((f) => <FaqItem key={f.id || f.q} q={f.q} a={f.a} points={f.points} size={size} />)}
       <div className="ez-faq-end" />
     </div>

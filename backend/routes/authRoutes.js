@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  encryptUser,
   forgotPasswordController,
   resetPasswordController,
   getAllOrdersController,
@@ -14,7 +13,6 @@ import {
   registerController,
   registerAdminController,
   changePasswordController,
-  testController,
   updateProfileController,
   userHideOrderController,
   logoutController
@@ -47,11 +45,10 @@ router.post("/logout", requireSignin, logoutController);
 
 // password reset by an emailed one-time link (controllers/authController.js)
 router.post("/forgot-password", emailFormLimit("forgot-password"), forgotPasswordController);
-router.post("/reset-password", resetPasswordController);
+router.post("/reset-password", loginLimit, resetPasswordController);
 
-router.get("/encrypt", requireSignin, encryptUser);
+// (/encrypt and /test were removed: nothing used them, and /encrypt signed tokens with the sign-in secret)
 
-router.get("/test", requireSignin, isAdmin, testController);
 
 // the customer list (names, emails, phones, addresses): admins only
 router.get("/allusers", requireSignin, isAdmin, getAllUsers);
@@ -69,7 +66,7 @@ router.get("/admin-auth", requireSignin, isAdmin, (req, res) => {
   res.status(200).send({ ok: true });
 });
 
-router.put("/profile", requireSignin, updateProfileController);
+router.put("/profile", loginLimit, requireSignin, updateProfileController);
 
 router.get("/orders", requireSignin, getOrdersController);
 
@@ -87,6 +84,6 @@ router.put(
 );
 
 // Change password - for logged-in users
-router.put("/change-password", requireSignin, changePasswordController);
+router.put("/change-password", loginLimit, requireSignin, changePasswordController);
 
 export default router;
