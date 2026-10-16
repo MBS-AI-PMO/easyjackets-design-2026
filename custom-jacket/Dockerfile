@@ -24,7 +24,7 @@ COPY . .
 RUN npm run build
 
 # nginx 1.28 (stable; the 1.27 line gets no more fixes)
-FROM nginx:1.28-alpine
+FROM nginx:1.29-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/build /usr/share/nginx/html
