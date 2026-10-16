@@ -1,5 +1,5 @@
 # Node.js 22 LTS for the build (20 reached its end of life on 2026-04-30)
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 
 # Defaults = the NEW 2026 deployment (backend on database easyjackets2026, new storefront).
