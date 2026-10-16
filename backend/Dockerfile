@@ -1,5 +1,5 @@
 # Node.js 22 LTS (20 reached its end of life on 2026-04-30 and gets no more security fixes)
-FROM node:22-bookworm-slim
+FROM node:25-bookworm-slim
 
 WORKDIR /app
 
