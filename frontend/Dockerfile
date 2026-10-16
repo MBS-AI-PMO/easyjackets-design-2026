@@ -1,13 +1,13 @@
 # Builds the Vite app and serves it with the storefront server (server.mjs), which writes each page's own
 # SEO tags and text into the HTML (it replaced plain nginx; same port 80, same Coolify settings).
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:22-alpine
+FROM node:25-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=80
