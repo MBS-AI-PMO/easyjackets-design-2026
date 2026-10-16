@@ -9,22 +9,9 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { fetchSizes, inchRange, toCm } from '../lib/materials';
 import { useAsync } from '../lib/useAsync';
-import { fetchProducts } from '../lib/catalog';
 import SizeGuides from '../components/SizeGuides';
 import './SizeChart.css';
 import { usePageTitle } from '../lib/usePageTitle';
-
-// The cropped guide shows a real catalog jacket (the live site's search order): its front photo links to its page.
-const CROPPED_TERMS = ['Baby Pink Cropped Varsity Jacket', 'Red And White Cropped Varsity Jacket', 'Cropped Varsity Jacket', 'New Cropped Varsity Jacket For Women'];
-async function fetchCroppedExample(signal) {
-  for (const search of CROPPED_TERMS) {
-    const r = await fetchProducts({ search, limit: 3 }, signal);
-    const p = r.products.find((x) => x.image);
-    if (p) return p;
-  }
-  const r = await fetchProducts({ category: 'cropped-varsity-jackets', limit: 1 }, signal);
-  return r.products[0] || null;
-}
 
 const VIEWS = [
   { key: 'jacket', label: 'Jacket', columns: [['chest', 'Chest (pit to pit)'], ['backLength', 'Back length'], ['acrossShoulder', 'Across shoulder'], ['shoulder', 'Shoulder'], ['sleeves', 'Sleeve']] },
@@ -37,7 +24,6 @@ export default function SizeChart() {
   const [view, setView] = useState('jacket');
   const [unit, setUnit] = useState('in');
   const [chest, setChest] = useState('');
-  const { data: croppedProduct } = useAsync((signal) => fetchCroppedExample(signal), []);
 
   const cm = unit === 'cm';
   const fmt = (v) => (v ? (cm ? toCm(v) : v) : '—');
@@ -235,7 +221,7 @@ export default function SizeChart() {
           </div>
         </div>
       </section>
-      <SizeGuides unit={unit} setUnit={setUnit} croppedProduct={croppedProduct} />
+      <SizeGuides unit={unit} setUnit={setUnit} />
       {/* CTA */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 96px' }}>
         <div style={{ background: 'var(--ink)', color: 'var(--cream)', borderRadius: '4px', padding: 'clamp(28px,4vw,48px)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '24px clamp(24px,4vw,64px)', alignItems: 'center' }}>

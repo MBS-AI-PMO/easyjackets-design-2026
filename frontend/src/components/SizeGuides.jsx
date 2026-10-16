@@ -3,7 +3,6 @@
 // (easyjackets/src/Pages/SizeChart.jsx); the layout is this site's own.
 // `unit` is the page's 'in' / 'cm' switch, shared by every table on the page.
 import SiteImage from './SiteImage';
-import ProductCard from './ProductCard';
 
 const YOUTH = [ // stored in centimetres, as on the live site
   { size: 'YXS', chest: 40, bodyLength: 50, acrossShoulder: 36, sleeveLength: 40 },
@@ -99,7 +98,7 @@ function Notes({ items }) {
   );
 }
 
-export default function SizeGuides({ unit, setUnit, croppedProduct }) {
+export default function SizeGuides({ unit, setUnit }) {
   const cm = unit === 'cm';
   const unitWord = cm ? 'centimeters' : 'inches';
   const u = cm ? '(cm)' : '(in)';
@@ -151,14 +150,10 @@ export default function SizeGuides({ unit, setUnit, croppedProduct }) {
               ['Please Note', 'Length is shorter by design for a modern, stylish fit.'],
             ]} />
           </div>
-          <div className="sc-product">
-            {croppedProduct ? (
-              <ProductCard product={croppedProduct} slotPrefix="size-cropped" width={640} />
-            ) : (
-              <div className="ez-skeleton" style={{ aspectRatio: '4/5', borderRadius: '4px' }} aria-busy="true" />
-            )}
-            <p className="sc-product-meta">Live catalog example for the cropped varsity fit.</p>
-          </div>
+          {/* the cropped jacket picture (admin: Site Images, "Cropped jacket picture") */}
+          <Frame ratio="4/5">
+            <SiteImage which="size-cropped" slot="size-cropped" shape="rect" fit="contain" width={768} sizes="(max-width: 720px) 100vw, 520px" placeholder="Cropped varsity jacket" />
+          </Frame>
         </div>
       </section>
 

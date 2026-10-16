@@ -106,6 +106,12 @@ export const SITE_IMAGE_GROUPS = [
         wire: { layout: 'diagramRight' },
       },
       {
+        key: 'size-cropped', title: 'Cropped jacket picture', path: '/sizechart#sc-cropped-title', fit: 'contain', ...portrait,
+        where: 'Size Chart page, "Ladies Fit — Cropped Jacket", to the right of the cropped size table.',
+        note: 'Shown whole on a cream panel (nothing is cropped): a cut-out or a jacket on a plain background works best.',
+        wire: { layout: 'diagramRight' },
+      },
+      {
         key: 'size-coach', title: 'Coach jacket diagram', path: '/sizechart#sc-coach-title', fit: 'contain',
         ratio: [16, 10], recommended: [1600, 1000], minimum: [1000, 625],
         where: 'Size Chart page, "Coach Jacket Fit Guide", to the right of the three steps.',

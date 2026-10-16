@@ -21,6 +21,7 @@ export const SITE_IMAGES = {
   'size-measure': { src: `${IMG}/jacket-measurement.webp`, alt: 'Diagram of a varsity jacket front and back with the five measurements numbered' },
   'size-youth': { src: '/images/size-chart/youth-varsity-measure.webp', alt: 'Youth varsity jacket measurement guide showing chest, body length, across shoulder, and sleeve length' },
   'size-coach': { src: '/images/size-chart/coach-jacket-measure.webp', alt: 'Coach jacket measurement guide showing sleeve length, body width, and body length' },
+  'size-cropped': { src: '/images/size-chart/cropped-jacket.webp', alt: 'Baby pink cropped varsity jacket with grey and green striped trim' },
   'notfound-photo': { src: `${IMG}/woman-red-white-detail.webp`, alt: 'Red and white cropped varsity jacket' },
 };
 

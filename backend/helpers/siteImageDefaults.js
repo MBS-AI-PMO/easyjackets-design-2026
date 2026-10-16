@@ -26,6 +26,7 @@ export const SITE_IMAGE_DEFAULTS = {
   'size-measure': { src: `${IMG}/jacket-measurement.webp`, alt: 'Diagram of a varsity jacket front and back with the five measurements numbered' },
   'size-youth': { src: '/images/size-chart/youth-varsity-measure.webp', alt: 'Youth varsity jacket measurement guide showing chest, body length, across shoulder, and sleeve length' },
   'size-coach': { src: '/images/size-chart/coach-jacket-measure.webp', alt: 'Coach jacket measurement guide showing sleeve length, body width, and body length' },
+  'size-cropped': { src: '/images/size-chart/cropped-jacket.webp', alt: 'Baby pink cropped varsity jacket with grey and green striped trim' },
   'notfound-photo': { src: `${IMG}/woman-red-white-detail.webp`, alt: 'Red and white cropped varsity jacket' },
 };
 
@@ -40,7 +41,8 @@ export async function ensureSiteImageDefaults() {
   const row = await Metadata.findOne({ route: '/global-settings' }).select('siteImages').lean();
   if (!row) return [];
   const have = row.siteImages && typeof row.siteImages === 'object' ? row.siteImages : {};
-  const missing = Object.keys(SITE_IMAGE_DEFAULTS).filter((key) => !have[key]?.src);
+  // (a slot without a shipped file would have nothing to store)
+  const missing = Object.keys(SITE_IMAGE_DEFAULTS).filter((key) => SITE_IMAGE_DEFAULTS[key].src && !have[key]?.src);
   if (!missing.length) return [];
   const set = {};
   for (const key of missing) set[`siteImages.${key}`] = { ...SITE_IMAGE_DEFAULTS[key], ...(have[key]?.alt ? { alt: have[key].alt } : {}) };
