@@ -1,6 +1,7 @@
 import React from "react";
-import logo from "../../assets/images/Header-logo.webp";
+import fallbackLogo from "../../assets/images/site-logo.webp";
 import axiosInstance from "../../utils/axiosConfig";
+import { useNavLogo } from "../SiteNav";
 import "./holding.css";
 
 // The "under construction" screen while one of the apps is being deployed (components/MaintenanceGate):
@@ -15,6 +16,9 @@ const COPY = {
 
 const UnderConstruction = ({ message, leaving = false }) => {
   const [contact, setContact] = React.useState(null);
+  // the admin's navbar logo (Settings -> Site Identity), as on the storefront's screen and in the builder's header
+  const navLogo = useNavLogo();
+  const logo = navLogo?.src || fallbackLogo;
   const copy = COPY;
 
   React.useEffect(() => {
@@ -57,7 +61,13 @@ const UnderConstruction = ({ message, leaving = false }) => {
     <main className={`ez-uc${leaving ? " ez-uc--leaving" : ""}`} aria-labelledby="ez-uc-title">
       <div className="ez-uc-glow" aria-hidden="true" />
       <div className="ez-uc-inner">
-        <img className="ez-uc-logo ez-uc-logo--ink ez-uc-in" style={after(0)} src={logo} alt="Easy Jackets" />
+        <img
+          className="ez-uc-logo ez-uc-in"
+          style={after(0)}
+          src={logo}
+          alt="Easy Jackets"
+          onError={(e) => { if (!e.currentTarget.src.endsWith(fallbackLogo)) e.currentTarget.src = fallbackLogo; }}
+        />
         <span className="ez-uc-label ez-uc-in" style={after(1)}>
           <span className="ez-uc-dot" aria-hidden="true" />
           {copy.label}
