@@ -2,9 +2,8 @@
 .ez-slides { position: absolute; inset: 0; overflow: hidden; touch-action: pan-y; }
 .ez-slide { position: absolute; inset: 0; opacity: 0; transition: opacity .9s ease; }
 .ez-slide.is-active { opacity: 1; z-index: 1; }
-/* the photo showing settles slowly into place */
-.ez-slide.is-active .ez-slot { animation: ez-slide-settle calc(var(--ez-slide-seconds, 6s) + 1s) cubic-bezier(.2, .7, .2, 1) both; }
-@keyframes ez-slide-settle { from { transform: scale(1.06); } to { transform: scale(1); } }
+/* no zoom on the photos: Chrome draws an image that is being scaled with a quicker, blurrier filter (and keeps it
+   so after the zoom ends), measured at 40-60% of the sharpness of the same photo held still. A fade keeps 100%. */
 
 /* a soft shade under the bars, so they read on a light photo too */
 .ez-slides::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; z-index: 2; pointer-events: none; background: linear-gradient(to top, rgba(20, 17, 15, .45), rgba(20, 17, 15, 0)); }
@@ -22,13 +21,12 @@
 /* wait while the mouse is over it or a bar is chosen with the keyboard (not after a tap or a click: a touch
    screen keeps :hover and a clicked button keeps focus, which would stop it for good) */
 @media (hover: hover) {
-  .ez-slides:hover .ez-slides-fill, .ez-slides:hover .ez-slide .ez-slot { animation-play-state: paused; }
+  .ez-slides:hover .ez-slides-fill { animation-play-state: paused; }
 }
-.ez-slides:has(:focus-visible) .ez-slides-fill, .ez-slides:has(:focus-visible) .ez-slide .ez-slot { animation-play-state: paused; }
+.ez-slides:has(:focus-visible) .ez-slides-fill { animation-play-state: paused; }
 
-/* reduced motion: no fading or zooming, and no moving on by itself (the bar of the photo showing is full) */
+/* reduced motion: no fading, and no moving on by itself (the bar of the photo showing is full) */
 @media (prefers-reduced-motion: reduce) {
   .ez-slide { transition: none; }
-  .ez-slide.is-active .ez-slot { animation: none; }
   .ez-slides-bar.is-active .ez-slides-fill { animation: none; transform: scaleX(1); }
 }
