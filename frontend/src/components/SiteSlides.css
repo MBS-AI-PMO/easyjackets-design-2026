@@ -1,0 +1,34 @@
+/* A slideshow photo slot (SiteSlides.jsx): the photos stacked in the box and cross-faded, bars along the bottom. */
+.ez-slides { position: absolute; inset: 0; overflow: hidden; touch-action: pan-y; }
+.ez-slide { position: absolute; inset: 0; opacity: 0; transition: opacity .9s ease; }
+.ez-slide.is-active { opacity: 1; z-index: 1; }
+/* the photo showing settles slowly into place */
+.ez-slide.is-active .ez-slot { animation: ez-slide-settle calc(var(--ez-slide-seconds, 6s) + 1s) cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes ez-slide-settle { from { transform: scale(1.06); } to { transform: scale(1); } }
+
+/* a soft shade under the bars, so they read on a light photo too */
+.ez-slides::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; z-index: 2; pointer-events: none; background: linear-gradient(to top, rgba(20, 17, 15, .45), rgba(20, 17, 15, 0)); }
+
+.ez-slides-bars { position: absolute; left: clamp(14px, 4%, 22px); right: clamp(14px, 4%, 22px); bottom: clamp(8px, 2.5%, 14px); z-index: 3; display: flex; gap: 6px; }
+.ez-slides-bar { flex: 1 1 0; min-width: 0; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: center; -webkit-tap-highlight-color: transparent; }
+.ez-slides-track { position: relative; display: block; width: 100%; height: 3px; border-radius: 3px; overflow: hidden; background: rgba(244, 239, 230, .38); transition: height .2s ease, background-color .2s ease; }
+.ez-slides-bar:hover .ez-slides-track { height: 5px; background: rgba(244, 239, 230, .55); }
+.ez-slides-bar:focus-visible { outline: none; }
+.ez-slides-bar:focus-visible .ez-slides-track { height: 5px; box-shadow: 0 0 0 2px var(--gold); }
+.ez-slides-fill { position: absolute; inset: 0; background: var(--cream); transform: scaleX(0); transform-origin: left center; }
+.ez-slides-bar.is-past .ez-slides-fill { transform: scaleX(1); }
+.ez-slides-bar.is-active .ez-slides-fill { animation: ez-slides-run var(--ez-slide-seconds, 6s) linear forwards; }
+@keyframes ez-slides-run { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* wait while the mouse is over it or a bar is chosen with the keyboard (not after a tap or a click: a touch
+   screen keeps :hover and a clicked button keeps focus, which would stop it for good) */
+@media (hover: hover) {
+  .ez-slides:hover .ez-slides-fill, .ez-slides:hover .ez-slide .ez-slot { animation-play-state: paused; }
+}
+.ez-slides:has(:focus-visible) .ez-slides-fill, .ez-slides:has(:focus-visible) .ez-slide .ez-slot { animation-play-state: paused; }
+
+/* reduced motion: no fading or zooming, and no moving on by itself (the bar of the photo showing is full) */
+@media (prefers-reduced-motion: reduce) {
+  .ez-slide { transition: none; }
+  .ez-slide.is-active .ez-slot { animation: none; }
+  .ez-slides-bar.is-active .ez-slides-fill { animation: none; transform: scaleX(1); }
+}

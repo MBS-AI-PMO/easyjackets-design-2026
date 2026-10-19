@@ -24,6 +24,7 @@ import { SITE_IMAGE_GROUPS } from '../constant/siteImages';
 import { MAX_EDGE, checkPhoto, fileProblem, readSize } from '../constant/imageChecks';
 import PageWireframe from './PageWireframe';
 import { PhotoDrop, PhotoNotes, SpecTiles } from './PhotoParts';
+import SiteSlidesCard from './SiteSlidesCard';
 import './SiteImages.css';
 
 // Content -> Site Images: every replaceable photo on the storefront, grouped by page. Each card says where
@@ -203,6 +204,7 @@ function SlotCard({ slot, group, saved, fallback, onSaved }) {
 const SiteImages = () => {
     const [saved, setSaved] = useState({});
     const [defaults, setDefaults] = useState({});
+    const [slideLimits, setSlideLimits] = useState({});
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
     const [tab, setTab] = useState(SITE_IMAGE_GROUPS[0].id);
@@ -217,6 +219,7 @@ const SiteImages = () => {
             ]);
             setSaved(settings.data?.metadata?.siteImages || {});
             setDefaults(shipped.data?.defaults || {});
+            setSlideLimits(shipped.data?.slides || {});
         } catch (error) {
             console.error('Error loading site images:', error);
             const message = error.response?.data?.message || error.message || 'Could not load the site images.';
@@ -228,7 +231,7 @@ const SiteImages = () => {
     useEffect(() => { load(); }, [load]);
 
     const group = useMemo(() => SITE_IMAGE_GROUPS.find((g) => g.id === tab) || SITE_IMAGE_GROUPS[0], [tab]);
-    const replaced = ALL_SLOTS.filter((s) => saved[s.key]?.src && saved[s.key].src !== defaults[s.key]?.src).length;
+    const replaced = ALL_SLOTS.filter((s) => (saved[s.key]?.src && saved[s.key].src !== defaults[s.key]?.src) || saved[s.key]?.more?.length).length;
 
     if (loading) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
@@ -246,7 +249,7 @@ const SiteImages = () => {
                         <Chip label={`${replaced} replaced`} color={replaced ? 'primary' : 'default'} variant={replaced ? 'filled' : 'outlined'} />
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                        Every photo on the storefront you can change, page by page. Each card shows where the photo sits, the size to upload, and previews your photo cropped exactly as the site will show it before you save. Uploads are converted to WebP and stored at most {MAX_EDGE} px on the longest side.
+                        Every photo on the storefront you can change, page by page. Each card shows where the photo sits, the size to upload, and previews your photo cropped exactly as the site will show it before you save. The home page hero takes several photos and shows them as a slideshow. Uploads are converted to WebP and stored at most {MAX_EDGE} px on the longest side.
                     </Typography>
                 </CardContent>
             </Card>
@@ -270,9 +273,11 @@ const SiteImages = () => {
             </Typography>
 
             <div className="pp-list">
-                {group.slots.map((slot) => (
+                {group.slots.map((slot) => (slot.slides ? (
+                    <SiteSlidesCard key={slot.key} slot={slot} group={group.title} saved={saved[slot.key]} fallback={defaults[slot.key]} limit={slideLimits[slot.key]} onSaved={setSaved} />
+                ) : (
                     <SlotCard key={slot.key} slot={slot} group={group.title} saved={saved[slot.key]} fallback={defaults[slot.key]} onSaved={setSaved} />
-                ))}
+                )))}
             </div>
         </Box>
     );

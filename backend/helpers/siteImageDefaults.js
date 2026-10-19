@@ -30,6 +30,10 @@ export const SITE_IMAGE_DEFAULTS = {
   'notfound-photo': { src: `${IMG}/woman-red-white-detail.webp`, alt: 'Red and white cropped varsity jacket' },
 };
 
+// Slots that may hold a slideshow: the most photos in it. The first photo is the slot's own `src`/`alt` (so a
+// single photo is stored exactly like every other slot); the rest are `more: [{ src, alt }, …]`, in order.
+export const SITE_IMAGE_SLIDES = { 'home-hero': 8 };
+
 /** Writes the shipped photo into the settings row for every slot it does not have yet. Returns the keys added. */
 export async function ensureSiteImageDefaults() {
   // the settings row itself, as the admin creates it (Settings -> Site Identity) when a database has none yet

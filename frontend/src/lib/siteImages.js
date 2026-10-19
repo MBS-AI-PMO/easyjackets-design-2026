@@ -25,18 +25,32 @@ export const SITE_IMAGES = {
   'notfound-photo': { src: `${IMG}/woman-red-white-detail.webp`, alt: 'Red and white cropped varsity jacket' },
 };
 
+// Slots that may be a slideshow, with the most photos in it (backend helpers/siteImageDefaults.js
+// SITE_IMAGE_SLIDES): the slot's own photo first, then `more: [{ src, alt }, …]`.
+export const SITE_IMAGE_SLIDES = { 'home-hero': 8 };
+
 // what the admin may store (the backend keeps only these too: metaDataController.js cleanSiteImages)
 const SAFE_SRC = /^(https?:\/\/[^\s"'<>]+|\/(uploads|images)\/[^\s"'<>]+)$/i;
 
-/** The admin's settings for the slots, cleaned: { key: { src?, alt? } }. */
+const cleanPhoto = (photo) => {
+  const entry = {};
+  if (!photo || typeof photo !== 'object') return entry;
+  if (typeof photo.src === 'string' && SAFE_SRC.test(photo.src.trim())) entry.src = photo.src.trim();
+  if (typeof photo.alt === 'string' && photo.alt.trim()) entry.alt = photo.alt.trim();
+  return entry;
+};
+
+/** The admin's settings for the slots, cleaned: { key: { src?, alt?, more? } }. */
 export const cleanSiteImages = (value) => {
   const out = {};
   if (!value || typeof value !== 'object') return out;
   for (const [key, slot] of Object.entries(value)) {
     if (!SITE_IMAGES[key] || !slot || typeof slot !== 'object') continue;
-    const entry = {};
-    if (typeof slot.src === 'string' && SAFE_SRC.test(slot.src.trim())) entry.src = slot.src.trim();
-    if (typeof slot.alt === 'string' && slot.alt.trim()) entry.alt = slot.alt.trim();
+    const entry = cleanPhoto(slot);
+    if (SITE_IMAGE_SLIDES[key] && Array.isArray(slot.more)) {
+      const more = slot.more.map(cleanPhoto).filter((photo) => photo.src).slice(0, SITE_IMAGE_SLIDES[key] - 1);
+      if (more.length) entry.more = more;
+    }
     if (Object.keys(entry).length) out[key] = entry;
   }
   return out;

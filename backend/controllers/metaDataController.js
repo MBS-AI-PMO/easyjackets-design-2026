@@ -11,25 +11,36 @@ import { fetchProductSeoPages, resolveSaveTarget, isProductRoute } from '../help
 import uploadToS3 from '../helpers/fileUpload.js';
 import formidable from 'formidable';
 import { adminForm } from '../helpers/uploadLimits.js'; // upload limits for the admin's forms
-import { SITE_IMAGE_DEFAULTS } from '../helpers/siteImageDefaults.js';
+import { SITE_IMAGE_DEFAULTS, SITE_IMAGE_SLIDES } from '../helpers/siteImageDefaults.js';
 
 export const SYSTEM_ROUTES = new Set(['/global-settings']);
 
-// Site Images (admin: Content -> Site Images): { 'home-hero': { src, alt }, … }. Only the known slots, an image
-// address on the web or this site (http(s), /uploads/, /images/) and a short description are kept, so the
-// storefront never renders anything else from this setting.
+// Site Images (admin: Content -> Site Images): { 'home-hero': { src, alt, more? }, … }. Only the known slots, an
+// image address on the web or this site (http(s), /uploads/, /images/) and a short description are kept, so the
+// storefront never renders anything else from this setting. A slideshow slot (SITE_IMAGE_SLIDES) also keeps its
+// further photos, `more: [{ src, alt }]`, up to its limit.
 const SITE_IMAGE_KEY = /^[a-z0-9]+(?:-[a-z0-9]+)*$/; // no dots: MongoDB would read them as nesting
 const SITE_IMAGE_SRC = /^(https?:\/\/[^\s"'<>]+|\/(uploads|images)\/[^\s"'<>]+)$/i;
+const cleanPhoto = (photo) => {
+  const entry = {};
+  if (!photo || typeof photo !== 'object' || Array.isArray(photo)) return entry;
+  const src = typeof photo.src === 'string' ? photo.src.trim().slice(0, 1000) : '';
+  const alt = typeof photo.alt === 'string' ? photo.alt.replace(/\s+/g, ' ').trim().slice(0, 300) : '';
+  if (src && SITE_IMAGE_SRC.test(src)) entry.src = src;
+  if (alt) entry.alt = alt;
+  return entry;
+};
 export const cleanSiteImages = (value) => {
   const out = {};
   if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
   for (const [key, slot] of Object.entries(value).slice(0, 100)) {
     if (!SITE_IMAGE_DEFAULTS[key] || !SITE_IMAGE_KEY.test(key) || !slot || typeof slot !== 'object') continue;
-    const src = typeof slot.src === 'string' ? slot.src.trim().slice(0, 1000) : '';
-    const alt = typeof slot.alt === 'string' ? slot.alt.replace(/\s+/g, ' ').trim().slice(0, 300) : '';
-    const entry = {};
-    if (src && SITE_IMAGE_SRC.test(src)) entry.src = src;
-    if (alt) entry.alt = alt;
+    const entry = cleanPhoto(slot);
+    if (SITE_IMAGE_SLIDES[key] && Array.isArray(slot.more)) {
+      // a photo of the slideshow without an address is dropped (its description alone shows nothing)
+      const more = slot.more.slice(0, 50).map(cleanPhoto).filter((photo) => photo.src).slice(0, SITE_IMAGE_SLIDES[key] - 1);
+      if (more.length) entry.more = more;
+    }
     if (Object.keys(entry).length) out[key] = entry;
   }
   return out;
@@ -969,7 +980,7 @@ export const deleteMetadata = async (req, res) => {
 
 // The photos the storefront shipped with, per Site Images slot (the admin's "Original photo" button)
 export const getSiteImageDefaults = (req, res) => {
-  res.status(200).json({ success: true, defaults: SITE_IMAGE_DEFAULTS });
+  res.status(200).json({ success: true, defaults: SITE_IMAGE_DEFAULTS, slides: SITE_IMAGE_SLIDES });
 };
 
 // Upload Image to S3

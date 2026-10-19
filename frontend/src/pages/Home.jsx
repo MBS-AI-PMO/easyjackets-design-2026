@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import A from '../components/A';
 import ImageSlot from '../components/ImageSlot';
 import SiteImage from '../components/SiteImage';
+import SiteSlides from '../components/SiteSlides';
 import CountUp from '../components/CountUp';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -211,7 +212,7 @@ export default function Home() {
               Free design proof
             </div>
             <div style={{ position: 'relative', aspectRatio: '4/5', maxHeight: 'calc(100vh - 230px)', width: '100%', borderRadius: '4px', overflow: 'hidden', background: 'var(--cream-2)' }}>
-              <SiteImage which="home-hero" slot="v2-hero" shape="rect" width={768} sizes="(max-width: 720px) 100vw, 600px" placeholder="Custom varsity jacket" aria-label="Customer wearing a custom red and navy varsity jacket" eager />
+              <SiteSlides which="home-hero" slot="v2-hero" shape="rect" width={768} sizes="(max-width: 720px) 100vw, 600px" placeholder="Custom varsity jacket" aria-label="Customer wearing a custom red and navy varsity jacket" eager />
             </div>
           </div>
         </div>

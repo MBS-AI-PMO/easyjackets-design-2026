@@ -15,8 +15,9 @@ import './SiteImages.css';
 /**
  * The photo framed as the site frames it (cropped or shown whole), and a drop zone: drag a file onto it or
  * click to choose one. `compare` shows the photo now on the site in the corner while a new one is previewed.
+ * `overlay` is drawn over the photo as the site draws it (e.g. a slideshow's bars).
  */
-export function PhotoDrop({ src, compare, ratio, fit, badge, busy, onFile, height = 300, emptyText = 'No photo yet' }) {
+export function PhotoDrop({ src, compare, ratio, fit, badge, busy, onFile, height = 300, emptyText = 'No photo yet', hint = 'Drop a photo or click to choose', overlay = null }) {
     const inputRef = useRef(null);
     const [over, setOver] = useState(false);
     const aspect = ratio[0] / ratio[1];
@@ -35,9 +36,10 @@ export function PhotoDrop({ src, compare, ratio, fit, badge, busy, onFile, heigh
                 aria-label="Choose a photo, or drop one here"
             >
                 {src ? <img src={src} alt="" style={{ objectFit: fit }} /> : <span className="pp-drop-empty">{emptyText}</span>}
+                {overlay}
                 <span className="pp-drop-hint">
                     <CloudUploadOutlinedIcon />
-                    <span>{busy ? 'Working…' : 'Drop a photo or click to choose'}</span>
+                    <span>{busy ? 'Working…' : hint}</span>
                 </span>
                 {badge ? <span className="pp-badge">{badge}</span> : null}
                 {compare ? (

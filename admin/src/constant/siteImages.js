@@ -6,6 +6,8 @@
 // (backend/helpers/fileUpload.js), so 1600 px is the most that is ever stored. `fit: 'cover'` fills the box
 // and crops what does not fit (from the centre); `fit: 'contain'` shows the whole picture inside the box.
 // `wire` draws the small page sketch in the admin: which layout, and which box is this photo.
+// `slides: n`: the spot takes up to n photos and shows them as a slideshow when there are two or more
+// (backend SITE_IMAGE_SLIDES; stored as the slot's own photo plus `more: [{ src, alt }]`).
 
 const portrait = { ratio: [4, 5], recommended: [1280, 1600], minimum: [960, 1200] };
 const landscape43 = { ratio: [4, 3], recommended: [1600, 1200], minimum: [1200, 900] };
@@ -16,9 +18,9 @@ export const SITE_IMAGE_GROUPS = [
     title: 'Home page',
     slots: [
       {
-        key: 'home-hero', title: 'Hero photo', path: '/', fit: 'cover', ...portrait,
-        where: 'The big photo at the very top of the home page, to the right of the headline.',
-        note: 'The gold "Free design proof" tag sits over its top-right corner, so keep faces and logos away from that corner.',
+        key: 'home-hero', title: 'Hero photos', path: '/', fit: 'cover', ...portrait, slides: 8,
+        where: 'The big photo at the very top of the home page, to the right of the headline. With one photo it stands still; add more and it becomes a slideshow.',
+        note: 'The gold "Free design proof" tag sits over its top-right corner and, in a slideshow, thin bars run along the bottom, so keep faces and logos away from the top-right corner and the bottom edge.',
         wire: { layout: 'hero' },
       },
       {
