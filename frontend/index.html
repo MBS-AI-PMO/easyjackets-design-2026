@@ -16,6 +16,25 @@
     <link rel="preload" href="/fonts/instrument-sans-400-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/instrument-sans-500-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/instrument-sans-600-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- First paint, before any stylesheet or script has loaded: the page colour at once (no white flash), and a thin
+         gold line moving along the top while the site loads (it appears only if loading takes longer than 0.4 s).
+         It shows while the page container is empty or holds only the crawler text (server.mjs .ez-ssr), and over the
+         page's own loading placeholder (.ez-boot, App.jsx); it goes the moment the page is drawn. -->
+    <style>
+      html { background: #f4efe6; }
+      body { margin: 0; }
+      #root:empty::before, #root:has(> .ez-ssr:only-child)::before, .ez-boot::before {
+        content: ''; position: fixed; top: 0; left: -35%; width: 35%; height: 3px; z-index: 2147483647;
+        background: linear-gradient(90deg, rgba(201, 162, 39, 0), #c9a227 45%, #c9a227 55%, rgba(201, 162, 39, 0));
+        opacity: 0; pointer-events: none;
+        animation: ez-boot-in .25s .4s forwards, ez-boot-run 1.2s .4s cubic-bezier(.45, 0, .55, 1) infinite;
+      }
+      @keyframes ez-boot-in { to { opacity: 1; } }
+      @keyframes ez-boot-run { from { left: -35%; } to { left: 100%; } }
+      @media (prefers-reduced-motion: reduce) {
+        #root:empty::before, #root:has(> .ez-ssr:only-child)::before, .ez-boot::before { left: 0; width: 100%; animation: ez-boot-in .25s .4s forwards; }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

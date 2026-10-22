@@ -495,8 +495,12 @@ const answerBlock = async (route) => {
   return { html, schema };
 };
 
-// minimal styling for the text above, shown only until the app replaces it
-const SSR_STYLE = '<style>.ez-ssr{max-width:1100px;margin:0 auto;padding:96px 20px 64px;font:16px/1.6 "Instrument Sans",system-ui,sans-serif;color:#14110f;background:#f4efe6}.ez-ssr h1{font:900 clamp(34px,6vw,64px)/1 "Big Shoulders Display",Impact,sans-serif;text-transform:uppercase;margin:12px 0 18px}.ez-ssr h2{font:800 26px/1.1 "Big Shoulders Display",Impact,sans-serif;text-transform:uppercase;margin:32px 0 10px}.ez-ssr h3{font-size:17px;margin:18px 0 6px}.ez-ssr a{color:inherit}.ez-ssr nav ol,.ez-ssr nav ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px}.ez-ssr img{max-width:100%;height:auto}</style>';
+// The text above is for crawlers that run no scripts: it is in the page but not shown, so a visitor never sees it
+// flash up before the app replaces it (a hard refresh showed it for seconds, then a blank page, then the site).
+// The visitor sees the page colour and, if loading takes a moment, the thin loading line (index.html). Without
+// JavaScript (<noscript>) the text is shown, with the minimal styling below.
+const SSR_STYLE = '<style>.ez-ssr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}</style>'
+  + '<noscript><style>.ez-ssr{position:static;width:auto;height:auto;overflow:visible;clip:auto;clip-path:none;white-space:normal;max-width:1100px;margin:0 auto;padding:96px 20px 64px;font:16px/1.6 "Instrument Sans",system-ui,sans-serif;color:#14110f;background:#f4efe6}.ez-ssr h1{font:900 clamp(34px,6vw,64px)/1 "Big Shoulders Display",Impact,sans-serif;text-transform:uppercase;margin:12px 0 18px}.ez-ssr h2{font:800 26px/1.1 "Big Shoulders Display",Impact,sans-serif;text-transform:uppercase;margin:32px 0 10px}.ez-ssr h3{font-size:17px;margin:18px 0 6px}.ez-ssr a{color:inherit}.ez-ssr nav ol,.ez-ssr nav ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px}.ez-ssr img{max-width:100%;height:auto}#root::before{display:none!important}</style></noscript>';
 
 // ── static files ─────────────────────────────────────────────────────────────
 

@@ -62,7 +62,8 @@ export default function App() {
       {/* WebMCP tools for AI agents in the visitor's browser (only where the browser supports them) */}
       <AgentTools />
       <ErrorBoundary key={pathname}>
-      <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+      {/* while a page's code loads: the page colour with the thin loading line (index.html .ez-boot) */}
+      <Suspense fallback={<div className="ez-boot" style={{ minHeight: '100vh' }} />}>
         <Routes>
           {/* Canonical routes: the live site's URL scheme (lib/urls.js), so every indexed address keeps working */}
           <Route path="/" element={<Home />} />
