@@ -12,16 +12,20 @@ import { fetchBlog, fetchBlogs } from '../lib/content';
 import { prepareArticle } from '../lib/html';
 import { useAsync } from '../lib/useAsync';
 import { useNoIndex, usePageTitle } from '../lib/usePageTitle';
+import { FALLBACK_NAV_LOGO, useSiteIdentity } from '../lib/siteIdentity';
 import './BlogPost.css';
 import { productPath } from '../lib/urls';
 
 const initials = (name) => String(name || 'EJ').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+// a post by the company itself (no author, or "Easy Jackets"): the byline shows the site's logo, not initials
+const isBrand = (name) => !String(name || '').trim() || /^easy\s*jackets?$/i.test(String(name).trim());
 const shareBox = { width: '36px', height: '36px', display: 'grid', placeItems: 'center', border: '1.5px solid var(--ink)', borderRadius: '2px', textDecoration: 'none', fontFamily: 'var(--display)', fontWeight: '900', fontSize: '14px', color: 'var(--ink)' };
 
 export default function BlogPost() {
   const { slug } = useParams();
   const { data: post, loading, error } = useAsync((signal) => fetchBlog(slug, signal), [slug]);
   const { data: all } = useAsync(fetchBlogs, []);
+  const identity = useSiteIdentity();
   // "Most popular jacket": one of the 12 most popular jackets (no hoodies), a new pick on every visit,
   // every post and whenever the reader comes back to the tab (not on the minute-by-minute refresh)
   const [pickRound, setPickRound] = useState(0);
@@ -140,7 +144,12 @@ export default function BlogPost() {
               <h1 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(48px,6.5vw,92px)', lineHeight: '0.88', textTransform: 'uppercase', margin: '14px 0 0' }}>{post.title}</h1>
               {post.excerpt ? <p style={{ fontSize: '19px', lineHeight: '1.55', color: 'var(--ink-2)', margin: '22px 0 0', maxWidth: '60ch' }}>{post.excerpt}</p> : null}
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '28px' }}>
-                <span style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--ink)', color: 'var(--gold)', display: 'grid', placeItems: 'center', fontFamily: 'var(--display)', fontWeight: '900', fontSize: '20px' }}>{initials(post.author)}</span>
+                {isBrand(post.author) ? (
+                  // a post by Easy Jackets: the navbar logo from the admin, at the size set there (Site Identity)
+                  <img src={identity.navSrc || FALLBACK_NAV_LOGO} alt="" height={identity.blogAuthorLogoHeight || 40} style={{ height: `${identity.blogAuthorLogoHeight || 40}px`, width: 'auto', maxWidth: '180px', objectFit: 'contain', flex: 'none' }} onError={(e) => { if (!e.currentTarget.src.endsWith(FALLBACK_NAV_LOGO)) e.currentTarget.src = FALLBACK_NAV_LOGO; }} />
+                ) : (
+                  <span style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--ink)', color: 'var(--gold)', display: 'grid', placeItems: 'center', fontFamily: 'var(--display)', fontWeight: '900', fontSize: '20px' }}>{initials(post.author)}</span>
+                )}
                 <div>
                   <div style={{ fontWeight: '600', fontSize: '14px' }}>{post.author || 'Easy Jackets'}</div>
                   <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Published {post.dateLabel}</div>

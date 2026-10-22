@@ -18,7 +18,7 @@ import {
 import instance from '../constant/instance';
 import { toast } from 'react-toastify';
 
-import { uploadUrl } from '../constant/url';
+import { FRONTEND_URL, uploadUrl } from '../constant/url';
 import { applyFavicons } from '../utils/favicon';
 const MetadataManager = () => {
   const [metadataList, setMetadataList] = useState([]);
@@ -39,7 +39,8 @@ const MetadataManager = () => {
     navbarLogo: '',
     footerLogo: '',
     navbarLogoHeight: 75,
-    footerLogoHeight: 66
+    footerLogoHeight: 66,
+    blogAuthorLogoHeight: 40
   });
   const [isEditMode, setIsEditMode] = useState(false);
   const [originalRoute, setOriginalRoute] = useState('');
@@ -129,7 +130,8 @@ const MetadataManager = () => {
           navbarLogo: response.data.metadata.navbarLogo || '',
           footerLogo: response.data.metadata.footerLogo || '',
           navbarLogoHeight: response.data.metadata.navbarLogoHeight || 75,
-          footerLogoHeight: response.data.metadata.footerLogoHeight || 66
+          footerLogoHeight: response.data.metadata.footerLogoHeight || 66,
+          blogAuthorLogoHeight: response.data.metadata.blogAuthorLogoHeight || 40
         });
       }
     } catch (error) {
@@ -578,6 +580,38 @@ const MetadataManager = () => {
                   value={globalSettings.footerLogoHeight}
                   onChange={(_, value) => handleLogoSizeChange('footerLogoHeight', value)}
                   sx={{ color: '#fff' }}
+                />
+              </Box>
+            </Box>
+
+            {/* Blog author logo: the navbar logo again, beside the author line of posts by Easy Jackets */}
+            <Box sx={{ flex: 1, minWidth: '200px', p: 2, bgcolor: '#f4efe6', borderRadius: 2, textAlign: 'center' }}>
+              <Typography variant="subtitle2" fontWeight="bold" mb={2}>Blog Author Logo</Typography>
+              <Box sx={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2, textAlign: 'left' }}>
+                <img
+                  src={globalSettings.navbarLogo ? uploadUrl(globalSettings.navbarLogo) : `${FRONTEND_URL}/logo-navbar.webp`}
+                  alt="Blog author"
+                  style={{ height: `${globalSettings.blogAuthorLogoHeight}px`, maxHeight: '96px', maxWidth: '60%', objectFit: 'contain' }}
+                />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 600, fontSize: 13, color: '#14110f', lineHeight: 1.3 }}>Easy Jackets</Typography>
+                  <Typography sx={{ fontSize: 12, color: '#7a7064', lineHeight: 1.3 }}>Published Oct 15, 2026</Typography>
+                </Box>
+              </Box>
+              <Typography variant="caption" display="block" color="text.secondary">
+                Uses the navbar logo. Shown beside the author line on blog posts by Easy Jackets.
+              </Typography>
+              <Box sx={{ mt: 1.5, px: 1 }}>
+                <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>
+                  Blog author size: {globalSettings.blogAuthorLogoHeight}px
+                </Typography>
+                <Slider
+                  size="small"
+                  min={20}
+                  max={96}
+                  value={globalSettings.blogAuthorLogoHeight}
+                  onChange={(_, value) => handleLogoSizeChange('blogAuthorLogoHeight', value)}
+                  sx={{ color: '#c9a227' }}
                 />
               </Box>
             </Box>

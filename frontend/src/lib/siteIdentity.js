@@ -20,7 +20,7 @@ const KEY = 'ej-identity';
 export const FALLBACK_NAV_LOGO = '/logo-navbar.webp';
 export const FALLBACK_FOOTER_LOGO = '/logo-navbar.webp';
 const NAV_LOGO_WIDTH = 320; // the resizer's smallest size: 2x+ the navbar's display width
-const DEFAULTS = { favicon: '', faviconDark: '', navbarLogo: '', navbarLogoHeight: 72, footerLogo: '', footerLogoHeight: 64, navSrc: '', navFor: '', siteImages: {}, siteImagesKnown: false };
+const DEFAULTS = { favicon: '', faviconDark: '', navbarLogo: '', navbarLogoHeight: 72, footerLogo: '', footerLogoHeight: 64, blogAuthorLogoHeight: 40, navSrc: '', navFor: '', siteImages: {}, siteImagesKnown: false };
 
 const read = () => {
   try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return { ...DEFAULTS }; }
@@ -78,6 +78,8 @@ export function loadIdentity() {
         navbarLogoHeight: Number(m.navbarLogoHeight) || DEFAULTS.navbarLogoHeight,
         footerLogo: m.footerLogo || '',
         footerLogoHeight: Number(m.footerLogoHeight) || DEFAULTS.footerLogoHeight,
+        // the navbar logo beside the author line of blog posts by Easy Jackets (admin: Settings -> Site Identity)
+        blogAuthorLogoHeight: Math.min(96, Math.max(20, Number(m.blogAuthorLogoHeight) || DEFAULTS.blogAuthorLogoHeight)),
         navSrc: current.navSrc,
         navFor: current.navFor,
         siteImages: cleanSiteImages(m.siteImages),

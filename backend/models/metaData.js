@@ -18,6 +18,8 @@ const metadataSchema = new mongoose.Schema({
   footerLogo: { type: String },
   navbarLogoHeight: { type: Number, default: 75 },
   footerLogoHeight: { type: Number, default: 66 },
+  // the navbar logo again, beside "Easy Jackets · Published …" on blog posts by Easy Jackets: its height in px
+  blogAuthorLogoHeight: { type: Number, default: 40, min: 20, max: 96 },
   // The storefront's replaceable photos (admin: Content -> Site Images), by slot key, e.g.
   // { 'home-hero': { src: 'https://…/uploads/x.webp', alt: '…' } }. A slot left out, or with no src, shows the
   // storefront's bundled photo. Cleaned on save (controllers/metaDataController.js cleanSiteImages).
