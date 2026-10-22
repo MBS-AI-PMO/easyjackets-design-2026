@@ -122,6 +122,7 @@ const navGroups = [
       { name: 'Top Bar', link: '/top-bar' },
       { name: 'Site Images', link: '/site-images' },
       { name: 'How to Design Page', link: '/how-to-design-page' },
+      { name: 'Terms & Conditions', link: '/terms-page' },
       { name: 'Storefront FAQs', link: '/storefront-faqs' },
     ],
   },

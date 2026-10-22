@@ -1,0 +1,37 @@
+/* Terms & Conditions (Terms.jsx): the admin's sections in the site's prose style, and the "On this page" list. */
+
+/* the sections: a jump to one lands below the sticky navbar */
+.pg-terms .tc-section { scroll-margin-top: 110px; }
+.pg-terms .tc-section + .tc-section { margin-top: 2.6em; }
+.pg-terms .tc-prose h2 { margin-top: 0; }
+.pg-terms .tc-prose h3 { font-family: var(--display); font-weight: 800; font-size: clamp(20px, 2vw, 24px); line-height: 1.1; letter-spacing: .02em; text-transform: uppercase; color: var(--ink); margin: 1.8em 0 .5em; }
+.pg-terms .tc-prose h4 { font-size: 16px; font-weight: 700; color: var(--ink); margin: 1.5em 0 .4em; }
+.pg-terms .tc-prose h2 + div > h3:first-child, .pg-terms .tc-prose h2 + div > h4:first-child { margin-top: .4em; }
+.pg-terms .tc-prose strong, .pg-terms .tc-prose b { color: var(--ink); font-weight: 700; }
+.pg-terms .tc-prose a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+.pg-terms .tc-prose a:hover { color: var(--gold-2); }
+.pg-terms .tc-prose ol { margin: 0 0 1.2em; padding-left: 1.4em; }
+.pg-terms .tc-prose ul { padding-left: 1.3em; }
+.pg-terms .tc-prose blockquote { margin: 0 0 1.2em; padding: 4px 0 4px 18px; border-left: 3px solid var(--gold); color: var(--ink); }
+.pg-terms .tc-prose table { width: 100%; border-collapse: collapse; margin: 0 0 1.2em; font-size: 15px; display: block; overflow-x: auto; }
+.pg-terms .tc-prose th, .pg-terms .tc-prose td { border: 1px solid var(--cream-2); padding: 8px 12px; text-align: left; vertical-align: top; }
+.pg-terms .tc-prose th { background: var(--cream-2); color: var(--ink); }
+
+/* "On this page": the whole list beside the text, scrolling on its own when it is taller than the screen */
+.pg-terms .tc-toc { max-height: calc(100vh - 130px); overflow-y: auto; scrollbar-width: thin; }
+.pg-terms .tc-toc-label { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.pg-terms .tc-toc-toggle { display: none; }
+
+/* phones and tablets: the list folds behind an "On this page" button above the text */
+@media (max-width: 960px) {
+  .pg-terms .tc-toc { max-height: none; overflow: visible; border: 1px solid var(--cream-2); border-radius: 4px; background: #fff; }
+  .pg-terms .tc-toc-label { display: none; }
+  .pg-terms .tc-toc-toggle {
+    display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 14px 16px;
+    border: 0; background: none; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink);
+  }
+  .pg-terms .tc-toc-toggle span { font-size: 20px; line-height: 1; color: var(--gold-2); }
+  .pg-terms .tc-toc-list { display: none; padding: 0 16px 12px; }
+  .pg-terms .tc-toc.is-open .tc-toc-list { display: block; }
+}

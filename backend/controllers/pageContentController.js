@@ -33,7 +33,8 @@ export const updatePageContent = async (req, res) => {
   if (!page) return;
   try {
     const content = page.clean(req.body?.content);
-    if (!content.steps?.length) return res.status(400).json({ success: false, message: 'The page needs at least one step.' });
+    const problem = page.problem?.(content);
+    if (problem) return res.status(400).json({ success: false, message: problem });
     const row = await PageContent.findOneAndUpdate(
       { key: req.params.key },
       { $set: { data: content } },

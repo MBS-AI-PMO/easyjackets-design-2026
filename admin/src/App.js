@@ -43,6 +43,7 @@ import StorefrontFaqs from './Components/StorefrontFaqs';
 import TopBar from './Components/TopBar';
 import SiteImages from './Components/SiteImages';
 import HowToDesignEditor from './Components/HowToDesignEditor';
+import TermsEditor from './Components/TermsEditor';
 import SeoHealth from './Components/SeoHealth';
 import IndexControl from './Components/IndexControl';
 import VisitorAnalytics from './Components/VisitorAnalytics';
@@ -95,6 +96,7 @@ export default function App() {
                   <Route path="/top-bar" element={<TopBar />} />
                   <Route path="/site-images" element={<SiteImages />} />
                   <Route path="/how-to-design-page" element={<HowToDesignEditor />} />
+                  <Route path="/terms-page" element={<TermsEditor />} />
                   <Route path="/blogs" element={<BlogManager />} />
                   <Route path="/storefront-faqs" element={<StorefrontFaqs />} />
                   {/* The old single-page FAQ screen was replaced by Storefront FAQs,

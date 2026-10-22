@@ -1,16 +1,47 @@
-// Converted from design/Easy Jackets Terms.dc.html
+// Terms & Conditions: the text is the admin's (Content -> Terms & Conditions, stored in the database, backend
+// helpers/pageContent.js + data/termsDefaults.js). Each section is a title and its text as HTML, cleaned on the
+// server to headings, paragraphs, lists, emphasis and links, and cleaned again here before it is drawn. The
+// "On this page" list is made from the section titles. Crawlers that run no scripts get the same text from the
+// server (seo-render).
+import { useMemo, useState } from 'react';
 import A from '../components/A';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { usePageTitle } from '../lib/usePageTitle';
+import { usePageContent } from '../lib/pageContent';
+import { safeHtml } from '../lib/html';
+import './Terms.css';
+
+// shown only when the terms cannot be loaded at all (no saved copy in this browser and no answer from the API)
+const UNAVAILABLE = { header: { title: 'Terms & Conditions' }, sections: [], unavailable: true };
+
+// "7. Sizing & measurements" -> "sizing-and-measurements": an address for each section, unique on the page
+const anchorsFor = (sections) => {
+  const seen = new Map();
+  return sections.map((s) => {
+    const base = String(s.title || 'section').toLowerCase().replace(/^\s*\d+\s*[.)]\s*/, '').replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'section';
+    const n = (seen.get(base) || 0) + 1;
+    seen.set(base, n);
+    return n > 1 ? `${base}-${n}` : base;
+  });
+};
+
+const Bar = ({ w, h = 16, mt = 12 }) => <div className="ez-skeleton" style={{ width: w, height: `${h}px`, marginTop: `${mt}px` }} />;
 
 export default function Terms() {
   usePageTitle('Terms & Conditions', 'The agreement between you and Easy Jackets when you order: acceptance, pricing, proofs, artwork rights, sizing, delivery, team orders and liability.');
+  const { content, ready } = usePageContent('terms', UNAVAILABLE);
+  const [tocOpen, setTocOpen] = useState(false);
+  const header = content?.header || {};
+  const sections = useMemo(() => (content?.sections || []).map((s) => ({ ...s, html: safeHtml(s.body || '', { stripStyles: true }) })), [content]);
+  const anchors = useMemo(() => anchorsFor(sections), [sections]);
+  const titled = sections.map((s, i) => ({ title: s.title, id: anchors[i] })).filter((s) => s.title);
 
   return (
     <div className="pg-terms">
       <Nav cta="cart" />
-      <main id="main">
+      <main id="main" aria-busy={!ready}>
       {/* Terms header */}
       <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(32px,4vw,56px) clamp(16px,4vw,48px) 0' }}>
         <div style={{ fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
@@ -20,80 +51,54 @@ export default function Terms() {
         </div>
         <div style={{ marginTop: '16px', maxWidth: '52ch' }}>
           <h1 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(52px,7.5vw,104px)', lineHeight: '0.88', textTransform: 'uppercase', margin: '0' }}>
-            Terms &
-            <br />
-            conditions
+            {ready ? header.title || 'Terms & Conditions' : 'Terms & Conditions'}
           </h1>
-          <p style={{ margin: '20px 0 0', color: 'var(--ink-2)', lineHeight: '1.6', fontSize: '16px' }}>
-            The agreement between you and Easy Jackets when you place an order, written to be read.
-          </p>
-          <p style={{ margin: '10px 0 0', color: 'var(--muted)', fontSize: '13px' }}>Last updated 22 September 2026</p>
+          {ready ? (
+            <>
+              {header.intro ? <p style={{ margin: '20px 0 0', color: 'var(--ink-2)', lineHeight: '1.6', fontSize: '16px' }}>{header.intro}</p> : null}
+              {header.effectiveDate ? <p style={{ margin: '10px 0 0', color: 'var(--muted)', fontSize: '13px' }}>Effective date: {header.effectiveDate}</p> : null}
+            </>
+          ) : (
+            <><Bar w="min(100%, 46ch)" mt={22} /><Bar w="18ch" h={12} /></>
+          )}
         </div>
       </section>
       {/* Terms body */}
-      <section className="ez-two" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,48px) 64px', display: 'grid', gridTemplateColumns: 'minmax(0,220px) minmax(0,1fr)', gap: '32px clamp(24px,5vw,80px)', alignItems: 'start' }}>
-        <aside className="ez-toc ez-side" style={{ position: 'sticky', top: '110px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
-            On this page
-          </div>
-          <A href="#orders">Orders & acceptance</A>
-          <A href="#pricing">Pricing & payment</A>
-          <A href="#proofs">Proofs & approval</A>
-          <A href="#ip">Artwork & IP</A>
-          <A href="#colors">Colors & materials</A>
-          <A href="#sizing">Sizing responsibility</A>
-          <A href="#delivery-terms">Delivery</A>
-          <A href="#bulk-terms">Team & bulk orders</A>
-          <A href="#liability">Liability</A>
-          <A href="#law">Governing law</A>
+      <section className="ez-two" style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,48px) 64px', display: 'grid', gridTemplateColumns: 'minmax(0,240px) minmax(0,1fr)', gap: '32px clamp(24px,5vw,80px)', alignItems: 'start' }}>
+        <aside className={`ez-toc ez-side tc-toc${tocOpen ? ' is-open' : ''}`} style={{ position: 'sticky', top: '110px' }}>
+          <button type="button" className="tc-toc-toggle" aria-expanded={tocOpen} aria-controls="tc-toc-list" onClick={() => setTocOpen((v) => !v)}>
+            On this page{titled.length ? ` (${titled.length})` : ''}
+            <span aria-hidden="true">{tocOpen ? '−' : '+'}</span>
+          </button>
+          <div className="tc-toc-label">On this page</div>
+          <nav id="tc-toc-list" className="tc-toc-list" aria-label="Sections">
+            {ready
+              ? titled.map((s) => <A key={s.id} href={`#${s.id}`} onClick={() => setTocOpen(false)}>{s.title}</A>)
+              : [70, 55, 80, 60, 75, 50].map((w, i) => <Bar key={i} w={`${w}%`} h={12} mt={14} />)}
+          </nav>
         </aside>
-        <div className="ez-prose">
-          <h2 id="orders">Orders & acceptance</h2>
-          <p>
-            Your order is an offer to buy. It is accepted when we send the order confirmation email. We may decline or cancel and refund any order we cannot make as specified, including orders for artwork we are not permitted to reproduce.
-          </p>
-          <h2 id="pricing">Pricing & payment</h2>
-          <p>
-            Prices are in US dollars and include production and decoration as specified at checkout. Payment is taken in full at checkout, except team orders, which may pay a 50% deposit with the balance due before shipping. Schools, districts and universities may order on a purchase order with net 30 terms after proof approval. Quoted prices hold for 30 days.
-          </p>
-          <h2 id="proofs">Proofs & approval</h2>
-          <p>
-            We email a digital proof within two business days of checkout. You may request unlimited revisions before approving it. Production begins at approval, and after approval the design is fixed: spelling, placement, colors and sizes shown on the approved proof are the specification we build to. Please check names and numbers carefully.
-          </p>
-          <h2 id="ip">Artwork & intellectual property</h2>
-          <p>
-            You keep ownership of the artwork you send and grant us the licence needed to produce and proof your order. You warrant that you have the right to use it. We do not reproduce third-party trademarks, school marks or licensed logos without written permission from the rights holder, and we may ask you for that permission before production. Designs our artists draw for you are yours to use on jackets we make; the site, its photography and its text remain ours.
-          </p>
-          <h2 id="colors">Colors & materials</h2>
-          <p>
-            Screens vary, so colors shown online are approximate. Request a free swatch pack for exact matching. Natural materials — particularly full-grain leather and melton wool — carry small variations in grain and tone that are part of the material, not a defect. If a material is out of stock we contact you with the closest alternative before proceeding.
-          </p>
-          <h2 id="sizing">Sizing responsibility</h2>
-          <p>
-            You are responsible for the size or measurements you supply. Use the{' '}
-            <A href="/sizechart">size chart</A>
-            {' '}and measure a jacket you already wear. Custom-made jackets are final sale and cannot be exchanged for a different size; see{' '}
-            <A href="/shipping#exchanges">shipping & returns</A>
-            .
-          </p>
-          <h2 id="delivery-terms">Delivery</h2>
-          <p>
-            Delivery estimates are estimates, not guarantees. We are not liable for delays caused by carriers, customs or events outside our control, though we will chase any late shipment with the carrier on your behalf. Risk passes to you on delivery.
-          </p>
-          <h2 id="bulk-terms">Team & bulk orders</h2>
-          <p>
-            Team pricing starts at ten jackets. A full size and name list is required before production; late changes to the roster may incur a charge. Orders of 25 or more may request a physical pre-production sample, credited against the order. Deposits on team orders are non-refundable once the proof is approved.
-          </p>
-          <h2 id="liability">Liability</h2>
-          <p>
-            Our liability for any order is limited to the amount you paid for it. We are not liable for indirect or consequential losses, such as missed events. Nothing in these terms limits your statutory consumer rights or excludes liability we cannot exclude by law.
-          </p>
-          <h2 id="law">Governing law & changes</h2>
-          <p>
-            These terms are governed by the laws of Pakistan, without affecting any mandatory consumer protections in your country of residence. We may update these terms; the version in force is the one published when you place your order. Questions:{' '}
-            <A href="/contact-us">contact us</A>
-            .
-          </p>
+        <div className="ez-prose tc-prose">
+          {!ready ? (
+            [0, 1, 2].map((i) => (
+              <div key={i} style={{ marginBottom: '40px' }}>
+                <Bar w="40%" h={30} mt={0} /><Bar w="100%" /><Bar w="96%" /><Bar w="88%" /><Bar w="70%" />
+              </div>
+            ))
+          ) : content?.unavailable ? (
+            <p>
+              The terms could not be loaded just now. Please refresh the page, or{' '}
+              <A href="/contact-us">contact us</A>
+              {' '}and we will send them to you.
+            </p>
+          ) : (
+            sections.map((s, i) => (
+              <section key={anchors[i]} id={anchors[i]} className="tc-section" aria-labelledby={s.title ? `${anchors[i]}-title` : undefined}>
+                {s.title ? <h2 id={`${anchors[i]}-title`}>{s.title}</h2> : null}
+                {/* the admin's text, cleaned on the server and again here (lib/html.js) */}
+                {s.html ? <div dangerouslySetInnerHTML={{ __html: s.html }} /> : null}
+              </section>
+            ))
+          )}
         </div>
       </section>
       {/* Related */}

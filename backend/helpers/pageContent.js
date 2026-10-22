@@ -1,8 +1,11 @@
-// Editable storefront pages (admin: Content -> How to Design Page): the content each page shipped with,
-// stored in the database on start-up when the page has no row yet, and the cleaning applied to every save
-// (only the known fields, plain text of a bounded length, image addresses on the web or this site, links to
-// this site or https). The storefront renders this content as text (React escapes it); nothing here is HTML.
+// Editable storefront pages (admin: Content -> How to Design Page, Content -> Terms & Conditions): the content
+// each page shipped with, stored in the database on start-up when the page has no row yet, and the cleaning
+// applied to every save and read (only the known fields, plain text of a bounded length, image addresses on the
+// web or this site, links to this site or https). The storefront renders this content as text (React escapes
+// it); the one exception is a Terms section's text, which is HTML reduced to the blog articles' safe subset.
 import PageContent from '../models/pageContent.js';
+import { sanitizeArticleHtml } from './ssrHtml.js';
+import { TERMS_DEFAULTS } from '../data/termsDefaults.js';
 
 const HTD = '/images/how-to-design';
 
@@ -138,8 +141,49 @@ const cleanHowToDesign = (input) => {
   };
 };
 
+// Terms & Conditions: a header and the sections, each a title (text) and its text as HTML from the admin's rich
+// text editor. The HTML keeps headings, paragraphs, lists, bold, italic, links, quotes and tables, nothing else
+// (helpers/ssrHtml.js sanitizeArticleHtml: no scripts, styles, images, event handlers or javascript: links). The
+// section title is the page's H2, so headings inside a section are H3 (the editor's Heading 1, 2 or 3) and H4
+// (its Heading 4). The levels are raised one step before cleaning (which keeps them from skipping a level) and
+// lowered after it, so sibling sub-headings stay level and a saved section reads back exactly as it was.
+const TERMS_BODY_MAX = 100000;
+const RAISE = { 1: 2, 2: 2, 3: 2, 4: 3, 5: 4, 6: 4 };
+const termsBody = (value) => (typeof value === 'string'
+  ? sanitizeArticleHtml(value.slice(0, TERMS_BODY_MAX).replace(/<(\/?)h([1-6])\b/gi, (tag, close, level) => `<${close}h${RAISE[level]}`))
+    .replace(/<(\/?)h([2-4])>/g, (tag, close, level) => `<${close}h${Math.min(4, Number(level) + 1)}>`)
+  : '');
+export const visibleText = (html) => String(html || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim();
+
+const cleanTerms = (input) => {
+  const d = obj(input);
+  const header = obj(d.header);
+  return {
+    header: {
+      title: text(header.title, 80),
+      intro: text(header.intro, 600),
+      effectiveDate: text(header.effectiveDate, 80),
+    },
+    sections: list(d.sections, 60, (raw) => {
+      const s = obj(raw);
+      const section = { title: text(s.title, 160), body: termsBody(s.body) };
+      // a section with neither a title nor any text shows nothing: dropped
+      return section.title || visibleText(section.body) ? section : null;
+    }),
+  };
+};
+
 export const PAGE_CONTENT = {
-  'how-to-design': { defaults: HOW_TO_DESIGN, clean: cleanHowToDesign },
+  'how-to-design': {
+    defaults: HOW_TO_DESIGN,
+    clean: cleanHowToDesign,
+    problem: (c) => (c.steps?.length ? '' : 'The page needs at least one step.'),
+  },
+  terms: {
+    defaults: TERMS_DEFAULTS,
+    clean: cleanTerms,
+    problem: (c) => (c.sections?.some((s) => visibleText(s.body)) ? '' : 'The terms need at least one section with text.'),
+  },
 };
 
 /** Stores the shipped content for every editable page that has no row yet. Returns the keys added. */

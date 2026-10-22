@@ -7,6 +7,8 @@ import CategoryModel from '../models/CategoryModel.js';
 import '../models/color.js';
 import Website from '../models/websiteModal.js';
 import ShippingRate from '../models/shippingRateModel.js';
+import PageContent from '../models/pageContent.js';
+import { PAGE_CONTENT } from '../helpers/pageContent.js';
 import { buildRequiredMetadataRoutes, normalizeRoute } from './metaDataController.js';
 import { KEYWORD_LANDING_FAQ_DEFAULTS } from '../data/keywordLandingFaqDefaults.js';
 import { priceProduct } from '../helpers/cartPricing.js';
@@ -591,6 +593,21 @@ const MAIN_LINKS = [
 
 const homeCategories = cached(5 * 60 * 1000, async () => CategoryModel.find({}).select('name slug section').sort({ name: 1 }).lean());
 
+// The Terms & Conditions as the admin wrote them (Content -> Terms & Conditions, helpers/pageContent.js): the page
+// draws them in the browser, so crawlers that run no scripts get the same text here. Section text is already
+// the safe subset (cleaned on every read); titles are escaped.
+const termsContent = cached(60 * 1000, async () => {
+  const row = await PageContent.findOne({ key: 'terms' }).lean();
+  return PAGE_CONTENT.terms.clean(row ? row.data : PAGE_CONTENT.terms.defaults);
+});
+const termsHtml = async () => {
+  const { header = {}, sections = [] } = await termsContent();
+  return [
+    header.effectiveDate ? `<p>Effective date: ${escapeHtml(header.effectiveDate)}</p>` : '',
+    ...sections.map((s) => `<section>${s.title ? `<h2>${escapeHtml(s.title)}</h2>` : ''}${s.body}</section>`),
+  ].filter(Boolean).join('\n');
+};
+
 const staticSeo = async (route, globals) => {
   const metadata = await metadataForRoute(route);
   if (!metadata) {
@@ -629,6 +646,7 @@ const staticSeo = async (route, globals) => {
     pageRoute === '/' ? '' : breadcrumbHtml(crumbs),
     `<h1>${escapeHtml(h1)}</h1>`,
     metadata.description ? `<p>${escapeHtml(cleanText(metadata.description))}</p>` : '',
+    pageRoute === '/terms-and-conditions' ? await termsHtml().catch(() => '') : '',
     faqHtml(pageFaqs),
     linkList(links, pageRoute === '/' ? 'Shop and design' : 'More from Easy Jackets'),
   ].filter(Boolean).join('\n');
