@@ -57,6 +57,20 @@ import { STOREFRONT_URL, uploadUrl } from '../constant/url';
 
 const money = (value) => `$${(Number(value) || 0).toFixed(2)}`;
 
+// "L" for one jacket; "L × 1, XL × 2" when several were ordered. Lines without a size (a jacket the customer
+// designed carries its sizes in the design) are left out; '' when no line has one.
+const sizeSummary = (cartData) => {
+  const counts = new Map();
+  for (const item of cartData || []) {
+    const size = String(item?.size || '').trim().toUpperCase();
+    if (size) counts.set(size, (counts.get(size) || 0) + (Number(item?.quantity) || 1));
+  }
+  if (!counts.size) return '';
+  const lines = (cartData || []).filter((item) => item?.size);
+  if (counts.size === 1 && lines.length === 1 && (Number(lines[0].quantity) || 1) === 1) return [...counts.keys()][0];
+  return [...counts.entries()].map(([size, n]) => `${size} × ${n}`).join(', ');
+};
+
 const DEAD_IMAGE_HOST = /amazonaws\.com/i;
 
 const designSnapshot = (item) => {
@@ -755,7 +769,7 @@ const OrderDetails = () => {
       const qty = item.quantity || 0;
       const price = `$${item.price || 0}`;
       const subtotal = `$${(item.price * item.quantity) || 0}`;
-      tableData.push([itemName, '', qty, price, subtotal]);
+      tableData.push([itemName, item?.size ? `Size ${String(item.size).toUpperCase()}` : '', qty, price, subtotal]);
     });
 
     // Product Table with Theme Styling & Proper Alignment
@@ -1528,6 +1542,13 @@ const OrderDetails = () => {
                     <Typography sx={{ color: '#666' }}>Total Items</Typography>
                     <Typography sx={{ color: '#333', fontWeight: 600 }}>{orderData.totalItems}</Typography>
                   </Box>
+                  {/* the size each jacket was ordered in (a size changes the price: each size has its own) */}
+                  {sizeSummary(orderData.cartData) && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, borderBottom: '1px solid #f0f0f0', pb: 1 }}>
+                      <Typography sx={{ color: '#666' }}>Size</Typography>
+                      <Typography sx={{ color: '#333', fontWeight: 600, textAlign: 'right' }}>{sizeSummary(orderData.cartData)}</Typography>
+                    </Box>
+                  )}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <CalendarToday sx={{ fontSize: 16, color: '#999' }} />
                     <Typography sx={{ color: '#888', fontSize: '0.875rem' }}>
@@ -2371,7 +2392,12 @@ const OrderDetails = () => {
                                     }}
                                   />
                                 </Box>
-                                <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                                <Box sx={{ display: 'flex', gap: 2, mt: 0.5, flexWrap: 'wrap' }}>
+                                  {item?.size ? (
+                                    <Typography variant="body2" sx={{ color: '#666' }}>
+                                      Size: <span style={{ color: '#333', fontWeight: 600 }}>{String(item.size).toUpperCase()}</span>
+                                    </Typography>
+                                  ) : null}
                                   <Typography variant="body2" sx={{ color: '#666' }}>
                                     Qty: <span style={{ color: '#333', fontWeight: 600 }}>{item.quantity}</span>
                                   </Typography>
