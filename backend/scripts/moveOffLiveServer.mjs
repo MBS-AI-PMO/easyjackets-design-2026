@@ -1,6 +1,8 @@
 // scripts/moveOffLiveServer.mjs
 //
 // Makes the 2026 copy database (easyjackets2026) independent of the OLD live server.
+// BEFORE THE DOMAIN SWITCH ONLY (used Oct 2026): it treats api.easyjackets.com as the old live server. Since the
+// switch, api.easyjackets.com is this backend and the site's addresses use it (api2. was dropped), so do not run it.
 //   1. Every file an address points at on the live server (https://api.easyjackets.com/uploads/<key>)
 //      is copied into THIS backend's file store (backend/uploads/<key>) if it is not there yet.
 //   2. Those addresses are rewritten to the 2026 API (https://api2.easyjackets.com/uploads/<key>),

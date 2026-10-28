@@ -5,6 +5,8 @@
 //   - Reads the live site only through its public API (the post list, then each post by id, which does
 //     not count a view); never writes there.
 //   - INSERTS only: a post whose slug already exists in the copy is skipped; nothing is updated or deleted.
+// BEFORE THE DOMAIN SWITCH ONLY (used Oct 2026): it treats api.easyjackets.com as the old live server. Since the
+// switch, api.easyjackets.com is this backend and the site's addresses use it (api2. was dropped), so do not run it.
 //   - Images the posts use on the live server are copied into this backend's file store and their
 //     addresses rewritten to the 2026 API (https://api2.easyjackets.com/uploads/…), as moveOffLiveServer.mjs
 //     did for everything else, so no address points at the old server.

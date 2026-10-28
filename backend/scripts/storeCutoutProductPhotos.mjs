@@ -17,7 +17,7 @@
 //   node scripts/storeCutoutProductPhotos.mjs --apply                copy files + update the products
 //   node scripts/storeCutoutProductPhotos.mjs --restore <backup>     put the previous addresses back
 //   --base <url>   address prefix for the new photos
-//                  (default https://api2.easyjackets.com/uploads/, the 2026 API in admin/Dockerfile);
+//                  (default https://api.easyjackets.com/uploads/, the site's API address);
 //                  run again with another --base to move photos already done onto a new address
 //
 // Previous addresses are saved to scripts/.product-photo-backup-<time>.json (git-ignored).
@@ -34,7 +34,7 @@ if (process.env.DNS_SERVERS) dns.setServers(process.env.DNS_SERVERS.split(',').m
 const args = process.argv.slice(2);
 const APPLY = args.includes('--apply');
 const RESTORE = args.includes('--restore') ? args[args.indexOf('--restore') + 1] : null;
-const BASE = (args.includes('--base') ? args[args.indexOf('--base') + 1] : 'https://api2.easyjackets.com/uploads/').replace(/\/*$/, '/');
+const BASE = (args.includes('--base') ? args[args.indexOf('--base') + 1] : 'https://api.easyjackets.com/uploads/').replace(/\/*$/, '/');
 const ALLOWED_DB = 'easyjackets2026';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 

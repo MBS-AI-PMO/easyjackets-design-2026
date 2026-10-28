@@ -6,8 +6,9 @@ point to the audit reports.
 
 ## Before launch
 
-1. **DNS: `api2.easyjackets.com`** must point at the server, with a certificate. Product photos, schema
-   images and share images live there. (N-T8)
+1. **API address: `api.easyjackets.com`** moves to the new backend (Coolify domain), with a certificate.
+   Product photos, schema images and share images are served there; the stored picture addresses use it
+   (they said `api2.easyjackets.com` until the launch, when they were rewritten). (N-T8)
 2. **Copy `backend/uploads`** (git-ignored) onto the API's uploads volume (`/app/uploads`), including
    `uploads/blog/`: the 7 blog posts copied from the live site use 28 pictures that are only there. (N-T4, N-T20)
 3. **Coolify settings**
