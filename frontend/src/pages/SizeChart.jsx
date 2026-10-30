@@ -14,7 +14,8 @@ import './SizeChart.css';
 import { usePageTitle } from '../lib/usePageTitle';
 
 const VIEWS = [
-  { key: 'jacket', label: 'Jacket', columns: [['chest', 'Chest (pit to pit)'], ['backLength', 'Back length'], ['acrossShoulder', 'Across shoulder'], ['shoulder', 'Shoulder'], ['sleeves', 'Sleeve']] },
+  // jacket chest: the full circumference, all the way around (the admin's sizes, since Oct 2026; was pit to pit)
+  { key: 'jacket', label: 'Jacket', columns: [['chest', 'Chest (around)'], ['backLength', 'Back length'], ['acrossShoulder', 'Across shoulder'], ['shoulder', 'Shoulder'], ['sleeves', 'Sleeve']] },
   { key: 'body', label: 'Body', columns: [['chest', 'Chest'], ['waist', 'Waist'], ['sleeves', 'Sleeve'], ['backLength', 'Back length']] },
 ];
 
@@ -90,6 +91,51 @@ export default function SizeChart() {
           </A>
         </div>
       </section>
+      {/* how to measure */}
+      {/* How to measure: the size guide, above the chart (client request, Oct 2026) */}
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '36px clamp(24px,4vw,72px)', alignItems: 'start' }}>
+        <div className="sc-frame" style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', inset: '14px -14px -14px 14px', background: 'var(--ink)', borderRadius: '4px' }} />
+          <div style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: '#fbf8f2', display: 'grid', placeItems: 'center', padding: '8%', boxSizing: 'border-box' }}>
+            <SiteImage which="size-measure" slot="size-diagram" shape="rect" fit="contain" width={768} sizes="(max-width: 720px) 100vw, 600px" placeholder="Jacket measurement diagram (chest, length, across shoulder, shoulder, back length)" aria-label="Diagram of a varsity jacket front and back with the five measurements numbered" style={{ aspectRatio: 'auto', height: 'auto' }} />
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)' }}>
+            How to measure
+          </div>
+          <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(44px,6vw,80px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '10px 0 28px' }}>
+            Grab a jacket you love
+          </h2>
+          <p style={{ color: 'var(--ink-2)', lineHeight: '1.6', margin: '0 0 28px', maxWidth: '52ch' }}>
+            The most reliable way to size a made-to-order jacket is to measure one that already fits you well. Lay it flat, zipped or snapped, and take these five measurements — they match the columns of the jacket chart below.
+          </p>
+          <div style={{ display: 'grid', gap: '22px' }}>
+            {[
+              ['1', 'Chest', 'All the way around the chest, one inch below the armpits, with the jacket closed. Laid flat? Measure armpit to armpit and double it. The chart lists this full circumference.'],
+              ['2', 'Length', 'From the top of the collar seam at the front straight down to the bottom of the waistband.'],
+              ['3', 'Across shoulder', 'Seam to seam across the back, where the sleeves attach.'],
+              ['4', 'Shoulder', 'From the collar seam to the sleeve seam along one shoulder.'],
+              ['5', 'Back length', 'From the base of the collar at the back straight down to the bottom of the waistband.'],
+            ].map(([n, title, text]) => (
+              <div key={n} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '18px' }}>
+                <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '36px', lineHeight: '1', color: 'var(--gold-2)', minWidth: '28px' }}>
+                  {n}
+                </div>
+                <div>
+                  <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase' }}>{title}</div>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: '1.55', fontSize: '14px' }}>{text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      {/* the chart itself */}
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)' }}>Size chart</div>
+        <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(40px,5vw,72px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '10px 0 0' }}>Pick your size</h2>
+      </section>
       {/* controls */}
       {/* Chart controls */}
       {/* the controls and the table share one narrower column, lined up with the heading: 7 short number
@@ -144,48 +190,8 @@ export default function SizeChart() {
         </div>
         {!loading && !error && !rows.length ? <p style={{ color: 'var(--muted)', margin: '14px 0 0' }}>No sizes have been published yet.</p> : null}
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '14px 0 0' }}>
-          Jacket measurements are of the finished jacket laid flat; chest is pit to pit. Tolerance ±0.5 in (1.3 cm). "Tall" sizes add length to the body and sleeves. Youth sizes and custom measurements are available at checkout.
+          Jacket measurements are of the finished jacket. Chest is the full circumference, all the way around the jacket just below the armpits; the others are taken laid flat. Tolerance ±0.5 in (1.3 cm). "Tall" sizes add length to the body and sleeves. Youth sizes and custom measurements are available at checkout.
         </p>
-        </div>
-      </section>
-      {/* how to measure */}
-      {/* How to measure */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(56px,7vw,96px) clamp(16px,4vw,48px) 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '36px clamp(24px,4vw,72px)', alignItems: 'start' }}>
-        <div className="sc-frame" style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', inset: '14px -14px -14px 14px', background: 'var(--ink)', borderRadius: '4px' }} />
-          <div style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '4px', overflow: 'hidden', background: '#fbf8f2', display: 'grid', placeItems: 'center', padding: '8%', boxSizing: 'border-box' }}>
-            <SiteImage which="size-measure" slot="size-diagram" shape="rect" fit="contain" width={768} sizes="(max-width: 720px) 100vw, 600px" placeholder="Jacket measurement diagram (chest, length, across shoulder, shoulder, back length)" aria-label="Diagram of a varsity jacket front and back with the five measurements numbered" style={{ aspectRatio: 'auto', height: 'auto' }} />
-          </div>
-        </div>
-        <div>
-          <div style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold-2)' }}>
-            How to measure
-          </div>
-          <h2 style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: 'clamp(44px,6vw,80px)', lineHeight: '0.9', textTransform: 'uppercase', margin: '10px 0 28px' }}>
-            Grab a jacket you love
-          </h2>
-          <p style={{ color: 'var(--ink-2)', lineHeight: '1.6', margin: '0 0 28px', maxWidth: '52ch' }}>
-            The most reliable way to size a made-to-order jacket is to measure one that already fits you well. Lay it flat, zipped or snapped, and take these five measurements — they match the columns of the jacket chart above.
-          </p>
-          <div style={{ display: 'grid', gap: '22px' }}>
-            {[
-              ['1', 'Chest', 'Armpit to armpit across the front, one inch below the sleeve seam. The chart lists this pit-to-pit width.'],
-              ['2', 'Length', 'From the top of the collar seam at the front straight down to the bottom of the waistband.'],
-              ['3', 'Across shoulder', 'Seam to seam across the back, where the sleeves attach.'],
-              ['4', 'Shoulder', 'From the collar seam to the sleeve seam along one shoulder.'],
-              ['5', 'Back length', 'From the base of the collar at the back straight down to the bottom of the waistband.'],
-            ].map(([n, title, text]) => (
-              <div key={n} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '18px' }}>
-                <div style={{ fontFamily: 'var(--display)', fontWeight: '900', fontSize: '36px', lineHeight: '1', color: 'var(--gold-2)', minWidth: '28px' }}>
-                  {n}
-                </div>
-                <div>
-                  <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase' }}>{title}</div>
-                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', lineHeight: '1.55', fontSize: '14px' }}>{text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
       {/* fit notes */}
@@ -198,7 +204,7 @@ export default function SizeChart() {
           <div style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>
             <div style={{ fontFamily: 'var(--display)', fontWeight: '800', fontSize: '24px', textTransform: 'uppercase' }}>Classic fit</div>
             <p style={{ margin: '8px 0 0', color: 'var(--muted)', lineHeight: '1.55', fontSize: '14px' }}>
-              Room for a hoodie underneath. Sits at the hip. The traditional letterman cut the chart is built on.
+              Want room for a hoodie underneath? Order one size bigger. Sits at the hip. The traditional letterman cut the chart is built on.
             </p>
           </div>
           <div style={{ borderTop: '3px solid var(--ink)', paddingTop: '16px' }}>

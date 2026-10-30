@@ -96,8 +96,8 @@ export const SITE_IMAGE_GROUPS = [
     slots: [
       {
         key: 'size-measure', title: '"How to measure" diagram', path: '/sizechart', fit: 'contain', ...portrait,
-        where: 'Size Chart page, "How to measure — Grab a jacket you love", on the left of the five numbered measurements.',
-        note: 'Shown whole on a cream panel (nothing is cropped): a diagram on a white or transparent background works best.',
+        where: 'Size Chart page, "How to measure — Grab a jacket you love", above the size chart, on the left of the five numbered measurements.',
+        note: 'Shown whole on a cream panel (nothing is cropped): a diagram on a white or transparent background works best. Measurement 1 (chest) is the full circumference, so draw it as a loop around the chest.',
         wire: { layout: 'diagramLeft' },
       },
       {
